@@ -234,3 +234,17 @@ evens = [x for x in nums if x % 2 == 0]`,
     lastUsedAt: "2026-01-13T12:00:00.000Z",
   },
 ];
+
+export function getItemTypeById(typeId: string): MockItemType | undefined {
+  return itemTypes.find((type) => type.id === typeId);
+}
+
+// Most recent use of any item in the collection, as a timestamp.
+export function getCollectionLastUsedAt(collectionId: string): number {
+  return Math.max(
+    0,
+    ...items
+      .filter((item) => item.collectionIds.includes(collectionId))
+      .map((item) => Date.parse(item.lastUsedAt)),
+  );
+}

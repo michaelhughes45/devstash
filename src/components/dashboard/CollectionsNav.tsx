@@ -8,17 +8,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { collections, items, type MockCollection } from "@/lib/mock-data";
-
-// Most recent use of any item in the collection, as a timestamp.
-function getLastUsedAt(collectionId: string): number {
-  return Math.max(
-    0,
-    ...items
-      .filter((item) => item.collectionIds.includes(collectionId))
-      .map((item) => Date.parse(item.lastUsedAt)),
-  );
-}
+import {
+  collections,
+  getCollectionLastUsedAt,
+  type MockCollection,
+} from "@/lib/mock-data";
 
 interface CollectionListProps {
   label: string;
@@ -59,7 +53,9 @@ export function CollectionsNav() {
   const favorites = collections.filter((collection) => collection.isFavorite);
   const recent = collections
     .filter((collection) => !collection.isFavorite)
-    .sort((a, b) => getLastUsedAt(b.id) - getLastUsedAt(a.id));
+    .sort(
+      (a, b) => getCollectionLastUsedAt(b.id) - getCollectionLastUsedAt(a.id),
+    );
 
   return (
     <SidebarSection title="Collections">
