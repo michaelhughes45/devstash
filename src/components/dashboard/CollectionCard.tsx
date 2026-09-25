@@ -4,16 +4,15 @@ import { MoreHorizontal, Star } from "lucide-react";
 import { ItemTypeIcon } from "@/components/dashboard/ItemTypeIcon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getItemTypeById, type MockCollection } from "@/lib/mock-data";
+import type { CollectionWithTypes } from "@/lib/db/collections";
 
 interface CollectionCardProps {
-  collection: MockCollection;
+  collection: CollectionWithTypes;
 }
 
 export function CollectionCard({ collection }: CollectionCardProps) {
-  const types = collection.typeIds
-    .map(getItemTypeById)
-    .filter((type) => type !== undefined);
+  const { types } = collection;
+  // Types are sorted most-used first, so the first one sets the accent
   const accent = types[0]?.color;
 
   return (
@@ -36,7 +35,7 @@ export function CollectionCard({ collection }: CollectionCardProps) {
               )}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {collection.itemCount} items
+              {collection.itemCount} {collection.itemCount === 1 ? "item" : "items"}
             </p>
           </div>
           <Button
@@ -48,9 +47,11 @@ export function CollectionCard({ collection }: CollectionCardProps) {
             <MoreHorizontal />
           </Button>
         </div>
-        <p className="line-clamp-2 text-sm text-muted-foreground">
-          {collection.description}
-        </p>
+        {collection.description && (
+          <p className="line-clamp-2 text-sm text-muted-foreground">
+            {collection.description}
+          </p>
+        )}
         <div className="flex items-center gap-2">
           {types.map((type) => (
             <ItemTypeIcon

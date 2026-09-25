@@ -6,17 +6,26 @@ import { DashboardSection } from "@/components/dashboard/DashboardSection";
 import { ItemCard } from "@/components/dashboard/ItemCard";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import {
-  collections,
-  getCollectionLastUsedAt,
-  items,
-} from "@/lib/mock-data";
+  getCollectionStats,
+  getDemoUserId,
+  getRecentCollections,
+} from "@/lib/db/collections";
+import { items } from "@/lib/mock-data";
 
+// Render per request so collections reflect the current database state
+export const dynamic = "force-dynamic";
+
+const RECENT_COLLECTIONS_LIMIT = 6;
 const RECENT_ITEMS_LIMIT = 10;
 
-export default function DashboardPage() {
-  const recentCollections = [...collections].sort(
-    (a, b) => getCollectionLastUsedAt(b.id) - getCollectionLastUsedAt(a.id),
-  );
+export default async function DashboardPage() {
+  const userId = await getDemoUserId();
+  const [recentCollections, collectionStats] = userId
+    ? await Promise.all([
+        getRecentCollections(userId, RECENT_COLLECTIONS_LIMIT),
+        getCollectionStats(userId),
+      ])
+    : [[], { total: 0, favorites: 0 }];
   const pinnedItems = items.filter((item) => item.isPinned);
   const recentItems = [...items]
     .sort((a, b) => Date.parse(b.lastUsedAt) - Date.parse(a.lastUsedAt))
@@ -29,7 +38,7 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">Your developer knowledge hub</p>
       </div>
 
-      <StatsCards />
+      <StatsCards collectionStats={collectionStats} />
 
       <DashboardSection
         title="Collections"
@@ -42,11 +51,15 @@ export default function DashboardPage() {
           </Link>
         }
       >
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {recentCollections.map((collection) => (
-            <CollectionCard key={collection.id} collection={collection} />
-          ))}
-        </div>
+        {recentCollections.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {recentCollections.map((collection) => (
+              <CollectionCard key={collection.id} collection={collection} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No collections yet.</p>
+        )}
       </DashboardSection>
 
       {pinnedItems.length > 0 && (
