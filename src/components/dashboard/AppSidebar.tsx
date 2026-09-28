@@ -14,8 +14,20 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { getDemoUserId, getSidebarCollections } from "@/lib/db/collections";
+import { getItemTypesWithCounts } from "@/lib/db/items";
 
-export function AppSidebar() {
+const SIDEBAR_RECENT_COLLECTIONS_LIMIT = 5;
+
+export async function AppSidebar() {
+  const userId = await getDemoUserId();
+  const [itemTypes, collections] = userId
+    ? await Promise.all([
+        getItemTypesWithCounts(userId),
+        getSidebarCollections(userId, SIDEBAR_RECENT_COLLECTIONS_LIMIT),
+      ])
+    : [[], { favorites: [], recent: [] }];
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -31,9 +43,9 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <TypesNav />
+        <TypesNav itemTypes={itemTypes} />
         <SidebarSeparator className="mx-0" />
-        <CollectionsNav />
+        <CollectionsNav collections={collections} />
       </SidebarContent>
       <SidebarFooter className="border-t">
         <UserNav />

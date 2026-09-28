@@ -76,6 +76,61 @@ export async function getRecentItems(
   return items.map(toItemWithType);
 }
 
+export interface ItemTypeWithCount {
+  id: string;
+  // Display name, e.g. "Snippets"
+  name: string;
+  // URL segment for /items/[slug], e.g. "snippets"
+  slug: string;
+  icon: string;
+  color: string;
+  count: number;
+}
+
+// Sidebar order for system types; custom types follow alphabetically
+const SYSTEM_TYPE_ORDER = ["snippet", "prompt", "command", "note", "file", "image", "link"];
+
+function getTypeRank(name: string, isSystem: boolean): number {
+  const index = SYSTEM_TYPE_ORDER.indexOf(name);
+  return isSystem && index !== -1 ? index : SYSTEM_TYPE_ORDER.length;
+}
+
+function toPlural(name: string): string {
+  return name.endsWith("s") ? name : `${name}s`;
+}
+
+export async function getItemTypesWithCounts(
+  userId: string,
+): Promise<ItemTypeWithCount[]> {
+  const [types, counts] = await Promise.all([
+    prisma.itemType.findMany({
+      where: { OR: [{ isSystem: true }, { userId }] },
+      select: { id: true, name: true, icon: true, color: true, isSystem: true },
+    }),
+    prisma.item.groupBy({ by: ["typeId"], where: { userId }, _count: true }),
+  ]);
+
+  const countByTypeId = new Map(counts.map((row) => [row.typeId, row._count]));
+
+  return types
+    .sort(
+      (a, b) =>
+        getTypeRank(a.name, a.isSystem) - getTypeRank(b.name, b.isSystem) ||
+        a.name.localeCompare(b.name),
+    )
+    .map((type) => {
+      const plural = toPlural(type.name);
+      return {
+        id: type.id,
+        name: plural.charAt(0).toUpperCase() + plural.slice(1),
+        slug: encodeURIComponent(plural.toLowerCase()),
+        icon: type.icon ?? DEFAULT_TYPE_ICON,
+        color: type.color ?? DEFAULT_TYPE_COLOR,
+        count: countByTypeId.get(type.id) ?? 0,
+      };
+    });
+}
+
 export async function getItemStats(userId: string): Promise<ItemStats> {
   const [total, favorites] = await Promise.all([
     prisma.item.count({ where: { userId } }),

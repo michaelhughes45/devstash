@@ -7,10 +7,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import type { ItemTypeWithCount } from "@/lib/db/items";
 import { getItemTypeIcon } from "@/lib/item-type-icons";
-import { itemTypes } from "@/lib/mock-data";
 
-export function TypesNav() {
+interface TypesNavProps {
+  itemTypes: ItemTypeWithCount[];
+}
+
+export function TypesNav({ itemTypes }: TypesNavProps) {
   return (
     <SidebarSection title="Types">
       <SidebarMenu>

@@ -37,9 +37,35 @@ export async function getDemoUserId(): Promise<string | null> {
   return user?.id ?? null;
 }
 
+export interface SidebarCollections {
+  favorites: CollectionWithTypes[];
+  recent: CollectionWithTypes[];
+}
+
 export async function getRecentCollections(
   userId: string,
   limit: number,
+): Promise<CollectionWithTypes[]> {
+  const collections = await getCollectionsByRecentUse(userId);
+  return collections.slice(0, limit);
+}
+
+// Favorites plus the most recently used non-favorite collections
+export async function getSidebarCollections(
+  userId: string,
+  recentLimit: number,
+): Promise<SidebarCollections> {
+  const collections = await getCollectionsByRecentUse(userId);
+  return {
+    favorites: collections.filter((collection) => collection.isFavorite),
+    recent: collections
+      .filter((collection) => !collection.isFavorite)
+      .slice(0, recentLimit),
+  };
+}
+
+async function getCollectionsByRecentUse(
+  userId: string,
 ): Promise<CollectionWithTypes[]> {
   const collections = await prisma.collection.findMany({
     where: { userId },
@@ -94,8 +120,7 @@ export async function getRecentCollections(
 
       return { ...collection, itemCount: items.length, types, lastUsedAt };
     })
-    .sort((a, b) => b.lastUsedAt.getTime() - a.lastUsedAt.getTime())
-    .slice(0, limit);
+    .sort((a, b) => b.lastUsedAt.getTime() - a.lastUsedAt.getTime());
 }
 
 export async function getCollectionStats(userId: string): Promise<CollectionStats> {

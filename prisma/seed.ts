@@ -28,11 +28,14 @@ interface SeedItem {
   content?: string;
   language?: string;
   url?: string;
+  isFavorite?: boolean;
+  isPinned?: boolean;
 }
 
 interface SeedCollection {
   name: string;
   description: string;
+  isFavorite?: boolean;
   items: SeedItem[];
 }
 
@@ -40,11 +43,13 @@ const COLLECTIONS: SeedCollection[] = [
   {
     name: "React Patterns",
     description: "Reusable React patterns and hooks",
+    isFavorite: true,
     items: [
       {
         type: "snippet",
         title: "useDebounce and useLocalStorage hooks",
         description: "Debounce a changing value and persist state to localStorage",
+        isFavorite: true,
         language: "typescript",
         content: `import { useEffect, useState } from "react";
 
@@ -143,11 +148,13 @@ export function formatBytes(bytes: number) {
   {
     name: "AI Workflows",
     description: "AI prompts and workflow automations",
+    isFavorite: true,
     items: [
       {
         type: "prompt",
         title: "Code review",
         description: "Thorough review focused on bugs, security and readability",
+        isFavorite: true,
         content: `Review the following code as a senior engineer.
 
 Focus on, in order:
@@ -208,6 +215,7 @@ First list the changes you plan to make and why, then show the refactored code.
         type: "snippet",
         title: "Next.js multi-stage Dockerfile",
         description: "Small production image using Next.js standalone output",
+        isPinned: true,
         language: "dockerfile",
         content: `FROM node:22-alpine AS deps
 WORKDIR /app
@@ -258,6 +266,7 @@ CMD ["node", "server.js"]`,
         type: "command",
         title: "Undo last commit, keep changes",
         description: "Move HEAD back one commit and leave the changes staged",
+        isFavorite: true,
         language: "bash",
         content: `git reset --soft HEAD~1`,
       },
@@ -272,6 +281,7 @@ CMD ["node", "server.js"]`,
         type: "command",
         title: "Kill process on a port",
         description: "Find and stop whatever is listening on port 3000",
+        isPinned: true,
         language: "bash",
         content: `lsof -ti :3000 | xargs kill -9`,
       },
@@ -292,6 +302,7 @@ CMD ["node", "server.js"]`,
         type: "link",
         title: "Tailwind CSS documentation",
         description: "Utility class reference and configuration for Tailwind CSS",
+        isPinned: true,
         url: "https://tailwindcss.com/docs",
       },
       {
@@ -348,8 +359,10 @@ async function seedCollections(userId: string, typeIds: Record<SystemTypeName, s
   await prisma.item.deleteMany({ where: { userId } });
   await prisma.collection.deleteMany({ where: { userId } });
 
-  for (const { name, description, items } of COLLECTIONS) {
-    const collection = await prisma.collection.create({ data: { name, description, userId } });
+  for (const { name, description, isFavorite, items } of COLLECTIONS) {
+    const collection = await prisma.collection.create({
+      data: { name, description, isFavorite, userId },
+    });
 
     for (const { type, url, ...item } of items) {
       await prisma.item.create({
