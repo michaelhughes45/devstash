@@ -10,26 +10,27 @@ import {
   getDemoUserId,
   getRecentCollections,
 } from "@/lib/db/collections";
-import { items } from "@/lib/mock-data";
+import { getItemStats, getPinnedItems, getRecentItems } from "@/lib/db/items";
 
-// Render per request so collections reflect the current database state
+// Render per request so the dashboard reflects the current database state
 export const dynamic = "force-dynamic";
 
 const RECENT_COLLECTIONS_LIMIT = 6;
 const RECENT_ITEMS_LIMIT = 10;
+const EMPTY_STATS = { total: 0, favorites: 0 };
 
 export default async function DashboardPage() {
   const userId = await getDemoUserId();
-  const [recentCollections, collectionStats] = userId
-    ? await Promise.all([
-        getRecentCollections(userId, RECENT_COLLECTIONS_LIMIT),
-        getCollectionStats(userId),
-      ])
-    : [[], { total: 0, favorites: 0 }];
-  const pinnedItems = items.filter((item) => item.isPinned);
-  const recentItems = [...items]
-    .sort((a, b) => Date.parse(b.lastUsedAt) - Date.parse(a.lastUsedAt))
-    .slice(0, RECENT_ITEMS_LIMIT);
+  const [recentCollections, collectionStats, pinnedItems, recentItems, itemStats] =
+    userId
+      ? await Promise.all([
+          getRecentCollections(userId, RECENT_COLLECTIONS_LIMIT),
+          getCollectionStats(userId),
+          getPinnedItems(userId),
+          getRecentItems(userId, RECENT_ITEMS_LIMIT),
+          getItemStats(userId),
+        ])
+      : [[], EMPTY_STATS, [], [], EMPTY_STATS];
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
@@ -38,7 +39,7 @@ export default async function DashboardPage() {
         <p className="text-muted-foreground">Your developer knowledge hub</p>
       </div>
 
-      <StatsCards collectionStats={collectionStats} />
+      <StatsCards itemStats={itemStats} collectionStats={collectionStats} />
 
       <DashboardSection
         title="Collections"
@@ -73,11 +74,15 @@ export default async function DashboardPage() {
       )}
 
       <DashboardSection title="Recent Items" icon={Clock}>
-        <div className="flex flex-col gap-3">
-          {recentItems.map((item) => (
-            <ItemCard key={item.id} item={item} />
-          ))}
-        </div>
+        {recentItems.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {recentItems.map((item) => (
+              <ItemCard key={item.id} item={item} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No items yet.</p>
+        )}
       </DashboardSection>
     </div>
   );

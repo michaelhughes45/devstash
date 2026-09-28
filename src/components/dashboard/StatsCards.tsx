@@ -2,7 +2,7 @@ import { Folder, FolderHeart, Layers, Star, type LucideIcon } from "lucide-react
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { CollectionStats } from "@/lib/db/collections";
-import { items } from "@/lib/mock-data";
+import type { ItemStats } from "@/lib/db/items";
 
 interface Stat {
   label: string;
@@ -11,19 +11,15 @@ interface Stat {
 }
 
 interface StatsCardsProps {
+  itemStats: ItemStats;
   collectionStats: CollectionStats;
 }
 
-export function StatsCards({ collectionStats }: StatsCardsProps) {
-  // Item stats stay on mock data until items are moved to the database
+export function StatsCards({ itemStats, collectionStats }: StatsCardsProps) {
   const stats: Stat[] = [
-    { label: "Items", value: items.length, icon: Layers },
+    { label: "Items", value: itemStats.total, icon: Layers },
     { label: "Collections", value: collectionStats.total, icon: Folder },
-    {
-      label: "Favorite Items",
-      value: items.filter((item) => item.isFavorite).length,
-      icon: Star,
-    },
+    { label: "Favorite Items", value: itemStats.favorites, icon: Star },
     {
       label: "Favorite Collections",
       value: collectionStats.favorites,
