@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SidebarSection } from "@/components/dashboard/SidebarSection";
+import { Badge } from "@/components/ui/badge";
 import {
   SidebarMenu,
   SidebarMenuBadge,
@@ -28,6 +29,14 @@ export function TypesNav({ itemTypes }: TypesNavProps) {
               >
                 <Icon style={{ color: type.color }} />
                 <span>{type.name}</span>
+                {type.isPro && (
+                  <Badge
+                    variant="outline"
+                    className="h-4 px-1.5 text-[10px] font-semibold tracking-wide text-muted-foreground group-data-[collapsible=icon]:hidden"
+                  >
+                    PRO
+                  </Badge>
+                )}
               </SidebarMenuButton>
               <SidebarMenuBadge className="text-muted-foreground">
                 {type.count}

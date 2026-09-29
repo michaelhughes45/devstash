@@ -85,10 +85,14 @@ export interface ItemTypeWithCount {
   icon: string;
   color: string;
   count: number;
+  isPro: boolean;
 }
 
 // Sidebar order for system types; custom types follow alphabetically
 const SYSTEM_TYPE_ORDER = ["snippet", "prompt", "command", "note", "file", "image", "link"];
+
+// System types shown with a PRO badge in the sidebar
+const PRO_SYSTEM_TYPES = ["file", "image"];
 
 function getTypeRank(name: string, isSystem: boolean): number {
   const index = SYSTEM_TYPE_ORDER.indexOf(name);
@@ -127,6 +131,7 @@ export async function getItemTypesWithCounts(
         icon: type.icon ?? DEFAULT_TYPE_ICON,
         color: type.color ?? DEFAULT_TYPE_COLOR,
         count: countByTypeId.get(type.id) ?? 0,
+        isPro: type.isSystem && PRO_SYSTEM_TYPES.includes(type.name),
       };
     });
 }
