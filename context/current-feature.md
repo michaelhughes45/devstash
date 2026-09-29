@@ -1,25 +1,18 @@
-# Current Feature: Add Pro Badge to Sidebar
+# Current Feature
 
-Add a PRO badge to the Files and Images types in the sidebar.
+<!-- Feature name and short description -->
 
 ## Status
 
-In Progress
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- Show a PRO badge next to the Files and Images item types in the sidebar
-- Use the shadcn/ui `Badge` component (already installed)
-- Keep the badge clean and subtle
-- Badge text is all uppercase: `PRO`
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Spec: `context/features/add-pro-badge-sidebar.md`
-- Sidebar types are rendered in `src/components/dashboard/TypesNav.tsx` (data from `getItemTypesWithCounts` via `AppSidebar`)
-- Display only — no plan gating logic is part of this feature
-- The project overview lists only File as Pro; the spec explicitly asks for both Files and Images
-- Consider how the badge behaves when the sidebar is collapsed to icons (likely hidden, like the counts)
+<!-- Any extra notes -->
 
 ## History
 
@@ -34,3 +27,4 @@ In Progress
 - **Dashboard Collections** — Completed. Replaced the mock collections in the dashboard main area with data from Neon via Prisma. Added `src/lib/db/collections.ts` (`getDemoUserId`, `getRecentCollections`, `getCollectionStats`); the dashboard page is now an async, dynamically rendered server component that shows the 6 most recently used collections for the demo user (temporary until auth). Each card's border color comes from its most-used item type, with icons for all its types (most-used first). The Collections and Favorite Collections stats now come from the database. The sidebar collections, Pinned and Recent items, and the item stats remain on mock data.
 - **Dashboard Items** — Completed. Replaced the mock Pinned and Recent items and the item stats in the dashboard main area with data from Neon via Prisma. Added `src/lib/db/items.ts` (`getPinnedItems`, `getRecentItems`, `getItemStats`); recent items are ordered by `lastUsedAt` (never-used items fall back to `updatedAt`) and limited to 10. Item cards take their icon, color and border from the item type and show tags from the database; the description is hidden when empty. The Pinned section is hidden when nothing is pinned, and Recent Items shows an empty state. All dashboard queries run in parallel. The sidebar remains on mock data.
 - **Stats & Sidebar** — Completed. Moved the sidebar from mock data to Neon via Prisma. Added `getItemTypesWithCounts` to `src/lib/db/items.ts` (system types in a fixed order, then custom types; display names and `/items/{slug}` links derived from the type name, with per-user item counts) and `getSidebarCollections` to `src/lib/db/collections.ts` (all favorites plus the 5 most recently used others, sharing a query with `getRecentCollections`). `AppSidebar` is now an async server component. Favorite collections keep the star; recent collections show a colored dot for their most-used item type; added a "View all collections" link to `/collections`. Trimmed `mock-data.ts` to just `currentUser` (still used by `UserNav`). The seed now favorites 2 collections and 3 items and pins 3 items.
+- **Add Pro Badge to Sidebar** — Completed. Added a subtle, uppercase `PRO` shadcn `Badge` (outline, muted, 10px) after the Files and Images type names in the sidebar, hidden when the sidebar is collapsed to icons. `getItemTypesWithCounts` now returns an `isPro` flag, set only for the built-in `file` and `image` system types (`PRO_SYSTEM_TYPES`), so custom types with the same name aren't badged. Display only — no plan gating.
