@@ -5,7 +5,7 @@
 
 | | |
 | --- | --- |
-| **Status** | 🟡 Planning — ready for environment setup & UI scaffolding |
+| **Status** | 🟢 In development — Phase 1 (MVP): setup, database and dashboard UI done; auth next |
 | **Type** | SaaS (Free + Pro subscription) |
 | **Stack** | Next.js · TypeScript · Prisma · Neon Postgres · Tailwind v4 · shadcn/ui · Auth.js · Stripe · Cloudflare R2 · OpenAI |
 
@@ -137,13 +137,15 @@ Changes from the original notes:
 ```prisma
 // ⚠️ ROUGH DRAFT — will evolve
 
+// Prisma 7: connection URLs live in prisma.config.ts, not in the datasource block
+
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum ContentType {
@@ -496,8 +498,13 @@ flowchart LR
 devstash/
 ├── prisma/
 │   ├── schema.prisma
-│   └── seed.ts              # seeds system item types
+│   ├── migrations/
+│   └── seed.ts              # seeds system types + demo data
+├── prisma.config.ts         # Prisma 7 config (connection URLs, seed)
+├── scripts/                 # e.g. test-db.ts
 ├── src/
+│   ├── auth.ts               # Auth.js config
+│   ├── proxy.ts              # route protection (Next.js 16 renamed middleware → proxy)
 │   ├── app/
 │   │   ├── (auth)/           # sign-in, register
 │   │   ├── (dashboard)/      # items, collections, settings
@@ -508,10 +515,10 @@ devstash/
 │   ├── components/
 │   │   ├── ui/               # shadcn components
 │   │   └── ...
-│   ├── lib/                  # prisma, auth, stripe, r2, openai clients
+│   ├── generated/prisma/     # generated Prisma client (gitignored)
+│   ├── hooks/
+│   ├── lib/                  # prisma, db queries, stripe, r2, openai clients
 │   └── types/
-├── auth.ts
-├── middleware.ts
 └── .env
 ```
 
@@ -521,7 +528,8 @@ devstash/
 
 ```bash
 # Database
-DATABASE_URL=
+DATABASE_URL=   # pooled Neon URL, used by the app
+DIRECT_URL=     # direct Neon URL, used by the Prisma CLI (migrations, seed)
 
 # Auth.js
 AUTH_SECRET=
@@ -582,7 +590,7 @@ Refer to the screenshots below as a base for the dashboard UI.  It does not have
 ## 🧭 Roadmap
 
 ### 🟢 Phase 1 — MVP
-- [ ] Project setup (Next.js, Tailwind, shadcn, Prisma, Neon)
+- [x] Project setup (Next.js, Tailwind, shadcn, Prisma, Neon)
 - [ ] Authentication (email + GitHub)
 - [ ] Item CRUD for system types
 - [ ] Collections

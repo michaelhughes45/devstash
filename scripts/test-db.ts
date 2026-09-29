@@ -39,7 +39,7 @@ async function checkDemoUser() {
   assert(user, `Demo user ${DEMO_EMAIL} not found. Run \`npx prisma db seed\``);
   assert(user.password, "Demo user has no password");
   assert(await bcrypt.compare(DEMO_PASSWORD, user.password), "Demo user password does not match");
-  assert(!user.isPro && user.emailVerified, "Demo user should be free and email-verified");
+  assert(user.isPro && user.emailVerified, "Demo user should be Pro and email-verified");
 
   console.log(`\n✔ Demo user: ${user.name} <${user.email}> (password ok, isPro: ${user.isPro})`);
   return user.id;

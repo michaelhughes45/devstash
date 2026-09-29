@@ -5,7 +5,7 @@ import { ContentType } from "../src/generated/prisma/client";
 
 const DEMO_USER = {
   email: "demo@devstash.io",
-  name: "Demo User",
+  name: "John Doe",
   password: "12345678",
 };
 
@@ -329,7 +329,7 @@ CMD ["node", "server.js"]`,
 
 async function seedUser() {
   const password = await bcrypt.hash(DEMO_USER.password, 12);
-  const data = { name: DEMO_USER.name, password, isPro: false, emailVerified: new Date() };
+  const data = { name: DEMO_USER.name, password, isPro: true, emailVerified: new Date() };
 
   return prisma.user.upsert({
     where: { email: DEMO_USER.email },
