@@ -53,11 +53,15 @@ function toItemWithType({ type, tags, ...item }: ItemCardRow): ItemWithType {
   };
 }
 
-export async function getPinnedItems(userId: string): Promise<ItemWithType[]> {
+export async function getPinnedItems(
+  userId: string,
+  limit: number,
+): Promise<ItemWithType[]> {
   const items = await prisma.item.findMany({
     where: { userId, isPinned: true },
     select: ITEM_CARD_SELECT,
     orderBy: { updatedAt: "desc" },
+    take: limit,
   });
   return items.map(toItemWithType);
 }

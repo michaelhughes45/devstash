@@ -16,6 +16,7 @@ import { getItemStats, getPinnedItems, getRecentItems } from "@/lib/db/items";
 export const dynamic = "force-dynamic";
 
 const RECENT_COLLECTIONS_LIMIT = 6;
+const PINNED_ITEMS_LIMIT = 10;
 const RECENT_ITEMS_LIMIT = 10;
 const EMPTY_STATS = { total: 0, favorites: 0 };
 
@@ -26,7 +27,7 @@ export default async function DashboardPage() {
       ? await Promise.all([
           getRecentCollections(userId, RECENT_COLLECTIONS_LIMIT),
           getCollectionStats(userId),
-          getPinnedItems(userId),
+          getPinnedItems(userId, PINNED_ITEMS_LIMIT),
           getRecentItems(userId, RECENT_ITEMS_LIMIT),
           getItemStats(userId),
         ])

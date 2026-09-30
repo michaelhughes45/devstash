@@ -1,3 +1,6 @@
+import { cache } from "react";
+
+import { DEMO_USER_EMAIL } from "@/lib/demo-user";
 import { prisma } from "@/lib/prisma";
 
 export interface CollectionType {
@@ -27,15 +30,14 @@ const DEFAULT_TYPE_ICON = "File";
 const DEFAULT_TYPE_COLOR = "#6b7280";
 
 // Temporary until auth is in place: the dashboard shows the seeded demo user's data.
-export const DEMO_USER_EMAIL = "demo@devstash.io";
-
-export async function getDemoUserId(): Promise<string | null> {
+// Cached per request, since the dashboard page and sidebar both need it.
+export const getDemoUserId = cache(async (): Promise<string | null> => {
   const user = await prisma.user.findUnique({
     where: { email: DEMO_USER_EMAIL },
     select: { id: true },
   });
   return user?.id ?? null;
-}
+});
 
 export interface SidebarCollections {
   favorites: CollectionWithTypes[];
@@ -64,64 +66,73 @@ export async function getSidebarCollections(
   };
 }
 
-async function getCollectionsByRecentUse(
-  userId: string,
-): Promise<CollectionWithTypes[]> {
-  const collections = await prisma.collection.findMany({
-    where: { userId },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      isFavorite: true,
-      updatedAt: true,
-      items: {
-        select: {
-          item: {
-            select: {
-              lastUsedAt: true,
-              updatedAt: true,
-              type: { select: { id: true, name: true, icon: true, color: true } },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  return collections
-    .map(({ items, ...collection }) => {
-      const typeCounts = new Map<string, { type: CollectionType; count: number }>();
-      let lastUsedAt = collection.updatedAt;
-
-      for (const { item } of items) {
-        const entry = typeCounts.get(item.type.id);
-        if (entry) {
-          entry.count++;
-        } else {
-          typeCounts.set(item.type.id, {
-            type: {
-              id: item.type.id,
-              name: item.type.name,
-              icon: item.type.icon ?? DEFAULT_TYPE_ICON,
-              color: item.type.color ?? DEFAULT_TYPE_COLOR,
-            },
-            count: 1,
-          });
-        }
-
-        const itemUsedAt = item.lastUsedAt ?? item.updatedAt;
-        if (itemUsedAt > lastUsedAt) lastUsedAt = itemUsedAt;
-      }
-
-      const types = [...typeCounts.values()]
-        .sort((a, b) => b.count - a.count)
-        .map(({ type }) => type);
-
-      return { ...collection, itemCount: items.length, types, lastUsedAt };
-    })
-    .sort((a, b) => b.lastUsedAt.getTime() - a.lastUsedAt.getTime());
+// One row per (collection, item type) pair in the user's collections
+interface CollectionTypeUsage {
+  collectionId: string;
+  typeId: string;
+  typeName: string;
+  typeIcon: string | null;
+  typeColor: string | null;
+  lastUsedAt: Date;
 }
+
+// Cached per request, since the dashboard page and sidebar both need it.
+const getCollectionsByRecentUse = cache(
+  async (userId: string): Promise<CollectionWithTypes[]> => {
+    const [collections, typeUsage] = await Promise.all([
+      prisma.collection.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          isFavorite: true,
+          updatedAt: true,
+          _count: { select: { items: true } },
+        },
+      }),
+      // Aggregated in the database so item rows aren't loaded. Rows come most-used
+      // type first (ties: type added to the collection first). An item's use time
+      // falls back to its last edit when it has never been used.
+      prisma.$queryRaw<CollectionTypeUsage[]>`
+        SELECT
+          ic."collectionId",
+          t."id" AS "typeId",
+          t."name" AS "typeName",
+          t."icon" AS "typeIcon",
+          t."color" AS "typeColor",
+          MAX(COALESCE(i."lastUsedAt", i."updatedAt")) AS "lastUsedAt"
+        FROM "ItemCollection" ic
+        JOIN "Collection" c ON c."id" = ic."collectionId"
+        JOIN "Item" i ON i."id" = ic."itemId"
+        JOIN "ItemType" t ON t."id" = i."typeId"
+        WHERE c."userId" = ${userId}
+        GROUP BY ic."collectionId", t."id"
+        ORDER BY COUNT(*) DESC, MIN(ic."addedAt") ASC
+      `,
+    ]);
+
+    const usageByCollection = Map.groupBy(typeUsage, (row) => row.collectionId);
+
+    return collections
+      .map(({ _count, ...collection }) => {
+        const usage = usageByCollection.get(collection.id) ?? [];
+        const types: CollectionType[] = usage.map((row) => ({
+          id: row.typeId,
+          name: row.typeName,
+          icon: row.typeIcon ?? DEFAULT_TYPE_ICON,
+          color: row.typeColor ?? DEFAULT_TYPE_COLOR,
+        }));
+        const lastUsedAt = usage.reduce(
+          (latest, row) => (row.lastUsedAt > latest ? row.lastUsedAt : latest),
+          collection.updatedAt,
+        );
+
+        return { ...collection, itemCount: _count.items, types, lastUsedAt };
+      })
+      .sort((a, b) => b.lastUsedAt.getTime() - a.lastUsedAt.getTime());
+  },
+);
 
 export async function getCollectionStats(userId: string): Promise<CollectionStats> {
   const [total, favorites] = await Promise.all([

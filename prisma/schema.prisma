@@ -1,8 +1,9 @@
 // Prisma 7: connection URLs live in prisma.config.ts, not in the datasource block
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -92,6 +93,8 @@ model ItemType {
   items Item[]
 
   @@unique([userId, name])
+  // Postgres treats NULLs as distinct, so the key above doesn't stop duplicate system types
+  @@unique([name], where: { userId: null }, map: "ItemType_system_name_key")
 }
 
 model Collection {

@@ -1,9 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
-
-const DEMO_EMAIL = "demo@devstash.io";
-const DEMO_PASSWORD = "12345678";
+import { DEMO_USER_EMAIL, DEMO_USER_PASSWORD } from "../src/lib/demo-user";
 
 // Expected item counts per collection, from context/features/seed-spec.md
 const EXPECTED_COLLECTIONS: Record<string, number> = {
@@ -35,10 +33,13 @@ async function logTableCounts() {
 }
 
 async function checkDemoUser() {
-  const user = await prisma.user.findUnique({ where: { email: DEMO_EMAIL } });
-  assert(user, `Demo user ${DEMO_EMAIL} not found. Run \`npx prisma db seed\``);
+  const user = await prisma.user.findUnique({ where: { email: DEMO_USER_EMAIL } });
+  assert(user, `Demo user ${DEMO_USER_EMAIL} not found. Run \`npx prisma db seed\``);
   assert(user.password, "Demo user has no password");
-  assert(await bcrypt.compare(DEMO_PASSWORD, user.password), "Demo user password does not match");
+  assert(
+    await bcrypt.compare(DEMO_USER_PASSWORD, user.password),
+    "Demo user password does not match",
+  );
   assert(user.isPro && user.emailVerified, "Demo user should be Pro and email-verified");
 
   console.log(`\n✔ Demo user: ${user.name} <${user.email}> (password ok, isPro: ${user.isPro})`);

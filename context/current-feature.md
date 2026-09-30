@@ -1,18 +1,29 @@
-# Current Feature
+# Current Feature: Code Scan Fixes
 
-<!-- Feature name and short description -->
+Fix the 2 medium and 4 low findings from the `code-scanner` full codebase scan. Behavior and UI stay exactly the same.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- `getDemoUserId` and `getCollectionsByRecentUse` wrapped in React `cache()` so each runs once per request (dashboard page + sidebar)
+- `getCollectionsByRecentUse` no longer loads every item row: `_count` for `itemCount`, DB-side aggregate for type usage and recency (typed `$queryRaw` acceptable); `CollectionWithTypes` shape and sort order unchanged
+- `getPinnedItems` takes a `limit` (10, matching Recent Items), passed from the dashboard page
+- New `src/lib/demo-user.ts` exporting `DEMO_USER_EMAIL` and `DEMO_USER_PASSWORD` (no Prisma/Next.js imports), used by `src/lib/db/collections.ts`, `prisma/seed.ts` and `scripts/test-db.ts`
+- New migration adding a partial unique index on `ItemType.name` where `"userId" IS NULL` (created with `prisma migrate dev --create-only`, SQL hand-edited — never `db push`); seed's find-or-create logic kept
 
 ## Notes
 
-<!-- Any extra notes -->
+- Spec: `context/features/code-scan-fixes/code-scan-fixes-1-spec.md`
+- Collection `lastUsedAt` = latest of the collection's `updatedAt` and each item's `lastUsedAt ?? updatedAt` — must stay the same
+- Auth intentionally not implemented yet; hardcoded demo user is not a finding
+- `.env` is gitignored and untracked — no action needed; no components need splitting
+- Verify the dashboard and sidebar render identically before and after (counts, collection order, type icons, border colors)
+- Run `npx prisma migrate status`, `npm run db:test`, `npm run lint` and `npm run build`
+- Partial index is declared in the schema (`partialIndexes` preview feature) instead of hand-edited SQL, so future migrations don't drop it as drift. Migration SQL generated with `migrate diff` (`migrate dev` refuses the unique-constraint warning non-interactively) and applied to the dev branch with `migrate deploy`
+- Production Neon branch still needs `prisma migrate deploy` for the new migration
 
 ## History
 

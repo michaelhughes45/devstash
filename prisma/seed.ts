@@ -2,11 +2,12 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
 import { ContentType } from "../src/generated/prisma/client";
+import { DEMO_USER_EMAIL, DEMO_USER_PASSWORD } from "../src/lib/demo-user";
 
 const DEMO_USER = {
-  email: "demo@devstash.io",
+  email: DEMO_USER_EMAIL,
   name: "John Doe",
-  password: "12345678",
+  password: DEMO_USER_PASSWORD,
 };
 
 const SYSTEM_TYPES = [
