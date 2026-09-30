@@ -1,29 +1,18 @@
-# Current Feature: Code Scan Fixes
+# Current Feature
 
-Fix the 2 medium and 4 low findings from the `code-scanner` full codebase scan. Behavior and UI stay exactly the same.
+<!-- Feature name and short description -->
 
 ## Status
 
-In Progress
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- `getDemoUserId` and `getCollectionsByRecentUse` wrapped in React `cache()` so each runs once per request (dashboard page + sidebar)
-- `getCollectionsByRecentUse` no longer loads every item row: `_count` for `itemCount`, DB-side aggregate for type usage and recency (typed `$queryRaw` acceptable); `CollectionWithTypes` shape and sort order unchanged
-- `getPinnedItems` takes a `limit` (10, matching Recent Items), passed from the dashboard page
-- New `src/lib/demo-user.ts` exporting `DEMO_USER_EMAIL` and `DEMO_USER_PASSWORD` (no Prisma/Next.js imports), used by `src/lib/db/collections.ts`, `prisma/seed.ts` and `scripts/test-db.ts`
-- New migration adding a partial unique index on `ItemType.name` where `"userId" IS NULL` (created with `prisma migrate dev --create-only`, SQL hand-edited — never `db push`); seed's find-or-create logic kept
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Spec: `context/features/code-scan-fixes/code-scan-fixes-1-spec.md`
-- Collection `lastUsedAt` = latest of the collection's `updatedAt` and each item's `lastUsedAt ?? updatedAt` — must stay the same
-- Auth intentionally not implemented yet; hardcoded demo user is not a finding
-- `.env` is gitignored and untracked — no action needed; no components need splitting
-- Verify the dashboard and sidebar render identically before and after (counts, collection order, type icons, border colors)
-- Run `npx prisma migrate status`, `npm run db:test`, `npm run lint` and `npm run build`
-- Partial index is declared in the schema (`partialIndexes` preview feature) instead of hand-edited SQL, so future migrations don't drop it as drift. Migration SQL generated with `migrate diff` (`migrate dev` refuses the unique-constraint warning non-interactively) and applied to the dev branch with `migrate deploy`
-- Production Neon branch still needs `prisma migrate deploy` for the new migration
+<!-- Any extra notes -->
 
 ## History
 
@@ -39,3 +28,4 @@ In Progress
 - **Dashboard Items** — Completed. Replaced the mock Pinned and Recent items and the item stats in the dashboard main area with data from Neon via Prisma. Added `src/lib/db/items.ts` (`getPinnedItems`, `getRecentItems`, `getItemStats`); recent items are ordered by `lastUsedAt` (never-used items fall back to `updatedAt`) and limited to 10. Item cards take their icon, color and border from the item type and show tags from the database; the description is hidden when empty. The Pinned section is hidden when nothing is pinned, and Recent Items shows an empty state. All dashboard queries run in parallel. The sidebar remains on mock data.
 - **Stats & Sidebar** — Completed. Moved the sidebar from mock data to Neon via Prisma. Added `getItemTypesWithCounts` to `src/lib/db/items.ts` (system types in a fixed order, then custom types; display names and `/items/{slug}` links derived from the type name, with per-user item counts) and `getSidebarCollections` to `src/lib/db/collections.ts` (all favorites plus the 5 most recently used others, sharing a query with `getRecentCollections`). `AppSidebar` is now an async server component. Favorite collections keep the star; recent collections show a colored dot for their most-used item type; added a "View all collections" link to `/collections`. Trimmed `mock-data.ts` to just `currentUser` (still used by `UserNav`). The seed now favorites 2 collections and 3 items and pins 3 items.
 - **Add Pro Badge to Sidebar** — Completed. Added a subtle, uppercase `PRO` shadcn `Badge` (outline, muted, 10px) after the Files and Images type names in the sidebar, hidden when the sidebar is collapsed to icons. `getItemTypesWithCounts` now returns an `isPro` flag, set only for the built-in `file` and `image` system types (`PRO_SYSTEM_TYPES`), so custom types with the same name aren't badged. Display only — no plan gating.
+- **Code Scan Fixes** — Completed. Fixed the findings from the `code-scanner` full codebase scan with no change to behavior or UI. `getDemoUserId` and `getCollectionsByRecentUse` are wrapped in React `cache()` so the dashboard page and sidebar share one query each per request. `getCollectionsByRecentUse` now uses `_count` for item counts and a typed `$queryRaw` that aggregates type usage and recency in the database instead of loading every item row (output verified identical to before). `getPinnedItems` takes a limit (10 on the dashboard). Added `src/lib/demo-user.ts` (`DEMO_USER_EMAIL`, `DEMO_USER_PASSWORD`), shared by the app, seed and `scripts/test-db.ts`. Added a partial unique index on system item type names (`userId IS NULL`) via the `partialIndexes` preview feature and the `item_type_system_name_unique` migration, applied to the development branch.
