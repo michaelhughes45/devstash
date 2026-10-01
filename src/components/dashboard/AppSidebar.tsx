@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Layers } from "lucide-react";
 
+import { auth } from "@/auth";
 import { CollectionsNav } from "@/components/dashboard/CollectionsNav";
 import { TypesNav } from "@/components/dashboard/TypesNav";
 import { UserNav } from "@/components/dashboard/UserNav";
@@ -20,7 +21,7 @@ import { getItemTypesWithCounts } from "@/lib/db/items";
 const SIDEBAR_RECENT_COLLECTIONS_LIMIT = 5;
 
 export async function AppSidebar() {
-  const userId = await getDemoUserId();
+  const [session, userId] = await Promise.all([auth(), getDemoUserId()]);
   const [itemTypes, collections] = userId
     ? await Promise.all([
         getItemTypesWithCounts(userId),
@@ -48,7 +49,7 @@ export async function AppSidebar() {
         <CollectionsNav collections={collections} />
       </SidebarContent>
       <SidebarFooter className="border-t">
-        <UserNav />
+        {session?.user && <UserNav user={session.user} />}
       </SidebarFooter>
     </Sidebar>
   );
