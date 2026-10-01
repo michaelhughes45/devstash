@@ -1,6 +1,5 @@
 import { cache } from "react";
 
-import { DEMO_USER_EMAIL } from "@/lib/demo-user";
 import { prisma } from "@/lib/prisma";
 
 export interface CollectionType {
@@ -28,16 +27,6 @@ export interface CollectionStats {
 
 const DEFAULT_TYPE_ICON = "File";
 const DEFAULT_TYPE_COLOR = "#6b7280";
-
-// Temporary until auth is in place: the dashboard shows the seeded demo user's data.
-// Cached per request, since the dashboard page and sidebar both need it.
-export const getDemoUserId = cache(async (): Promise<string | null> => {
-  const user = await prisma.user.findUnique({
-    where: { email: DEMO_USER_EMAIL },
-    select: { id: true },
-  });
-  return user?.id ?? null;
-});
 
 export interface SidebarCollections {
   favorites: CollectionWithTypes[];

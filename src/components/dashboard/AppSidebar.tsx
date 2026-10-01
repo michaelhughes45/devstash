@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Layers } from "lucide-react";
 
-import { auth } from "@/auth";
 import { CollectionsNav } from "@/components/dashboard/CollectionsNav";
 import { TypesNav } from "@/components/dashboard/TypesNav";
 import { UserNav } from "@/components/dashboard/UserNav";
@@ -15,13 +14,15 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { getDemoUserId, getSidebarCollections } from "@/lib/db/collections";
+import { getSidebarCollections } from "@/lib/db/collections";
 import { getItemTypesWithCounts } from "@/lib/db/items";
+import { getSession } from "@/lib/session";
 
 const SIDEBAR_RECENT_COLLECTIONS_LIMIT = 5;
 
 export async function AppSidebar() {
-  const [session, userId] = await Promise.all([auth(), getDemoUserId()]);
+  const session = await getSession();
+  const userId = session?.user?.id;
   const [itemTypes, collections] = userId
     ? await Promise.all([
         getItemTypesWithCounts(userId),
