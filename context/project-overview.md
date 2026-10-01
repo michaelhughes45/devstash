@@ -536,6 +536,10 @@ AUTH_SECRET=
 AUTH_GITHUB_ID=
 AUTH_GITHUB_SECRET=
 
+# Email (Resend)
+RESEND_API_KEY=
+EMAIL_VERIFICATION_ENABLED=   # verification is on unless set to "false"
+
 # Cloudflare R2
 R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=

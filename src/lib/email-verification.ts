@@ -7,6 +7,11 @@ const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 export type VerifyEmailResult = "verified" | "invalid" | "expired";
 
+// On unless explicitly disabled, so a missing or mistyped value never turns it off
+export function isEmailVerificationEnabled() {
+  return process.env.EMAIL_VERIFICATION_ENABLED !== "false";
+}
+
 // Only the hash is stored, so a leaked database row can't be used as a link
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");

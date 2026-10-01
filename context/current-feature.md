@@ -1,18 +1,29 @@
-# Current Feature
+# Current Feature: Email Verification Toggle
 
-<!-- Feature name and short description -->
+Add a flag that turns email verification for email/password sign-up on or off. With no domain linked to Resend yet, only Resend's own test address can receive mail, so real users can't verify. Turning verification off lets anyone register and sign in straight away.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Add an `EMAIL_VERIFICATION_ENABLED` environment variable, read through one server-only helper (e.g. `isEmailVerificationEnabled()` in `src/lib/email-verification.ts`)
+- Verification is **on by default**; only the exact value `false` turns it off, so a missing or mistyped variable never silently disables it
+- When off, `POST /api/auth/register` creates the account without sending a verification email
+- When off, credentials `authorize` in `src/auth.ts` skips the `emailVerified` check and doesn't send a resend link, so new users can sign in right after registering
+- When off, the sign-in page's `?registered=1` message says the account was created and they can sign in now (no "check your email")
+- When on, behavior is unchanged from the Email Verification feature
+- Add the variable to `.env` (set to `false` for now) and document it in the environment variables section of `context/project-overview.md`
+- Run `npm run build` and verify both modes on the dev server
 
 ## Notes
 
-<!-- Any extra notes -->
+- Env var chosen over a hard-coded constant so it can differ per environment (local vs Vercel) without a code change. It is server-only, so no `NEXT_PUBLIC_` prefix; the register form doesn't need it because the sign-in page (a server component) picks the message.
+- `emailVerified` is left `null` for users who register while verification is off, so the column stays truthful. If verification is turned back on later, those users are asked to verify on their next sign-in and get a fresh link automatically (existing behavior).
+- Env vars are read at request time on the server, but the dev server must be restarted after changing `.env`.
+- The `/api/auth/verify-email` route stays available in both modes so links already sent still work.
+- GitHub OAuth is unaffected.
 
 ## History
 

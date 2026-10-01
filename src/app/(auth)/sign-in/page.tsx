@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { isEmailVerificationEnabled } from "@/lib/email-verification";
 import { safeCallbackUrl } from "@/lib/safe-callback-url";
 
 export const metadata: Metadata = {
@@ -51,7 +52,9 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
       <CardContent className="grid gap-4">
         {registered && (
           <FormMessage variant="success">
-            Account created. Check your email for a link to verify your address.
+            {isEmailVerificationEnabled()
+              ? "Account created. Check your email for a link to verify your address."
+              : "Account created. You can sign in now."}
           </FormMessage>
         )}
         {verified && (
