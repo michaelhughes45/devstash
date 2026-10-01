@@ -1,0 +1,252 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e3]:
+    - generic [ref=e6]:
+      - link [ref=e8] [cursor=pointer]:
+        - /url: /
+        - img "Traversy Media" [ref=e9]
+      - generic [ref=e11]:
+        - link "Courses" [ref=e12] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/store
+        - link "Learning Path" [ref=e13] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/learning-path
+        - link "FAQ" [ref=e14] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/faq-web-development-courses-and-membership-faqs
+        - link "Blog" [ref=e15] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/blog
+      - button "GET FULL ACCESS" [ref=e17] [cursor=pointer]
+      - link "Log In" [ref=e21] [cursor=pointer]:
+        - /url: /login
+  - main [ref=e22]:
+    - generic [ref=e23]:
+      - generic [ref=e29]:
+        - generic [ref=e31]:
+          - generic [ref=e32]: Teaching developers since 2011
+          - heading "Learn web development by building real projects." [level=1] [ref=e33]
+          - paragraph [ref=e34]: Clear, project-based courses for developers who want to stop watching and start shipping. No fluff. No gatekeeping.
+          - paragraph [ref=e35]: Start with one course or unlock the full library for $99/year.
+          - button "BROWSE COURSES" [ref=e36] [cursor=pointer]
+        - generic "Featured Traversy Media courses" [ref=e39]:
+          - link "View Coding With AI" [ref=e41] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225849
+            - img "Coding With AI course" [ref=e42]
+            - generic [ref=e43]:
+              - strong [ref=e44]: Coding With AI
+              - generic [ref=e45]: FEATURED
+          - link "View Modern React" [ref=e46] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225299
+            - img "Modern React From The Beginning course" [ref=e47]
+            - generic [ref=e48]:
+              - strong [ref=e49]: Modern React
+              - generic [ref=e50]: PROJECT COURSE
+          - link "View Modern JavaScript" [ref=e51] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225917
+            - img "Modern JavaScript From The Beginning course" [ref=e52]
+            - generic [ref=e53]:
+              - strong [ref=e54]: Modern JavaScript
+              - generic [ref=e55]: CORE COURSE
+          - generic [ref=e56]: ONE LIBRARY · REAL PROJECTS · LIFETIME SKILLS
+      - generic [ref=e62]:
+        - generic [ref=e64]:
+          - heading "Get the next course drop." [level=3] [ref=e65]
+          - paragraph [ref=e66]: New releases and major updates. No daily noise.
+        - generic [ref=e70]:
+          - list
+          - generic [ref=e71]:
+            - generic [ref=e72]:
+              - textbox "Email" [ref=e73]
+              - list
+            - button "KEEP ME POSTED" [ref=e75] [cursor=pointer]
+      - generic [ref=e84]:
+        - generic [ref=e85]:
+          - generic [ref=e86]: Project-based learning
+          - heading "Pick a project. Learn the stack." [level=2] [ref=e87]
+          - paragraph [ref=e88]: Each course moves from the fundamentals to complete, practical applications you can understand and extend.
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - heading "Latest courses" [level=3] [ref=e91]
+            - generic [ref=e92]: Fresh material for the tools developers use now
+          - generic [ref=e93]:
+            - link "16 Hours Intermediate Coding With AI Planning to Production View course →" [ref=e94] [cursor=pointer]:
+              - /url: https://www.traversymedia.com/coding-with-ai
+              - generic [ref=e95]: 16 Hours
+              - generic [ref=e97]: Intermediate
+              - heading "Coding With AI" [level=4] [ref=e98]
+              - paragraph [ref=e99]: Planning to Production
+              - generic [ref=e100]: View course →
+            - link "25 Hours All Levels Modern React From The Beginning Build modern React applications View course →" [ref=e101] [cursor=pointer]:
+              - /url: https://www.traversymedia.com/modern-react-from-the-beginning
+              - generic [ref=e102]: 25 Hours
+              - generic [ref=e104]: All Levels
+              - heading "Modern React From The Beginning" [level=4] [ref=e105]
+              - paragraph [ref=e106]: Build modern React applications
+              - generic [ref=e107]: View course →
+            - link "22 Hours Intermediate Next.js Ecommerce Full-stack shopping platform View course →" [ref=e108] [cursor=pointer]:
+              - /url: https://www.traversymedia.com/nextjs-ecommerce
+              - generic [ref=e109]: 22 Hours
+              - generic [ref=e111]: Intermediate
+              - heading "Next.js Ecommerce" [level=4] [ref=e112]
+              - paragraph [ref=e113]: Full-stack shopping platform
+              - generic [ref=e114]: View course →
+        - generic [ref=e115]:
+          - generic [ref=e116]:
+            - heading "Popular courses" [level=3] [ref=e117]
+            - generic [ref=e118]: Proven starting points across the full stack
+          - generic [ref=e119]:
+            - link "24 Hours All Levels Modern HTML & CSS 2.0 Responsive sites from the ground up View course →" [ref=e120] [cursor=pointer]:
+              - /url: https://www.traversymedia.com/modern-html-css-from-the-beginning
+              - generic [ref=e121]: 24 Hours
+              - generic [ref=e123]: All Levels
+              - heading "Modern HTML & CSS 2.0" [level=4] [ref=e124]
+              - paragraph [ref=e125]: Responsive sites from the ground up
+              - generic [ref=e126]: View course →
+            - link "37 Hours All Levels Modern JavaScript 2.0 The language, browser APIs, and projects View course →" [ref=e127] [cursor=pointer]:
+              - /url: https://www.traversymedia.com/modern-javascript-2-0
+              - generic [ref=e128]: 37 Hours
+              - generic [ref=e130]: All Levels
+              - heading "Modern JavaScript 2.0" [level=4] [ref=e131]
+              - paragraph [ref=e132]: The language, browser APIs, and projects
+              - generic [ref=e133]: View course →
+            - link "18 Hours All Levels PHP From Scratch Beginner to advanced View course →" [ref=e134] [cursor=pointer]:
+              - /url: https://www.traversymedia.com/php-from-scratch
+              - generic [ref=e135]: 18 Hours
+              - generic [ref=e137]: All Levels
+              - heading "PHP From Scratch" [level=4] [ref=e138]
+              - paragraph [ref=e139]: Beginner to advanced
+              - generic [ref=e140]: View course →
+            - link "13 Hours Beginner Laravel From Scratch Build a production-ready job listing app View course →" [ref=e141] [cursor=pointer]:
+              - /url: https://www.traversymedia.com/laravel-from-scratch
+              - generic [ref=e142]: 13 Hours
+              - generic [ref=e144]: Beginner
+              - heading "Laravel From Scratch" [level=4] [ref=e145]
+              - paragraph [ref=e146]: Build a production-ready job listing app
+              - generic [ref=e147]: View course →
+            - link "20 Hours All Levels 50 Projects in 50 Days HTML, CSS, and JavaScript View course →" [ref=e148] [cursor=pointer]:
+              - /url: https://www.traversymedia.com/50-Projects-In-50-Days
+              - generic [ref=e149]: 20 Hours
+              - generic [ref=e151]: All Levels
+              - heading "50 Projects in 50 Days" [level=4] [ref=e152]
+              - paragraph [ref=e153]: HTML, CSS, and JavaScript
+              - generic [ref=e154]: View course →
+            - link "12.5 Hours Intermediate 70+ JavaScript Challenges Data structures and algorithms View course →" [ref=e155] [cursor=pointer]:
+              - /url: https://www.traversymedia.com/javascript-challeges
+              - generic [ref=e156]: 12.5 Hours
+              - generic [ref=e158]: Intermediate
+              - heading "70+ JavaScript Challenges" [level=4] [ref=e159]
+              - paragraph [ref=e160]: Data structures and algorithms
+              - generic [ref=e161]: View course →
+        - link "Browse all courses" [ref=e162] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/store
+      - generic [ref=e168]:
+        - generic [ref=e170]:
+          - generic [ref=e171]: Choose your access
+          - heading "One library. Two ways in." [level=2] [ref=e172]
+          - paragraph [ref=e173]: Own a focused course for life, or unlock the complete Traversy Media course library with a membership.
+        - generic [ref=e177]:
+          - heading "Single Course" [level=4] [ref=e178]
+          - heading "$25" [level=2] [ref=e180]
+          - paragraph [ref=e181]: One course, yours for life
+          - list [ref=e183]:
+            - listitem [ref=e184]:  Choose any individual course
+            - listitem [ref=e185]:  Lifetime course access
+            - listitem [ref=e186]:  Project files and exercises
+            - listitem [ref=e187]:  Certificate of completion
+            - listitem [ref=e188]:  Discord community access
+            - listitem [ref=e189]:  15-day refund period
+          - button "BROWSE COURSES" [ref=e190] [cursor=pointer]
+        - generic [ref=e194]:
+          - heading "Monthly Access" [level=4] [ref=e195]
+          - heading "$19/month" [level=2] [ref=e197]
+          - paragraph [ref=e198]: The full library while active
+          - list [ref=e200]:
+            - listitem [ref=e201]:  Access every course
+            - listitem [ref=e202]:  400+ hours of content
+            - listitem [ref=e203]:  New and exclusive material
+            - listitem [ref=e204]:  Project files and exercises
+            - listitem [ref=e205]:  Certificates of completion
+            - listitem [ref=e206]:  Discord and priority support
+            - listitem [ref=e207]:  15-day refund period
+          - button "JOIN MONTHLY" [ref=e208] [cursor=pointer]
+        - generic [ref=e212]:
+          - heading "Yearly Access" [level=4] [ref=e213]
+          - heading "$99/year" [level=2] [ref=e215]
+          - paragraph [ref=e216]: Just $8.25 per month
+          - generic [ref=e217]:
+            - generic [ref=e218]: Best Value
+            - list [ref=e219]:
+              - listitem [ref=e220]:  Save 57% compared to monthly
+              - listitem [ref=e221]:  Access every course
+              - listitem [ref=e222]:  400+ hours of content
+              - listitem [ref=e223]:  New and exclusive material
+              - listitem [ref=e224]:  Project files and exercises
+              - listitem [ref=e225]:  Certificates of completion
+              - listitem [ref=e226]:  Discord and priority support
+              - listitem [ref=e227]:  15-day refund period
+          - button "JOIN YEARLY" [ref=e228] [cursor=pointer]
+      - generic [ref=e234]:
+        - generic [ref=e236]:
+          - generic [ref=e237]: A practical way to learn
+          - heading "Courses built for momentum, not passive watching." [level=2] [ref=e238]
+          - paragraph [ref=e239]: Learn the concept, see the decisions, then put it to work in a real project.
+        - generic [ref=e243]:
+          - heading "01 / BUILD" [level=5] [ref=e244]
+          - heading "Build as you learn" [level=3] [ref=e245]
+          - paragraph [ref=e246]: Move from a working feature to a complete application instead of collecting disconnected snippets.
+        - generic [ref=e250]:
+          - heading "02 / UNDERSTAND" [level=5] [ref=e251]
+          - heading "Understand the code" [level=3] [ref=e252]
+          - paragraph [ref=e253]: Get plain-English explanations of the tradeoffs, patterns, and choices that make the project work.
+        - generic [ref=e257]:
+          - heading "03 / KEEP GOING" [level=5] [ref=e258]
+          - heading "Learn your way" [level=3] [ref=e259]
+          - paragraph [ref=e260]: Buy one course for lifetime access or use a membership to explore the complete library.
+      - generic [ref=e268]:
+        - generic [ref=e269]: Meet your instructor
+        - heading "Learn from someone who remembers what starting feels like." [level=2] [ref=e270]
+      - generic [ref=e276]:
+        - img "Brad Traversy, founder and instructor at Traversy Media" [ref=e280]
+        - generic [ref=e282]:
+          - heading "BRAD TRAVERSY" [level=5] [ref=e283]
+          - heading "Teaching developers since 2011." [level=3] [ref=e284]
+          - paragraph [ref=e285]: I started coding in 2007 at age 26. I was not a prodigy or a straight-A computer science student, and I remember how confusing the early steps can feel.
+          - paragraph [ref=e286]: "That perspective shapes every course: plain-language explanations, practical decisions, and projects that turn concepts into working software."
+          - button "MORE ABOUT BRAD" [ref=e287] [cursor=pointer]
+      - generic [ref=e293]:
+        - generic [ref=e295]:
+          - generic [ref=e296]: Student results
+          - heading "Real feedback from developers who kept building." [level=2] [ref=e297]
+          - paragraph [ref=e298]: The best proof is what students were able to understand, create, and change in their careers.
+        - img "YouTube comment from @rowancodes saying Traversy Media tutorials helped start a software engineering career" [ref=e302]
+        - img "YouTube comment from @martins-ecke praising Traversy Media courses for helping developers build professional skills" [ref=e306]
+        - img "YouTube comment from @krisssachintha thanking Traversy Media tutorials for helping advance a software engineering career" [ref=e310]
+        - img "YouTube comment from @olusanyaolamide9764 saying Traversy Media helped them progress to a mid-senior engineering role" [ref=e314]
+        - img "YouTube comment from @operatorpukg praising the clear explanations and course community" [ref=e318]
+        - img "YouTube comment from @austinpatrick1871 saying Traversy Media courses helped them break into software engineering" [ref=e322]
+      - generic [ref=e328]:
+        - img "Traversy Media YouTube channel with free web development tutorials" [ref=e332]
+        - generic [ref=e334]:
+          - generic [ref=e335]: Start free
+          - heading "Explore a topic before you go deeper." [level=2] [ref=e336]
+          - paragraph [ref=e337]: Join more than 2 million developers using Traversy Media tutorials and crash courses. Start on YouTube, then move into a structured project course when you are ready.
+          - button "WATCH FREE TUTORIALS" [ref=e338] [cursor=pointer]
+  - contentinfo [ref=e340]:
+    - generic [ref=e342]:
+      - link [ref=e344] [cursor=pointer]:
+        - /url: /
+        - img "Footer Logo" [ref=e345]
+      - generic [ref=e349]:
+        - link "About" [ref=e350] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/about
+        - link "Contact" [ref=e351] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/contact
+      - generic [ref=e352]: © 2026 Traversy Media. All Rights Reserved
+      - generic [ref=e355]:
+        - link "𝕏" [ref=e356] [cursor=pointer]:
+          - /url: https://twitter.com/traversymedia
+        - link "" [ref=e358] [cursor=pointer]:
+          - /url: https://www.instagram.com/traversymedia/
+        - link "" [ref=e360] [cursor=pointer]:
+          - /url: https://www.youtube.com/channel/UC29ju8bIPH5as8OGnQzwJyA
+        - link "" [ref=e362] [cursor=pointer]:
+          - /url: https://github.com/bradtraversy
+        - link "" [ref=e364] [cursor=pointer]:
+          - /url: https://www.linkedin.com/in/bradtraversy

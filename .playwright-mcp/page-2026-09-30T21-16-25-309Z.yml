@@ -1,0 +1,303 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e3]:
+    - generic [ref=f1e6]:
+      - link [ref=f1e8] [cursor=pointer]:
+        - /url: /
+        - img "Traversy Media" [ref=f1e9]
+      - generic [ref=f1e11]:
+        - link "Courses" [ref=f1e12] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/store
+        - link "Learning Path" [ref=f1e13] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/learning-path
+        - link "FAQ" [ref=f1e14] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/faq-web-development-courses-and-membership-faqs
+        - link "Blog" [ref=f1e15] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/blog
+      - button "GET FULL ACCESS" [ref=f1e17] [cursor=pointer]
+      - link "Log In" [ref=f1e21] [cursor=pointer]:
+        - /url: /login
+  - main [ref=f1e22]:
+    - generic [ref=f1e23]:
+      - generic [ref=f1e29]:
+        - generic [ref=f1e31]:
+          - paragraph [ref=f1e32]:
+            - strong [ref=f1e33]: TRAVERSY MEDIA COURSE LIBRARY
+          - heading "Build Skills. Ship Projects." [level=1] [ref=f1e34]
+          - paragraph [ref=f1e35]: Practical, project-based courses that are easy to understand and straight to the point.
+          - paragraph [ref=f1e36]:
+            - generic [ref=f1e37]:
+              - strong [ref=f1e38]: "18"
+              - text: COURSES |
+              - strong [ref=f1e39]: 400+
+              - text: HOURS |
+              - strong [ref=f1e40]: 1M+
+              - text: STUDENTS
+          - button "Get Full Access" [ref=f1e41] [cursor=pointer]
+        - paragraph [ref=f1e44]: Or buy any individual course for $25.
+      - generic [ref=f1e50]:
+        - heading "Featured Courses" [level=2] [ref=f1e53]
+        - generic [ref=f1e56]:
+          - link [ref=f1e57] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225849
+            - img "Coding With AI course cover" [ref=f1e58]
+          - generic [ref=f1e59]:
+            - heading [level=4] [ref=f1e60]:
+              - strong [ref=f1e61]: Coding With AI
+            - paragraph [ref=f1e62]: Planning To Production
+            - separator [ref=f1e63]
+            - heading [level=5] [ref=f1e64]:
+              - strong [ref=f1e65]: $25
+          - button "View Course" [ref=f1e66] [cursor=pointer]
+        - generic [ref=f1e69]:
+          - link [ref=f1e70] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225299
+            - img "Modern React From The Beginning 2.0 course cover" [ref=f1e71]
+          - generic [ref=f1e72]:
+            - heading [level=4] [ref=f1e73]:
+              - strong [ref=f1e74]: Modern React From The Beginning 2.0
+            - separator [ref=f1e75]
+            - heading [level=5] [ref=f1e76]:
+              - strong [ref=f1e77]: $25
+          - button "View Course" [ref=f1e78] [cursor=pointer]
+        - generic [ref=f1e81]:
+          - link [ref=f1e82] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225917
+            - img "Modern JavaScript From The Beginning 2.0 course cover" [ref=f1e83]
+          - generic [ref=f1e84]:
+            - heading [level=4] [ref=f1e85]:
+              - strong [ref=f1e86]: Modern JS From The Beginning 2.0
+            - separator [ref=f1e87]
+            - heading [level=5] [ref=f1e88]:
+              - strong [ref=f1e89]: $25
+          - button "View Course" [ref=f1e90] [cursor=pointer]
+      - generic [ref=f1e96]:
+        - heading "Available Courses" [level=2] [ref=f1e99]
+        - generic [ref=f1e102]:
+          - link [ref=f1e103] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225937
+            - img "Modern HTML & CSS From The Beginning course cover" [ref=f1e104]
+          - generic [ref=f1e105]:
+            - heading [level=4] [ref=f1e106]:
+              - strong [ref=f1e107]: Modern HTML & CSS From The Beginning 2.0
+            - separator [ref=f1e108]
+            - heading [level=5] [ref=f1e109]:
+              - strong [ref=f1e110]: $25
+          - button "View Course" [ref=f1e111] [cursor=pointer]
+        - generic [ref=f1e114]:
+          - link [ref=f1e115] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225971
+            - img "Next.js Ecommerce Build a Shopping Platform course cover" [ref=f1e116]
+          - generic [ref=f1e117]:
+            - heading [level=4] [ref=f1e118]:
+              - strong [ref=f1e119]: Next.js Ecommerce Build a Shopping Platform
+            - separator [ref=f1e120]
+            - heading [level=5] [ref=f1e121]:
+              - strong [ref=f1e122]: $25
+          - button "View Course" [ref=f1e123] [cursor=pointer]
+        - generic [ref=f1e126]:
+          - link [ref=f1e127] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225973
+            - img "Laravel From Scratch Job Listing Website course cover" [ref=f1e128]
+          - generic [ref=f1e129]:
+            - heading [level=4] [ref=f1e130]:
+              - strong [ref=f1e131]: Laravel From Scratch
+              - text: Build A Job Listing Website
+            - separator [ref=f1e132]
+            - heading [level=5] [ref=f1e133]:
+              - strong [ref=f1e134]: $25
+          - button "View Course" [ref=f1e135] [cursor=pointer]
+        - generic [ref=f1e138]:
+          - link [ref=f1e139] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225970
+            - img "70+ JS Challenges Data Structures & Algorithms course cover" [ref=f1e140]
+          - generic [ref=f1e141]:
+            - heading [level=4] [ref=f1e142]:
+              - strong [ref=f1e143]: "70+ JS Challenges: Data Structures & Algorithms"
+            - separator [ref=f1e144]
+            - heading [level=5] [ref=f1e145]:
+              - strong [ref=f1e146]: $25
+          - button "View Course" [ref=f1e147] [cursor=pointer]
+        - generic [ref=f1e150]:
+          - link [ref=f1e151] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225964
+            - img "PHP From Scratch Beginner To Advanced course cover" [ref=f1e152]
+          - generic [ref=f1e153]:
+            - heading [level=4] [ref=f1e154]:
+              - strong [ref=f1e155]: PHP From Scratch | Beginner To Advanced
+            - separator [ref=f1e156]
+            - heading [level=5] [ref=f1e157]:
+              - strong [ref=f1e158]: $25
+          - button "View Course" [ref=f1e159] [cursor=pointer]
+        - generic [ref=f1e162]:
+          - link [ref=f1e163] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225961
+            - img "Bootstrap 5 From Scratch course cover" [ref=f1e164]
+          - generic [ref=f1e165]:
+            - heading [level=4] [ref=f1e166]:
+              - strong [ref=f1e167]: Bootstrap 5 From Scratch Course
+            - separator [ref=f1e168]
+            - heading [level=5] [ref=f1e169]:
+              - strong [ref=f1e170]: $25
+          - button "View Course" [ref=f1e171] [cursor=pointer]
+        - generic [ref=f1e174]:
+          - link [ref=f1e175] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225960
+            - img "Tailwind CSS From Scratch course cover" [ref=f1e176]
+          - generic [ref=f1e177]:
+            - heading [level=4] [ref=f1e178]:
+              - strong [ref=f1e179]: Tailwind CSS From Scratch
+            - separator [ref=f1e180]
+            - heading [level=5] [ref=f1e181]:
+              - strong [ref=f1e182]: $25
+          - button "View Course" [ref=f1e183] [cursor=pointer]
+        - generic [ref=f1e186]:
+          - link [ref=f1e187] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225969
+            - img "MERN Stack From Scratch eCommerce course cover" [ref=f1e188]
+          - generic [ref=f1e189]:
+            - heading [level=4] [ref=f1e190]:
+              - strong [ref=f1e191]: MERN Stack From Scratch - eCommerce
+            - separator [ref=f1e192]
+            - heading [level=5] [ref=f1e193]:
+              - strong [ref=f1e194]: $25
+          - button "View Course" [ref=f1e195] [cursor=pointer]
+        - generic [ref=f1e198]:
+          - link [ref=f1e199] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225959
+            - img "50 Projects in 50 Days course cover" [ref=f1e200]
+          - generic [ref=f1e201]:
+            - heading [level=4] [ref=f1e202]:
+              - strong [ref=f1e203]: 50 Projects In 50 Days - HTML, CSS & JavaScript
+            - separator [ref=f1e204]
+            - heading [level=5] [ref=f1e205]:
+              - strong [ref=f1e206]: $25
+          - button "View Course" [ref=f1e207] [cursor=pointer]
+        - generic [ref=f1e210]:
+          - link [ref=f1e211] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225963
+            - img "20 Web Projects With Vanilla JavaScript course cover" [ref=f1e212]
+          - generic [ref=f1e213]:
+            - heading [level=4] [ref=f1e214]:
+              - strong [ref=f1e215]: 20 Web Projects With Vanilla JavaScript
+            - separator [ref=f1e216]
+            - heading [level=5] [ref=f1e217]:
+              - strong [ref=f1e218]: $25
+          - button "View Course" [ref=f1e219] [cursor=pointer]
+        - generic [ref=f1e222]:
+          - link [ref=f1e223] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225967
+            - img "Node.js API Masterclass With Express & MongoDB course cover" [ref=f1e224]
+          - generic [ref=f1e225]:
+            - heading [level=4] [ref=f1e226]:
+              - strong [ref=f1e227]: Node.js API Masterclass With Express & MongoDB
+            - separator [ref=f1e228]
+            - heading [level=5] [ref=f1e229]:
+              - strong [ref=f1e230]: $25
+          - button "View Course" [ref=f1e231] [cursor=pointer]
+        - generic [ref=f1e234]:
+          - link [ref=f1e235] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225972
+            - img "Next.js From Scratch course cover" [ref=f1e236]
+          - generic [ref=f1e237]:
+            - heading [level=4] [ref=f1e238]:
+              - strong [ref=f1e239]: Next.js From Scratch
+            - separator [ref=f1e240]
+            - heading [level=5] [ref=f1e241]:
+              - strong [ref=f1e242]: $25
+          - button "View Course" [ref=f1e243] [cursor=pointer]
+        - generic [ref=f1e246]:
+          - link [ref=f1e247] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225962
+            - img "Python Django Dev To Deployment course cover" [ref=f1e248]
+          - generic [ref=f1e249]:
+            - heading [level=4] [ref=f1e250]:
+              - strong [ref=f1e251]: Python Django Dev To Deployment
+            - separator [ref=f1e252]
+            - heading [level=5] [ref=f1e253]:
+              - strong [ref=f1e254]: $25
+          - button "View Course" [ref=f1e255] [cursor=pointer]
+        - generic [ref=f1e258]:
+          - link [ref=f1e259] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225968
+            - img "Object Oriented PHP & MVC course cover" [ref=f1e260]
+          - generic [ref=f1e261]:
+            - heading [level=4] [ref=f1e262]:
+              - strong [ref=f1e263]: Object Oriented PHP & MVC Course
+            - separator [ref=f1e264]
+            - heading [level=5] [ref=f1e265]:
+              - strong [ref=f1e266]: $25
+          - button "View Course" [ref=f1e267] [cursor=pointer]
+        - generic [ref=f1e270]:
+          - link [ref=f1e271] [cursor=pointer]:
+            - /url: /resource_redirect/landing_pages/2152225966
+            - img "Astro Quick Start course cover" [ref=f1e272]
+          - generic [ref=f1e273]:
+            - heading [level=4] [ref=f1e274]:
+              - strong [ref=f1e275]: Astro Quick Start (Members Only)
+            - separator [ref=f1e276]
+            - heading [level=5] [ref=f1e277]:
+              - strong [ref=f1e278]: Included With Membership
+          - button "View Course" [ref=f1e279] [cursor=pointer]
+        - generic [ref=f1e282]:
+          - img "Many More Courses Coming Soon graphic" [ref=f1e283]
+          - heading [level=4] [ref=f1e285]:
+            - strong [ref=f1e286]: Many More Courses To Be Added
+      - generic [ref=f1e292]:
+        - generic [ref=f1e294]:
+          - heading "All Access Membership" [level=2] [ref=f1e295]
+          - paragraph [ref=f1e296]: Become a member and get access to all courses
+        - generic [ref=f1e300]:
+          - heading "Monthly Membership" [level=4] [ref=f1e301]
+          - heading "$19/month" [level=2] [ref=f1e303]
+          - paragraph [ref=f1e304]: Become a Pro Member
+          - generic [ref=f1e305]:
+            - list [ref=f1e306]:
+              - listitem [ref=f1e307]:  Access To All Courses
+              - listitem [ref=f1e308]:  400+ Hours of Content
+              - listitem [ref=f1e309]:  Full HD Video & HQ Audio
+              - listitem [ref=f1e310]:  Extra course attachments & exercises
+              - listitem [ref=f1e311]:  English Captions
+              - listitem [ref=f1e312]:  Certificate of Completion
+              - listitem [ref=f1e313]:  Access To Discord Community
+              - listitem [ref=f1e314]:  Priority Support
+              - listitem [ref=f1e315]: " Risk-free: 15 Days Refund Period"
+            - paragraph [ref=f1e316]
+          - button "BUY NOW" [ref=f1e317] [cursor=pointer]
+        - generic [ref=f1e321]:
+          - heading "Yearly Membership" [level=4] [ref=f1e322]
+          - heading "$99/year" [level=2] [ref=f1e324]
+          - paragraph [ref=f1e325]: Become a Yearly Member
+          - list [ref=f1e327]:
+            - listitem [ref=f1e328]:  Save 57% Compared to Monthly
+            - listitem [ref=f1e329]:  400+ Hours of Content
+            - listitem [ref=f1e330]:  Exclusive Content
+            - listitem [ref=f1e331]:  Full HD Video & HQ Audio
+            - listitem [ref=f1e332]:  Extra course attachments & exercises
+            - listitem [ref=f1e333]:  English Captions
+            - listitem [ref=f1e334]:  Certificate of Completion
+            - listitem [ref=f1e335]:  Access To Discord Community
+            - listitem [ref=f1e336]:  Priority Support
+            - listitem [ref=f1e337]: " Risk-free: 15 Days Refund Period"
+          - button "BUY NOW" [ref=f1e338] [cursor=pointer]
+  - contentinfo [ref=f1e344]:
+    - generic [ref=f1e346]:
+      - link [ref=f1e348] [cursor=pointer]:
+        - /url: /
+        - img "Footer Logo" [ref=f1e349]
+      - generic [ref=f1e353]:
+        - link "About" [ref=f1e354] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/about
+        - link "Contact" [ref=f1e355] [cursor=pointer]:
+          - /url: https://www.traversymedia.com/contact
+      - generic [ref=f1e356]: © 2026 Traversy Media. All Rights Reserved
+      - generic [ref=f1e359]:
+        - link "𝕏" [ref=f1e360] [cursor=pointer]:
+          - /url: https://twitter.com/traversymedia
+        - link "" [ref=f1e362] [cursor=pointer]:
+          - /url: https://www.instagram.com/traversymedia/
+        - link "" [ref=f1e364] [cursor=pointer]:
+          - /url: https://www.youtube.com/channel/UC29ju8bIPH5as8OGnQzwJyA
+        - link "" [ref=f1e366] [cursor=pointer]:
+          - /url: https://github.com/bradtraversy
+        - link "" [ref=f1e368] [cursor=pointer]:
+          - /url: https://www.linkedin.com/in/bradtraversy
