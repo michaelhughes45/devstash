@@ -28,10 +28,19 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 
 const DEFAULT_ERROR_MESSAGE = "Unable to sign in. Please try again.";
 
+// Results from /api/auth/verify-email
+const VERIFY_ERROR_MESSAGES: Record<string, string> = {
+  invalid: "This verification link is invalid or has already been used.",
+  expired: "This verification link has expired. Sign in to get a new one.",
+};
+
+const DEFAULT_VERIFY_ERROR_MESSAGE = "Unable to verify your email. Please try again.";
+
 export default async function SignInPage({ searchParams }: PageProps<"/sign-in">) {
-  const { callbackUrl, error, registered } = await searchParams;
+  const { callbackUrl, error, registered, verified, verifyError } = await searchParams;
   const redirectTo = safeCallbackUrl(callbackUrl);
   const errorCode = typeof error === "string" ? error : undefined;
+  const verifyErrorCode = typeof verifyError === "string" ? verifyError : undefined;
 
   return (
     <Card>
@@ -42,7 +51,17 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
       <CardContent className="grid gap-4">
         {registered && (
           <FormMessage variant="success">
-            Account created. Sign in to continue.
+            Account created. Check your email for a link to verify your address.
+          </FormMessage>
+        )}
+        {verified && (
+          <FormMessage variant="success">
+            Email verified. Sign in to continue.
+          </FormMessage>
+        )}
+        {verifyErrorCode && (
+          <FormMessage variant="error">
+            {VERIFY_ERROR_MESSAGES[verifyErrorCode] ?? DEFAULT_VERIFY_ERROR_MESSAGE}
           </FormMessage>
         )}
         {errorCode && (

@@ -1,8 +1,9 @@
 "use server";
 
-import { AuthError } from "next-auth";
+import { AuthError, CredentialsSignin } from "next-auth";
 import { z } from "zod";
 import { signIn, signOut } from "@/auth";
+import { EMAIL_NOT_VERIFIED_CODE } from "@/lib/auth-errors";
 import { safeCallbackUrl } from "@/lib/safe-callback-url";
 import { signInSchema } from "@/lib/validations/auth";
 
@@ -38,14 +39,21 @@ export async function signInWithCredentials(
     });
     return { success: true };
   } catch (error) {
-    if (error instanceof AuthError) {
+    if (error instanceof CredentialsSignin) {
       return {
         success: false,
         email,
         error:
-          error.type === "CredentialsSignin"
-            ? "Invalid email or password"
-            : "Something went wrong. Please try again.",
+          error.code === EMAIL_NOT_VERIFIED_CODE
+            ? "Please verify your email before signing in. We've sent you a new verification link."
+            : "Invalid email or password",
+      };
+    }
+    if (error instanceof AuthError) {
+      return {
+        success: false,
+        email,
+        error: "Something went wrong. Please try again.",
       };
     }
     throw error;

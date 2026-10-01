@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
+import { sendVerificationEmail } from "@/lib/email-verification";
 import { registerSchema } from "@/lib/validations/auth";
 
 const BCRYPT_ROUNDS = 12;
@@ -62,6 +63,13 @@ export async function POST(request: Request) {
       },
       select: { id: true, name: true, email: true },
     });
+
+    // The account exists either way; a failed send is logged rather than undoing it
+    try {
+      await sendVerificationEmail(user.email, new URL(request.url).origin);
+    } catch (error) {
+      console.error("Failed to send verification email", error);
+    }
 
     return respond({ success: true, data: user }, 201);
   } catch (error) {
