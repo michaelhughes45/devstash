@@ -1,29 +1,18 @@
-# Current Feature: Email Verification Toggle
+# Current Feature
 
-Add a flag that turns email verification for email/password sign-up on or off. With no domain linked to Resend yet, only Resend's own test address can receive mail, so real users can't verify. Turning verification off lets anyone register and sign in straight away.
+<!-- Feature name and short description -->
 
 ## Status
 
-In Progress
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- Add an `EMAIL_VERIFICATION_ENABLED` environment variable, read through one server-only helper (e.g. `isEmailVerificationEnabled()` in `src/lib/email-verification.ts`)
-- Verification is **on by default**; only the exact value `false` turns it off, so a missing or mistyped variable never silently disables it
-- When off, `POST /api/auth/register` creates the account without sending a verification email
-- When off, credentials `authorize` in `src/auth.ts` skips the `emailVerified` check and doesn't send a resend link, so new users can sign in right after registering
-- When off, the sign-in page's `?registered=1` message says the account was created and they can sign in now (no "check your email")
-- When on, behavior is unchanged from the Email Verification feature
-- Add the variable to `.env` (set to `false` for now) and document it in the environment variables section of `context/project-overview.md`
-- Run `npm run build` and verify both modes on the dev server
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Env var chosen over a hard-coded constant so it can differ per environment (local vs Vercel) without a code change. It is server-only, so no `NEXT_PUBLIC_` prefix; the register form doesn't need it because the sign-in page (a server component) picks the message.
-- `emailVerified` is left `null` for users who register while verification is off, so the column stays truthful. If verification is turned back on later, those users are asked to verify on their next sign-in and get a fresh link automatically (existing behavior).
-- Env vars are read at request time on the server, but the dev server must be restarted after changing `.env`.
-- The `/api/auth/verify-email` route stays available in both modes so links already sent still work.
-- GitHub OAuth is unaffected.
+<!-- Any extra notes -->
 
 ## History
 
@@ -44,3 +33,4 @@ In Progress
 - **Auth Phase 2 — Credentials (Email/Password) Provider** — Completed. Installed `zod` (v4) and added shared sign-in and registration schemas in `src/lib/validations/auth.ts`. `src/auth.config.ts` registers a Credentials provider with an `authorize: () => null` placeholder (edge-safe); `src/auth.ts` swaps it, by provider id, for the real `authorize`, which validates input, looks the user up by lowercased email and checks the password with bcrypt (OAuth-only users without a password are rejected). Added `POST /api/auth/register`: validates name, email and matching passwords (8–72 characters), returns 409 for an existing email (including a concurrent-insert race via `P2002`), hashes with bcrypt (12 rounds) and responds with `{ success, data, error }`. Verified with curl: registration, duplicate/mismatch/bad-JSON errors, credentials sign-in redirecting to `/dashboard`, and wrong-password rejection. Known gap: emails with surrounding whitespace fail validation because `z.email()` runs before `.trim()`.
 - **Auth Phase 3 — Sign In, Register & Sign Out UI** — Completed. Replaced NextAuth's default pages with a custom `(auth)` route group (centered layout with logo; signed-in users are redirected to `/dashboard`). `/sign-in` has a "Sign in with GitHub" button, an email/password form using `useActionState`, a link to `/register`, field and credential errors, a success message after registering (`?registered=1`) and friendly messages for NextAuth error codes. `/register` validates client-side with the shared `registerSchema`, posts to `/api/auth/register`, shows server errors (e.g. email taken) and redirects to `/sign-in`. Sign-in/sign-out are server actions in `src/actions/auth.ts`. `auth.config.ts` sets `pages.signIn`/`pages.error` to `/sign-in`; the proxy redirects there with a relative `callbackUrl`, checked by `safeCallbackUrl` (same-origin paths only). Added a reusable `UserAvatar` (GitHub image or initials from first and last name, falling back to the email's first letter) and made the sidebar `UserNav` a session-driven dropdown with Profile (`/profile`, page not built yet) and Sign out (redirects to `/sign-in`). Added shadcn `dropdown-menu` and `label`. Verified in the browser: redirect to `/sign-in`, wrong-password error, demo sign-in, initials avatar, menu, sign out, register validation and success, and GitHub OAuth start (full GitHub round-trip not tested). `mock-data.ts` is now unused, and the dashboard still reads the demo user's data.
 - **Email Verification on Register** — Completed. Installed `resend` and added a shared client in `src/lib/resend.ts` (from `onboarding@resend.dev`). `src/lib/email-verification.ts` creates a random token, stores only its SHA-256 hash in `VerificationToken` (24-hour expiry, replacing any earlier token for that email) and emails a link to the new `GET /api/auth/verify-email` route, built from the request origin. Verifying is single-use: the token is deleted before `emailVerified` is set, along with any other tokens for that email, and the route redirects to `/sign-in` with a verified, invalid or expired message. Registration still succeeds if the email fails to send (the error is logged), and the sign-in page now says to check your email. Credentials `authorize` throws a `CredentialsSignin` subclass with the `email_not_verified` code (checked after the password, so a wrong password stays generic), the sign-in action shows a friendly message, and a fresh link is sent so expired links don't leave users stuck. Also fixed the dashboard page and sidebar to show the signed-in user's data instead of the demo user's (`src/lib/session.ts`, request-cached `getSession`/`getCurrentUserId`; removed `getDemoUserId`), and added `scripts/clean-users.ts` (`npm run db:clean-users`, dry run unless `--confirm`) to delete every user except the demo user. Verified on the dev server: registration with Resend's `delivered@resend.dev` test address, unverified sign-in message, valid/expired/reused/invalid links, sign-in after verifying, and empty versus demo dashboards. Known gap: a deleted user's JWT session stays valid until they sign out.
+- **Email Verification Toggle** — Completed. Added an `EMAIL_VERIFICATION_ENABLED` environment variable, read by `isEmailVerificationEnabled()` in `src/lib/email-verification.ts`; verification stays on unless the value is exactly `false`, so a missing or mistyped variable never disables it. When off, `POST /api/auth/register` skips the verification email, credentials `authorize` skips the `emailVerified` check (and the resend), and the sign-in page's `?registered=1` message says the account was created and they can sign in now. `emailVerified` stays `null` for users who register while it's off, so they're asked to verify (with a fresh link) if it's turned back on. Set to `false` in `.env` for now (no Resend domain yet) and documented, along with `RESEND_API_KEY`, in `context/project-overview.md`. Verified against the production build: with it off, a new user registered and signed in straight to the dashboard; with it on, the same user was blocked with the verify-email message.
