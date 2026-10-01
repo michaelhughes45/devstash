@@ -4,7 +4,10 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { EMAIL_NOT_VERIFIED_CODE } from "@/lib/auth-errors";
-import { sendVerificationEmail } from "@/lib/email-verification";
+import {
+  isEmailVerificationEnabled,
+  sendVerificationEmail,
+} from "@/lib/email-verification";
 import { signInSchema } from "@/lib/validations/auth";
 import authConfig from "@/auth.config";
 
@@ -30,7 +33,7 @@ const credentials = Credentials({
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) return null;
     // Checked after the password so unverified status isn't revealed to guessers
-    if (!user.emailVerified) {
+    if (isEmailVerificationEnabled() && !user.emailVerified) {
       // Send a fresh link so users with an expired or lost email aren't stuck
       try {
         await sendVerificationEmail(user.email, new URL(request.url).origin);
