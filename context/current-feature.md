@@ -1,18 +1,29 @@
-# Current Feature
+# Current Feature: Profile Page
 
-<!-- Feature name and short description -->
+Create the profile page with user info, usage stats, change password and delete account.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Add a `/profile` route, protected so signed-out users are redirected to `/sign-in`
+- Show user info: email, name, avatar (GitHub image or initials) and account creation date
+- Show usage stats: total items, total collections and an item count for each type (snippets, prompts, notes, commands, links, files, images)
+- Add a change password action, shown only to users who have a password (email/password sign-up, not GitHub OAuth-only)
+- Add a delete account action behind a confirmation dialog
+- Follow existing codebase patterns for data fetching and components
 
 ## Notes
 
-<!-- Any extra notes -->
+- Reuse the existing `UserAvatar` component (GitHub image, or initials from name, falling back to the email's first letter)
+- The sidebar `UserNav` dropdown already links to `/profile`; `src/proxy.ts` currently only protects `/dashboard/:path*`
+- Use the request-cached `getSession`/`getCurrentUserId` from `src/lib/session.ts` and existing db helpers (e.g. `getItemTypesWithCounts`, `getCollectionStats`, `getItemStats`) where they fit
+- "Has a password" (not the account provider) decides whether change password is shown; reuse the shared password rules and `hashPassword` from `src/lib/password.ts`
+- Change password should require the current password
+- Delete account relies on the existing cascade deletes; sign the user out afterwards
+- Server Actions return `{ success, data, error }` and validate input with Zod
 
 ## History
 
