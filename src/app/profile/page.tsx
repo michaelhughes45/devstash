@@ -129,7 +129,7 @@ export default async function ProfilePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DeleteAccountDialog />
+          <DeleteAccountDialog hasPassword={profile.hasPassword} />
         </CardContent>
       </Card>
     </div>
