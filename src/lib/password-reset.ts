@@ -61,9 +61,13 @@ export async function resetPassword(
   if (result.status !== "valid") return result.status;
 
   const email = result.identifier.slice(PASSWORD_RESET_PREFIX.length);
-  // Following the emailed link proves the user owns the inbox, so it also verifies it
+  // Following the emailed link proves the user owns the inbox, so it also verifies it.
+  // Bumping sessionVersion signs out every existing session
   const [{ count: updated }] = await prisma.$transaction([
-    prisma.user.updateMany({ where: { email }, data: { password: passwordHash } }),
+    prisma.user.updateMany({
+      where: { email },
+      data: { password: passwordHash, sessionVersion: { increment: 1 } },
+    }),
     prisma.user.updateMany({
       where: { email, emailVerified: null },
       data: { emailVerified: new Date() },

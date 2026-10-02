@@ -21,9 +21,13 @@ export async function changeUserPassword(
   if (!isValid) return "wrong-password";
 
   const passwordHash = await hashPassword(newPassword);
-  // An outstanding reset link would otherwise still override the new password
+  // An outstanding reset link would otherwise still override the new password.
+  // Bumping sessionVersion signs out every session, including this one
   await prisma.$transaction([
-    prisma.user.update({ where: { id: userId }, data: { password: passwordHash } }),
+    prisma.user.update({
+      where: { id: userId },
+      data: { password: passwordHash, sessionVersion: { increment: 1 } },
+    }),
     prisma.verificationToken.deleteMany({
       where: { identifier: `${PASSWORD_RESET_PREFIX}${user.email}` },
     }),
