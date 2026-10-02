@@ -1,29 +1,18 @@
-# Current Feature: Profile Page
+# Current Feature
 
-Create the profile page with user info, usage stats, change password and delete account.
+<!-- Feature name and short description -->
 
 ## Status
 
-In Progress
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- Add a `/profile` route, protected so signed-out users are redirected to `/sign-in`
-- Show user info: email, name, avatar (GitHub image or initials) and account creation date
-- Show usage stats: total items, total collections and an item count for each type (snippets, prompts, notes, commands, links, files, images)
-- Add a change password action, shown only to users who have a password (email/password sign-up, not GitHub OAuth-only)
-- Add a delete account action behind a confirmation dialog
-- Follow existing codebase patterns for data fetching and components
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Reuse the existing `UserAvatar` component (GitHub image, or initials from name, falling back to the email's first letter)
-- The sidebar `UserNav` dropdown already links to `/profile`; `src/proxy.ts` currently only protects `/dashboard/:path*`
-- Use the request-cached `getSession`/`getCurrentUserId` from `src/lib/session.ts` and existing db helpers (e.g. `getItemTypesWithCounts`, `getCollectionStats`, `getItemStats`) where they fit
-- "Has a password" (not the account provider) decides whether change password is shown; reuse the shared password rules and `hashPassword` from `src/lib/password.ts`
-- Change password should require the current password
-- Delete account relies on the existing cascade deletes; sign the user out afterwards
-- Server Actions return `{ success, data, error }` and validate input with Zod
+<!-- Any extra notes -->
 
 ## History
 
@@ -46,3 +35,4 @@ In Progress
 - **Email Verification on Register** — Completed. Installed `resend` and added a shared client in `src/lib/resend.ts` (from `onboarding@resend.dev`). `src/lib/email-verification.ts` creates a random token, stores only its SHA-256 hash in `VerificationToken` (24-hour expiry, replacing any earlier token for that email) and emails a link to the new `GET /api/auth/verify-email` route, built from the request origin. Verifying is single-use: the token is deleted before `emailVerified` is set, along with any other tokens for that email, and the route redirects to `/sign-in` with a verified, invalid or expired message. Registration still succeeds if the email fails to send (the error is logged), and the sign-in page now says to check your email. Credentials `authorize` throws a `CredentialsSignin` subclass with the `email_not_verified` code (checked after the password, so a wrong password stays generic), the sign-in action shows a friendly message, and a fresh link is sent so expired links don't leave users stuck. Also fixed the dashboard page and sidebar to show the signed-in user's data instead of the demo user's (`src/lib/session.ts`, request-cached `getSession`/`getCurrentUserId`; removed `getDemoUserId`), and added `scripts/clean-users.ts` (`npm run db:clean-users`, dry run unless `--confirm`) to delete every user except the demo user. Verified on the dev server: registration with Resend's `delivered@resend.dev` test address, unverified sign-in message, valid/expired/reused/invalid links, sign-in after verifying, and empty versus demo dashboards. Known gap: a deleted user's JWT session stays valid until they sign out.
 - **Email Verification Toggle** — Completed. Added an `EMAIL_VERIFICATION_ENABLED` environment variable, read by `isEmailVerificationEnabled()` in `src/lib/email-verification.ts`; verification stays on unless the value is exactly `false`, so a missing or mistyped variable never disables it. When off, `POST /api/auth/register` skips the verification email, credentials `authorize` skips the `emailVerified` check (and the resend), and the sign-in page's `?registered=1` message says the account was created and they can sign in now. `emailVerified` stays `null` for users who register while it's off, so they're asked to verify (with a fresh link) if it's turned back on. Set to `false` in `.env` for now (no Resend domain yet) and documented, along with `RESEND_API_KEY`, in `context/project-overview.md`. Verified against the production build: with it off, a new user registered and signed in straight to the dashboard; with it on, the same user was blocked with the verify-email message.
 - **Forgot Password** — Completed. Added a "Forgot password?" link next to the password label on `/sign-in` (via a new `labelAddon` prop on `FormField`) and a `/forgot-password` page whose server action always shows the same "If an account exists…" message and sends the email with `after()`, so neither the message nor the response time reveals whether an account exists. Only users with a password get an email. Reset tokens live in `VerificationToken` under a `password-reset:{email}` identifier (SHA-256 hash only, 1-hour expiry, replacing earlier reset tokens); the shared token logic moved from `email-verification.ts` to `src/lib/tokens.ts` (`issueToken`, read-only `checkToken`, single-use `consumeToken`), and `verifyEmailToken` now rejects reset tokens. `/reset-password` checks the link on load without using it (invalid, used and expired links show an error with a "Request a new link" link) and sets `referrer: no-referrer`. Submitting consumes the token before saving the bcrypt hash, marks the email verified if it wasn't, clears the user's other reset and verification tokens and redirects to `/sign-in?reset=1`. Added `src/lib/password.ts` (`hashPassword`, also used by the register route) and shared password rules between the register and reset schemas. Verified on the dev server: link and page, generic message for an unknown email (no token created), mismatch error, successful reset and sign-in with the new password, used/missing/expired links, and the verify-email route rejecting a reset token. Reset emails weren't read in testing (Resend test address only). Known gap: existing JWT sessions stay valid after a reset.
+- **Profile Page** — Completed. Added a protected `/profile` page (added to the proxy matcher; also redirects if the session's user no longer exists) showing the avatar (`UserAvatar`), name, email and join date, plus usage stats: total items and collections and a per-type item count from the existing `getItemStats`, `getCollectionStats` and `getItemTypesWithCounts`. Moved the sidebar and top bar into a shared `AppShell` used by the `/dashboard` and `/profile` layouts. `getUserProfile` (`src/lib/db/users.ts`) returns a `hasPassword` flag instead of the hash; the change password card only shows when it's set. Changing the password (`changePassword` in `src/actions/profile.ts`, logic in `src/lib/account.ts`) requires the current password, uses the shared password rules via `changePasswordSchema`, and clears outstanding reset links. Delete account uses a shadcn `alert-dialog` confirmation (generated import of `cn` fixed), deletes the user (cascade) and their email/reset tokens, then signs out to `/sign-in?deleted=1`, which shows a confirmation. Verified on the dev server: signed-out redirect, new and demo user stats, wrong-current-password and mismatch errors, successful change and sign-in with the new password, cancel and confirm delete (user and tokens confirmed gone on the development branch). Not tested: hiding change password for a GitHub-only user. Known gap: other sessions stay signed in after a password change.
