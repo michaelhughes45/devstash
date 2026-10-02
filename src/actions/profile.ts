@@ -46,11 +46,15 @@ export async function changePassword(
     if (result === "no-password") {
       return { success: false, error: "Your account doesn't use a password." };
     }
-    return { success: true };
   } catch (error) {
     console.error("Password change failed", error);
     return { success: false, error: GENERIC_ERROR };
   }
+
+  // The change ended every session, including this one; throws a redirect,
+  // so it stays outside the try/catch
+  await signOut({ redirectTo: "/sign-in?passwordChanged=1" });
+  return { success: true };
 }
 
 export interface DeleteAccountState {

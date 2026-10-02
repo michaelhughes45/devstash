@@ -55,4 +55,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       ? credentials
       : provider,
   ),
+  callbacks: {
+    ...authConfig.callbacks,
+    // Not in auth.config.ts: the proxy has no database access, so it only checks the signature.
+    // Returning null ends the session once the user is deleted or their sessionVersion is bumped
+    async jwt({ token, user }) {
+      const userId = user?.id ?? token.sub;
+      if (!userId) return null;
+
+      const current = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { sessionVersion: true },
+      });
+      if (!current) return null;
+
+      if (user) return { ...token, sessionVersion: current.sessionVersion };
+      return token.sessionVersion === current.sessionVersion ? token : null;
+    },
+  },
 });

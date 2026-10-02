@@ -23,6 +23,8 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String? // hashed; null for OAuth-only users
+  // Bumped on password change/reset; JWTs carrying an older value are rejected
+  sessionVersion Int    @default(0)
 
   // Billing
   isPro                Boolean @default(false)

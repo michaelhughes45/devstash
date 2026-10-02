@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Clock, Pin } from "lucide-react";
 
 import { CollectionCard } from "@/components/dashboard/CollectionCard";
@@ -15,20 +16,20 @@ export const dynamic = "force-dynamic";
 const RECENT_COLLECTIONS_LIMIT = 6;
 const PINNED_ITEMS_LIMIT = 10;
 const RECENT_ITEMS_LIMIT = 10;
-const EMPTY_STATS = { total: 0, favorites: 0 };
 
 export default async function DashboardPage() {
+  // The proxy only checks the JWT signature; a revoked session gets here without a user
   const userId = await getCurrentUserId();
+  if (!userId) redirect("/sign-in?callbackUrl=/dashboard");
+
   const [recentCollections, collectionStats, pinnedItems, recentItems, itemStats] =
-    userId
-      ? await Promise.all([
-          getRecentCollections(userId, RECENT_COLLECTIONS_LIMIT),
-          getCollectionStats(userId),
-          getPinnedItems(userId, PINNED_ITEMS_LIMIT),
-          getRecentItems(userId, RECENT_ITEMS_LIMIT),
-          getItemStats(userId),
-        ])
-      : [[], EMPTY_STATS, [], [], EMPTY_STATS];
+    await Promise.all([
+      getRecentCollections(userId, RECENT_COLLECTIONS_LIMIT),
+      getCollectionStats(userId),
+      getPinnedItems(userId, PINNED_ITEMS_LIMIT),
+      getRecentItems(userId, RECENT_ITEMS_LIMIT),
+      getItemStats(userId),
+    ]);
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">

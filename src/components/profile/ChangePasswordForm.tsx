@@ -14,7 +14,6 @@ export function ChangePasswordForm() {
 
   return (
     <form action={formAction} className="grid max-w-sm gap-4">
-      {state.success && <FormMessage variant="success">Password updated.</FormMessage>}
       {state.error && <FormMessage variant="error">{state.error}</FormMessage>}
       <FormField
         name="currentPassword"
