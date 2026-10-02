@@ -531,6 +531,9 @@ devstash/
 DATABASE_URL=   # pooled Neon URL, used by the app
 DIRECT_URL=     # direct Neon URL, used by the Prisma CLI (migrations, seed)
 
+# App
+APP_URL=        # base URL for links in emails, e.g. http://localhost:3000 in development
+
 # Auth.js
 AUTH_SECRET=
 AUTH_GITHUB_ID=

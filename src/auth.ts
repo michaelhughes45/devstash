@@ -8,6 +8,7 @@ import {
   isEmailVerificationEnabled,
   sendVerificationEmail,
 } from "@/lib/email-verification";
+import { DUMMY_PASSWORD_HASH } from "@/lib/password";
 import { signInSchema } from "@/lib/validations/auth";
 import authConfig from "@/auth.config";
 
@@ -21,22 +22,20 @@ const credentials = Credentials({
     email: { label: "Email", type: "email" },
     password: { label: "Password", type: "password" },
   },
-  async authorize(input, request) {
+  async authorize(input) {
     const parsed = signInSchema.safeParse(input);
     if (!parsed.success) return null;
 
     const { email, password } = parsed.data;
     const user = await prisma.user.findUnique({ where: { email } });
-    // OAuth-only users have no password and can't sign in with credentials
-    if (!user?.password) return null;
-
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) return null;
+    // Always compare, so unknown and OAuth-only (no password) emails take as long as a wrong password
+    const isValid = await bcrypt.compare(password, user?.password ?? DUMMY_PASSWORD_HASH);
+    if (!user?.password || !isValid) return null;
     // Checked after the password so unverified status isn't revealed to guessers
     if (isEmailVerificationEnabled() && !user.emailVerified) {
       // Send a fresh link so users with an expired or lost email aren't stuck
       try {
-        await sendVerificationEmail(user.email, new URL(request.url).origin);
+        await sendVerificationEmail(user.email);
       } catch (error) {
         console.error("Failed to resend verification email", error);
       }

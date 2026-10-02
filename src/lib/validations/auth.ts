@@ -1,13 +1,23 @@
 import { z } from "zod";
 
 const PASSWORD_MIN_LENGTH = 8;
+// bcrypt ignores everything past 72 bytes, and multi-byte characters count more than once
+const PASSWORD_MAX_BYTES = 72;
+// Existing passwords skip the byte rule so older, longer ones still work, but stay bounded
+const EXISTING_PASSWORD_MAX_LENGTH = 256;
 
 const email = z.email("Enter a valid email address").trim().toLowerCase();
 
 const newPassword = z
   .string()
   .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
-  .max(72, "Password must be at most 72 characters");
+  .refine(
+    (value) => new TextEncoder().encode(value).length <= PASSWORD_MAX_BYTES,
+    "Password is too long",
+  );
+
+const existingPassword = (requiredMessage: string) =>
+  z.string().min(1, requiredMessage).max(EXISTING_PASSWORD_MAX_LENGTH, "Password is too long");
 
 const passwordsMatch = (data: { password: string; confirmPassword: string }) =>
   data.password === data.confirmPassword;
@@ -19,7 +29,7 @@ const PASSWORDS_MISMATCH = {
 
 export const signInSchema = z.object({
   email,
-  password: z.string().min(1, "Password is required"),
+  password: existingPassword("Password is required"),
 });
 
 export const registerSchema = z
@@ -35,7 +45,7 @@ export const forgotPasswordSchema = z.object({ email });
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Current password is required"),
+    currentPassword: existingPassword("Current password is required"),
     password: newPassword,
     confirmPassword: z.string(),
   })
