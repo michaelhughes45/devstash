@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 
 import { signInWithCredentials, type SignInState } from "@/actions/auth";
 import { FormField } from "@/components/auth/FormField";
@@ -40,6 +41,14 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
         label="Password"
         type="password"
         autoComplete="current-password"
+        labelAddon={
+          <Link
+            href="/forgot-password"
+            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Forgot password?
+          </Link>
+        }
         errors={state.fieldErrors?.password}
         required
       />

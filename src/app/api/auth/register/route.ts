@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
@@ -7,9 +6,8 @@ import {
   isEmailVerificationEnabled,
   sendVerificationEmail,
 } from "@/lib/email-verification";
+import { hashPassword } from "@/lib/password";
 import { registerSchema } from "@/lib/validations/auth";
-
-const BCRYPT_ROUNDS = 12;
 
 interface RegisterResponse {
   success: boolean;
@@ -62,7 +60,7 @@ export async function POST(request: Request) {
       data: {
         name,
         email,
-        password: await bcrypt.hash(password, BCRYPT_ROUNDS),
+        password: await hashPassword(password),
       },
       select: { id: true, name: true, email: true },
     });

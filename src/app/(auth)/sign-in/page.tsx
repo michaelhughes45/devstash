@@ -38,7 +38,7 @@ const VERIFY_ERROR_MESSAGES: Record<string, string> = {
 const DEFAULT_VERIFY_ERROR_MESSAGE = "Unable to verify your email. Please try again.";
 
 export default async function SignInPage({ searchParams }: PageProps<"/sign-in">) {
-  const { callbackUrl, error, registered, verified, verifyError } = await searchParams;
+  const { callbackUrl, error, registered, reset, verified, verifyError } = await searchParams;
   const redirectTo = safeCallbackUrl(callbackUrl);
   const errorCode = typeof error === "string" ? error : undefined;
   const verifyErrorCode = typeof verifyError === "string" ? verifyError : undefined;
@@ -60,6 +60,11 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
         {verified && (
           <FormMessage variant="success">
             Email verified. Sign in to continue.
+          </FormMessage>
+        )}
+        {reset && (
+          <FormMessage variant="success">
+            Password updated. You can sign in now.
           </FormMessage>
         )}
         {verifyErrorCode && (
