@@ -5,7 +5,7 @@
 
 | | |
 | --- | --- |
-| **Status** | 🟢 In development — Phase 1 (MVP): setup, database and dashboard UI done; auth next |
+| **Status** | 🟢 In development — Phase 1 (MVP): setup, database, dashboard UI and auth (email/password + GitHub, email verification, password reset, profile) done; item CRUD next |
 | **Type** | SaaS (Free + Pro subscription) |
 | **Stack** | Next.js · TypeScript · Prisma · Neon Postgres · Tailwind v4 · shadcn/ui · Auth.js · Stripe · Cloudflare R2 · OpenAI |
 
@@ -161,6 +161,7 @@ model User {
   emailVerified        DateTime?
   image                String?
   password             String?   // hashed; null for OAuth-only users
+  sessionVersion       Int       @default(0) // bumped to revoke existing JWT sessions
 
   // Billing
   isPro                Boolean   @default(false)
@@ -598,7 +599,7 @@ Refer to the screenshots below as a base for the dashboard UI.  It does not have
 
 ### 🟢 Phase 1 — MVP
 - [x] Project setup (Next.js, Tailwind, shadcn, Prisma, Neon)
-- [ ] Authentication (email + GitHub)
+- [x] Authentication (email + GitHub)
 - [ ] Item CRUD for system types
 - [ ] Collections
 - [ ] Tags
@@ -630,7 +631,6 @@ Refer to the screenshots below as a base for the dashboard UI.  It does not have
 - **Uploads:** max file size per plan? Total storage quota for Pro?
 - **AI costs:** per‑user daily limit on AI calls?
 - **Downgrade behavior:** what happens to custom types and files when a Pro user cancels?
-- **Password auth:** require email verification before first login?
 
 ---
 
