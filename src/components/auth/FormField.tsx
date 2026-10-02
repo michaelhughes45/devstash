@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,16 +6,20 @@ import { Label } from "@/components/ui/label";
 interface FormFieldProps extends ComponentProps<typeof Input> {
   name: string;
   label: string;
+  labelAddon?: ReactNode;
   errors?: string[];
 }
 
-export function FormField({ name, label, errors, ...inputProps }: FormFieldProps) {
+export function FormField({ name, label, labelAddon, errors, ...inputProps }: FormFieldProps) {
   const error = errors?.[0];
   const errorId = `${name}-error`;
 
   return (
     <div className="grid gap-2">
-      <Label htmlFor={name}>{label}</Label>
+      <div className="flex items-center justify-between">
+        <Label htmlFor={name}>{label}</Label>
+        {labelAddon}
+      </div>
       <Input
         id={name}
         name={name}

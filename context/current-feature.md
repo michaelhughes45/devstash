@@ -1,18 +1,34 @@
-# Current Feature
+# Current Feature: Forgot Password
 
-<!-- Feature name and short description -->
+Add a "Forgot password?" link to the sign-in page and a full email-based password reset flow, storing reset tokens in the existing `VerificationToken` model.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- "Forgot password?" link on `/sign-in` (next to the password field) pointing to `/forgot-password`
+- `/forgot-password` page in the `(auth)` route group: email form that requests a reset link
+- Requesting a reset always shows the same generic message ("If an account exists for that email, we've sent a reset link") so it can't be used to discover registered emails
+- Only send a reset email to users that exist and have a password (credentials users); OAuth-only users get no email
+- Reset tokens use the existing `VerificationToken` model: random token, only its SHA-256 hash stored, short expiry (1 hour), replacing any earlier reset token for that email
+- Reset email sent via Resend with a link to `/reset-password?token=...`, built from the request origin
+- `/reset-password` page: new password + confirm password form, validated with a shared Zod schema (same 8–72 character rules as registration)
+- Resetting is single-use: the token is deleted before the password is updated (bcrypt, 12 rounds); expired, used or invalid tokens show a friendly error with a link to request a new one
+- On success, redirect to `/sign-in` with a "Password updated, you can sign in now" message
+- Signed-in users visiting either page are redirected to `/dashboard` (existing `(auth)` layout behavior)
+- Build and lint pass
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Token namespacing:** email verification tokens use the plain email as `identifier` and delete all tokens for that identifier. Reset tokens must use a distinct identifier (e.g. `password-reset:{email}`) so verification and reset tokens don't delete each other, and `verifyEmailToken` must not accept a reset token (scope its lookup to non-reset identifiers). No schema change or migration needed.
+- Reuse the hashing/token pattern from `src/lib/email-verification.ts`; consider extracting the shared token helpers rather than duplicating them. Put the reset logic in `src/lib/password-reset.ts`.
+- Use server actions (`src/actions/auth.ts`) with `useActionState`, matching the sign-in form, and the `{ success, data, error }` pattern.
+- Resetting a password should also mark the email as verified (the user proved they own the inbox) — confirm during implementation.
+- Email sending is independent of `EMAIL_VERIFICATION_ENABLED`; without a Resend domain, only Resend test addresses (e.g. `delivered@resend.dev`) receive mail, so log the reset link in development for testing.
+- Known gap (same as before): existing JWT sessions stay valid after a password reset until they expire or sign out.
+- Not in scope: rate limiting reset requests (separate `rate-limiting-spec.md`), changing password from a profile page.
 
 ## History
 
