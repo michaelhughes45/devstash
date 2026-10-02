@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { AuthError, CredentialsSignin } from "next-auth";
@@ -89,14 +88,6 @@ export interface ForgotPasswordState {
   fieldErrors?: Record<string, string[] | undefined>;
 }
 
-async function requestOrigin() {
-  const headerList = await headers();
-  const origin = headerList.get("origin");
-  if (origin) return origin;
-  const protocol = headerList.get("x-forwarded-proto") ?? "http";
-  return `${protocol}://${headerList.get("host")}`;
-}
-
 export async function requestPasswordReset(
   _prevState: ForgotPasswordState,
   formData: FormData,
@@ -111,11 +102,10 @@ export async function requestPasswordReset(
     };
   }
 
-  const origin = await requestOrigin();
   // Sent after the response, so its timing can't reveal whether the account exists
   after(async () => {
     try {
-      await sendPasswordResetEmail(parsed.data.email, origin);
+      await sendPasswordResetEmail(parsed.data.email);
     } catch (error) {
       console.error("Failed to send password reset email", error);
     }

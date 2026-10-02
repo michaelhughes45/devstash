@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     // The account exists either way; a failed send is logged rather than undoing it
     if (isEmailVerificationEnabled()) {
       try {
-        await sendVerificationEmail(user.email, new URL(request.url).origin);
+        await sendVerificationEmail(user.email);
       } catch (error) {
         console.error("Failed to send verification email", error);
       }

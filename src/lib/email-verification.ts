@@ -1,3 +1,4 @@
+import { appUrl } from "@/lib/app-url";
 import { prisma } from "@/lib/prisma";
 import { EMAIL_FROM, resend } from "@/lib/resend";
 import { consumeToken, issueToken, PASSWORD_RESET_PREFIX } from "@/lib/tokens";
@@ -14,9 +15,9 @@ export function isEmailVerificationEnabled() {
   return process.env.EMAIL_VERIFICATION_ENABLED !== "false";
 }
 
-export async function sendVerificationEmail(email: string, origin: string) {
+export async function sendVerificationEmail(email: string) {
   const token = await issueToken(email, TOKEN_TTL_MS);
-  const url = new URL("/api/auth/verify-email", origin);
+  const url = appUrl("/api/auth/verify-email");
   url.searchParams.set("token", token);
 
   const { error } = await resend.emails.send({

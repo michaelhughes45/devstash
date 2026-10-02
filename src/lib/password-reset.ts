@@ -1,3 +1,4 @@
+import { appUrl } from "@/lib/app-url";
 import { hashPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { EMAIL_FROM, resend } from "@/lib/resend";
@@ -21,7 +22,7 @@ export const RESET_LINK_ERRORS: Record<"invalid" | "expired", string> = {
 };
 
 // Silently does nothing for unknown or OAuth-only emails so callers can't tell them apart
-export async function sendPasswordResetEmail(email: string, origin: string) {
+export async function sendPasswordResetEmail(email: string) {
   const user = await prisma.user.findUnique({
     where: { email },
     select: { password: true },
@@ -29,7 +30,7 @@ export async function sendPasswordResetEmail(email: string, origin: string) {
   if (!user?.password) return;
 
   const token = await issueToken(`${PASSWORD_RESET_PREFIX}${email}`, TOKEN_TTL_MS);
-  const url = new URL("/reset-password", origin);
+  const url = appUrl("/reset-password");
   url.searchParams.set("token", token);
 
   const { error } = await resend.emails.send({
