@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useActionState, useState } from "react";
 import { Trash2 } from "lucide-react";
 
-import { deleteAccount } from "@/actions/profile";
+import { deleteAccount, type DeleteAccountState } from "@/actions/profile";
+import { FormField } from "@/components/auth/FormField";
 import { FormMessage } from "@/components/auth/FormMessage";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -18,21 +18,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
-export function DeleteAccountDialog() {
-  const [error, setError] = useState<string>();
-  const [pending, startTransition] = useTransition();
+const INITIAL_STATE: DeleteAccountState = { success: false };
 
-  function handleDelete() {
-    setError(undefined);
-    startTransition(async () => {
-      // Redirects to sign-in on success, so only failures come back
-      const result = await deleteAccount();
-      if (!result.success) setError(result.error);
-    });
-  }
+interface DeleteAccountDialogProps {
+  hasPassword: boolean;
+}
 
+export function DeleteAccountDialog({ hasPassword }: DeleteAccountDialogProps) {
   return (
-    <AlertDialog onOpenChange={(open) => !open && setError(undefined)}>
+    <AlertDialog>
       <AlertDialogTrigger render={<Button variant="destructive" />}>
         <Trash2 data-icon="inline-start" />
         Delete account
@@ -45,14 +39,37 @@ export function DeleteAccountDialog() {
             tags. This can&apos;t be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {error && <FormMessage variant="error">{error}</FormMessage>}
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={pending}>
-            {pending ? "Deleting…" : "Delete account"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
+        {/* Unmounts when the dialog closes, so the field and errors reset */}
+        <DeleteAccountForm hasPassword={hasPassword} />
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+function DeleteAccountForm({ hasPassword }: DeleteAccountDialogProps) {
+  // Redirects to sign-in on success, so only failures come back
+  const [state, formAction, pending] = useActionState(deleteAccount, INITIAL_STATE);
+  const [confirmation, setConfirmation] = useState("");
+
+  return (
+    <form action={formAction} className="grid gap-4">
+      {state.error && <FormMessage variant="error">{state.error}</FormMessage>}
+      <FormField
+        name="confirmation"
+        label={hasPassword ? "Enter your password to confirm" : "Type your email to confirm"}
+        type={hasPassword ? "password" : "email"}
+        autoComplete={hasPassword ? "current-password" : "off"}
+        value={confirmation}
+        onChange={(event) => setConfirmation(event.target.value)}
+        errors={state.fieldErrors?.confirmation}
+        required
+      />
+      <AlertDialogFooter>
+        <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+        <Button type="submit" variant="destructive" disabled={pending || !confirmation}>
+          {pending ? "Deleting…" : "Delete account"}
+        </Button>
+      </AlertDialogFooter>
+    </form>
   );
 }

@@ -17,7 +17,10 @@ const newPassword = z
   );
 
 const existingPassword = (requiredMessage: string) =>
-  z.string().min(1, requiredMessage).max(EXISTING_PASSWORD_MAX_LENGTH, "Password is too long");
+  z
+    .string({ error: requiredMessage })
+    .min(1, requiredMessage)
+    .max(EXISTING_PASSWORD_MAX_LENGTH, "Password is too long");
 
 const passwordsMatch = (data: { password: string; confirmPassword: string }) =>
   data.password === data.confirmPassword;
@@ -50,6 +53,12 @@ export const changePasswordSchema = z
     confirmPassword: z.string(),
   })
   .refine(passwordsMatch, PASSWORDS_MISMATCH);
+
+// The current password, or the email for accounts without one; not trimmed, as
+// passwords can contain surrounding spaces
+export const deleteAccountSchema = z.object({
+  confirmation: existingPassword("Confirmation is required"),
+});
 
 export const resetPasswordSchema = z
   .object({

@@ -31,14 +31,32 @@ export async function changeUserPassword(
   return "changed";
 }
 
+export type DeleteAccountResult =
+  | "deleted"
+  | "not-found"
+  | "wrong-password"
+  | "wrong-confirmation";
+
+// Password users confirm with their password; accounts without one (GitHub only)
+// confirm by typing their email.
 // Items, collections, tags, custom types and accounts go with the user via cascade
 // deletes; tokens are keyed by email rather than user, so they're removed here
-export async function deleteUserAccount(userId: string) {
+export async function deleteUserAccount(
+  userId: string,
+  confirmation: string,
+): Promise<DeleteAccountResult> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true },
+    select: { email: true, password: true },
   });
-  if (!user) return;
+  if (!user) return "not-found";
+
+  if (user.password) {
+    const isValid = await bcrypt.compare(confirmation, user.password);
+    if (!isValid) return "wrong-password";
+  } else if (confirmation.trim().toLowerCase() !== user.email.toLowerCase()) {
+    return "wrong-confirmation";
+  }
 
   await prisma.$transaction([
     prisma.verificationToken.deleteMany({
@@ -48,4 +66,5 @@ export async function deleteUserAccount(userId: string) {
     }),
     prisma.user.deleteMany({ where: { id: userId } }),
   ]);
+  return "deleted";
 }
