@@ -359,6 +359,7 @@ erDiagram
 | 💳 Payments | [Stripe](https://docs.stripe.com/billing/subscriptions/overview) | Checkout, Customer Portal, webhooks |
 | ✅ Validation | [Zod](https://zod.dev/) | Shared schemas for forms & server actions |
 | 🖍️ Code highlighting | [Shiki](https://shiki.style/) | VS Code‑quality highlighting |
+| 🧪 Unit testing | [Vitest](https://vitest.dev/) | Server actions and utilities only, not components |
 | 🚀 Deployment | [Vercel](https://vercel.com/docs) | Likely |
 | 🐞 Monitoring | [Sentry](https://docs.sentry.io/platforms/javascript/guides/nextjs/) | Added later |
 
@@ -579,7 +580,8 @@ This project doubles as a **course**, so the history should be easy to follow.
 - 🤖 AI‑assisted development with Cursor, Claude Code or ChatGPT
 - 🐘 Optional: a Neon database branch per lesson for isolated data
 - 🐞 Sentry for runtime monitoring & error tracking
-- ✅ GitHub Actions for lint / typecheck / build (optional)
+- 🧪 Vitest unit tests for server actions and utilities (`npm test`)
+- ✅ GitHub Actions for lint / typecheck / test / build (optional)
 
 ```bash
 git switch -c lesson-01-setup
