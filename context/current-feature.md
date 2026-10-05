@@ -1,30 +1,18 @@
-# Current Feature: Item Drawer
+# Current Feature
 
-Right-side slide-in drawer that opens when clicking an item card. This is the item detail view — there is no separate item page.
+<!-- Feature name and short description -->
 
 ## Status
 
-In Progress
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- Use the shadcn Sheet component, opening from the right
-- Clicking an `ItemCard` opens the drawer with that item's full data
-- Works on both the dashboard and the `/items/[type]` list pages
-- Action bar with Favorite (star icon, yellow when active), Pin, Copy, Edit (pencil icon) and Delete (trash icon, right-aligned), laid out as in the screenshot
-- Client wrapper component manages drawer state, since the pages are server components
-- Feels snappy: fetch on click, no page navigation
-- Card data (title, description, tags, etc.) is still fetched by the server components as before
-- Full item detail (content, collections, language, etc.) is fetched on click from a new `GET /api/items/[id]` route
-- The query function lives in `src/lib/db/items.ts`; the API route calls it with an auth check (only the owner's items)
-- The drawer shows a skeleton/loading state while fetching
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Spec: `context/features/item-drawer-spec.md`
-- Visual reference: `context/screenshots/dashboard-ui-drawer.png`
-- Display only for now — the code editor and item-specific extras come later (separate specs: item-drawer-edit, code-editor, markdown-editor, etc.)
-- Add Vitest unit tests for the new query function / route logic per the testing workflow
+<!-- Any extra notes -->
 
 ## History
 
@@ -55,3 +43,4 @@ In Progress
 - **Items List View** — Completed. Added the `/items/[type]` route (e.g. `/items/snippets`), which lists the signed-in user's items of one type, newest first, as `ItemCard`s in a grid (one column, two from `md` up) with the type-colored left border. The header shows the type's colored icon, display name and item count; a type with no items shows "No {type} yet.", an unknown slug returns 404, and the tab title is the type name. Added `getItemTypeBySlug` (matches the sidebar's slugs, encoded or decoded) and `getItemsByType` to `src/lib/db/items.ts`, and wrapped `getItemTypesWithCounts` in React `cache()` so the sidebar, metadata and page share one query per request. `/items` uses the shared `AppShell` layout, is added to the proxy matcher, and the page redirects to `/sign-in` if the session's user is gone. Verified on the dev server with Playwright as the demo user: signed-out redirect and return, item counts matching the sidebar for snippets, prompts, commands and links, empty states for notes, files and images, 404 for an unknown type, and two columns on desktop versus one at phone width. No pagination yet (separate spec).
 - **Vitest Unit Testing Setup** — Completed. Installed Vitest 5 for unit tests of server actions and utilities only (no component tests). `vitest.config.mts` uses the Node environment (no jsdom or React Testing Library), includes only `src/**/*.test.ts`, resolves the `@/*` path natively through Vite 8 (`resolve.tsconfigPaths`, no plugin), and resets mocks and env stubs between tests. Added `npm test` (single run) and `npm run test:watch`. Vitest 5 needs `@types/node` 22 or 24+, so it moved from `^20` to `^24` (matching the local Node 24). Added co-located starter tests: `safeCallbackUrl`, the rate-limit helpers (key building, retry timing and message, failing open without Upstash), the auth validation schemas (password mismatch, 72-byte limit, longer existing passwords, required messages) and the `changePassword`/`deleteAccount` server actions with `@/auth`, `@/lib/session` and `@/lib/account` mocked. The workflow in `context/ai-interaction.md` now requires writing or updating unit tests and passing `npm test` before committing; testing conventions are in `context/coding-standards.md`, and the commands are in `CLAUDE.md` and `context/project-overview.md`. 30 tests pass; typecheck, lint and build pass. Also hid the Next.js dev indicators (`devIndicators: false`).
 - **Items List Three Columns** — Completed. The `/items/[type]` grid now shows one column on phones, two from `md` and three from `xl` (`md:grid-cols-2 xl:grid-cols-3`), matching the dashboard collections grid. Three columns start at `xl` rather than `lg` because the sidebar takes width. Layout only, so no new unit tests. Verified on the dev server with Playwright as the demo user: three columns at 1440px and 1280px, two at 1024px and 768px, one at 390px, no horizontal scroll at any width, and three columns with the sidebar collapsed (the `max-w-7xl` container keeps the cards the same width). At 1280px with the sidebar open, long titles and descriptions truncate more than before.
+- **Item Drawer** — Completed. Clicking an `ItemCard` on the dashboard or `/items/[type]` opens a right-side shadcn Sheet with the item's full details, with no page navigation. `ItemDrawerProvider` (client, mounted in `AppShell`) owns the drawer state; `ItemCard` stays a server component and is wrapped in a client `ItemCardTrigger` button. The header (icon, title, type badge) renders instantly from the card's data while the rest is fetched from the new `GET /api/items/[id]` route, which checks the session itself (the proxy doesn't cover `/api`) and calls `getItemDetail` in `src/lib/db/items.ts`, scoped by id and user id so another user's item returns the same 404 as a missing one; 401 when signed out. A newer click aborts an in-flight request, and closing aborts it too. The body shows a skeleton while loading, then the description, content (text in a monospace block, links clickable only for http/https via `safeExternalUrl`, files as name and size), tags, collections and created/updated dates, plus the language badge. The action bar has Favorite (yellow when active), Pin, Copy, Edit and a right-aligned Delete; only Copy works (copies content, URL or file URL with a toast), the rest show state only until their own specs. Helpers live in `src/lib/item-content.ts`, and the client response type in `src/types/items.ts`. Also fixed the top bar on phones: below `sm` the New Collection and New Item buttons collapse to icons (labels kept for screen readers), the ⌘K hint hides and the search shrinks, so nothing overflows. Added 11 unit tests (`getItemDetail` with Prisma mocked, and the item-content helpers); 41 pass, and typecheck, lint and build pass. Verified on the dev server with Playwright as the demo user: link, snippet and favorited command items, loading skeleton, Copy toast, 404 for an unknown id and 401 signed out, the drawer at 390px, and the top bar at 320, 390 and 768px with no horizontal scroll. Not tested: fetching a real second user's item (only the demo user has items; covered by the unit test). No syntax highlighting or line numbers yet (code editor spec).
