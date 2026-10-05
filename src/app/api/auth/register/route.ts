@@ -7,6 +7,12 @@ import {
   sendVerificationEmail,
 } from "@/lib/email-verification";
 import { hashPassword } from "@/lib/password";
+import {
+  checkRateLimit,
+  rateLimitKey,
+  rateLimitMessage,
+  retryAfterSeconds,
+} from "@/lib/rate-limit";
 import { registerSchema } from "@/lib/validations/auth";
 
 interface RegisterResponse {
@@ -44,6 +50,14 @@ export async function POST(request: Request) {
         fieldErrors: z.flattenError(parsed.error).fieldErrors,
       },
       400,
+    );
+  }
+
+  const limit = await checkRateLimit("register", rateLimitKey(request.headers));
+  if (!limit.success) {
+    return NextResponse.json(
+      { success: false, error: rateLimitMessage(limit.reset) } satisfies RegisterResponse,
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds(limit.reset)) } },
     );
   }
 

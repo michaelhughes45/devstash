@@ -7,6 +7,7 @@ import { signInWithCredentials, type SignInState } from "@/actions/auth";
 import { FormField } from "@/components/auth/FormField";
 import { FormMessage } from "@/components/auth/FormMessage";
 import { Button } from "@/components/ui/button";
+import { useRateLimitToast } from "@/hooks/use-rate-limit-toast";
 
 interface SignInFormProps {
   callbackUrl: string;
@@ -19,6 +20,7 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
     signInWithCredentials,
     INITIAL_STATE,
   );
+  useRateLimitToast(state);
 
   return (
     <form action={formAction} className="grid gap-4">
