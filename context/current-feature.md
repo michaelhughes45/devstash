@@ -1,42 +1,18 @@
-# Current Feature: Item Drawer — Edit Mode
+# Current Feature
 
-Clicking the Edit (pencil) button in the item drawer's action bar switches the same open drawer from view mode to an inline edit mode with editable inputs. Spec: `context/features/item-drawer-edit-spec.md`.
+<!-- Feature name and short description -->
 
 ## Status
 
-Complete
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- Edit button switches the drawer into edit mode; the action bar is replaced with Save and Cancel
-- Cancel discards changes and returns to view mode
-- Save persists changes via a server action, returns to view mode and refreshes the drawer with the returned data (no second fetch)
-- Toast on save success or error
-- Editable for all types: **Title** (text input, required), **Description** (textarea, optional), **Tags** (comma-separated input, converted to a tag array on save)
-- Type-specific fields, shown only for the relevant type:
-  - **Content** (textarea) — snippet, prompt, command, note
-  - **Language** (text input) — snippet, command
-  - **URL** (text input) — link
-- Display only in edit mode: item type, collections, created/updated dates
-- Zod schema for the update payload, validated in the server action before touching the database:
-  - `title` — trimmed, non-empty
-  - `description`, `content`, `language` — string or null, optional
-  - `url` — valid URL or null, optional
-  - `tags` — array of trimmed, non-empty strings
-- Zod errors returned in `{ success: false, error }` so the client can show them
-- `updateItem(itemId, data)` server action in `src/actions/items.ts` (`{ success, data, error }` pattern): validates with Zod, gets the session via `auth()`, checks ownership, calls the query function
-- `updateItem` query in `src/lib/db/items.ts`: disconnects all existing tags, connect-or-creates the new ones, returns the updated `ItemDetail`
-- After save, `router.refresh()` so the underlying card lists reflect the changes
-- Unit tests for the server action and the query function
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Keep it simple: no form library, controlled inputs with local state
-- Client side: disable Save when the title is empty (basic UX guard); the server-side Zod check is the source of truth
-- The content textarea is a plain textarea — the code editor comes later
-- Collections are managed separately (not editable here)
-- Favorite, Pin and Delete in the action bar stay display-only (their own specs)
-- The spec says "link"; the system type is named `URL` (slug `links`) — map the URL field to that type
+<!-- Any extra notes -->
 
 ## History
 
@@ -68,3 +44,4 @@ Complete
 - **Vitest Unit Testing Setup** — Completed. Installed Vitest 5 for unit tests of server actions and utilities only (no component tests). `vitest.config.mts` uses the Node environment (no jsdom or React Testing Library), includes only `src/**/*.test.ts`, resolves the `@/*` path natively through Vite 8 (`resolve.tsconfigPaths`, no plugin), and resets mocks and env stubs between tests. Added `npm test` (single run) and `npm run test:watch`. Vitest 5 needs `@types/node` 22 or 24+, so it moved from `^20` to `^24` (matching the local Node 24). Added co-located starter tests: `safeCallbackUrl`, the rate-limit helpers (key building, retry timing and message, failing open without Upstash), the auth validation schemas (password mismatch, 72-byte limit, longer existing passwords, required messages) and the `changePassword`/`deleteAccount` server actions with `@/auth`, `@/lib/session` and `@/lib/account` mocked. The workflow in `context/ai-interaction.md` now requires writing or updating unit tests and passing `npm test` before committing; testing conventions are in `context/coding-standards.md`, and the commands are in `CLAUDE.md` and `context/project-overview.md`. 30 tests pass; typecheck, lint and build pass. Also hid the Next.js dev indicators (`devIndicators: false`).
 - **Items List Three Columns** — Completed. The `/items/[type]` grid now shows one column on phones, two from `md` and three from `xl` (`md:grid-cols-2 xl:grid-cols-3`), matching the dashboard collections grid. Three columns start at `xl` rather than `lg` because the sidebar takes width. Layout only, so no new unit tests. Verified on the dev server with Playwright as the demo user: three columns at 1440px and 1280px, two at 1024px and 768px, one at 390px, no horizontal scroll at any width, and three columns with the sidebar collapsed (the `max-w-7xl` container keeps the cards the same width). At 1280px with the sidebar open, long titles and descriptions truncate more than before.
 - **Item Drawer** — Completed. Clicking an `ItemCard` on the dashboard or `/items/[type]` opens a right-side shadcn Sheet with the item's full details, with no page navigation. `ItemDrawerProvider` (client, mounted in `AppShell`) owns the drawer state; `ItemCard` stays a server component and is wrapped in a client `ItemCardTrigger` button. The header (icon, title, type badge) renders instantly from the card's data while the rest is fetched from the new `GET /api/items/[id]` route, which checks the session itself (the proxy doesn't cover `/api`) and calls `getItemDetail` in `src/lib/db/items.ts`, scoped by id and user id so another user's item returns the same 404 as a missing one; 401 when signed out. A newer click aborts an in-flight request, and closing aborts it too. The body shows a skeleton while loading, then the description, content (text in a monospace block, links clickable only for http/https via `safeExternalUrl`, files as name and size), tags, collections and created/updated dates, plus the language badge. The action bar has Favorite (yellow when active), Pin, Copy, Edit and a right-aligned Delete; only Copy works (copies content, URL or file URL with a toast), the rest show state only until their own specs. Helpers live in `src/lib/item-content.ts`, and the client response type in `src/types/items.ts`. Also fixed the top bar on phones: below `sm` the New Collection and New Item buttons collapse to icons (labels kept for screen readers), the ⌘K hint hides and the search shrinks, so nothing overflows. Added 11 unit tests (`getItemDetail` with Prisma mocked, and the item-content helpers); 41 pass, and typecheck, lint and build pass. Verified on the dev server with Playwright as the demo user: link, snippet and favorited command items, loading skeleton, Copy toast, 404 for an unknown id and 401 signed out, the drawer at 390px, and the top bar at 320, 390 and 768px with no horizontal scroll. Not tested: fetching a real second user's item (only the demo user has items; covered by the unit test). No syntax highlighting or line numbers yet (code editor spec).
+- **Item Drawer — Edit Mode** — Completed. The drawer's Edit button switches the open drawer to an inline form (`ItemEditForm`, controlled inputs, no form library) with Save and Cancel in place of the action bar; the type badge, collections and dates stay read-only. Title, description and tags (comma-separated, parsed by `parseTags`) show for every item; content for text items, language for snippets and commands, and URL for links (`getEditableFields` in `src/lib/item-content.ts`). Cancel discards changes, and opening another item leaves edit mode. Save calls the new `updateItem` server action (`src/actions/items.ts`), which checks the session, validates with `updateItemSchema` (`src/lib/validations/items.ts`: trimmed required title, blank optional fields saved as null, content not trimmed so indentation survives, http/https URLs only, deduplicated tags, length limits) and returns `{ success, data }` or `{ success: false, error, fieldErrors }`. The `updateItem` query in `src/lib/db/items.ts` updates only the owner's item (`where: { id, userId }`, P2025 returns null so another user's item is "not found"), replaces its tags with `deleteMany` plus `connectOrCreate` on `userId_name`, and returns the updated `ItemDetail`; the drawer uses it directly (no refetch), updates the header title, toasts, and calls `router.refresh()` so cards update. Save is disabled while the title is blank; server field errors show under each field. Added shadcn `textarea`. 25 new unit tests (schema, action, query, helpers); 66 pass, and typecheck, lint and build pass. Verified on the dev server with Playwright as the demo user: snippet fields and values, cancel, disabled Save on a blank title, saving a title and tags (header, drawer tags and card list updated, toast), a `javascript:` URL rejected on a link with the form kept open, a prompt without the Language field, and the form at 390px with no horizontal scroll. Not tested in the browser: saving a language change, and file or image items (none in the demo data; covered by unit tests). Known gap: tags removed from their last item stay in the `Tag` table.
