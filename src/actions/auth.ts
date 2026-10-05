@@ -1,17 +1,28 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { AuthError, CredentialsSignin } from "next-auth";
 import { z } from "zod";
-import { signIn, signOut } from "@/auth";
-import { EMAIL_NOT_VERIFIED_CODE } from "@/lib/auth-errors";
+import {
+  EmailNotVerifiedError,
+  SignInRateLimitedError,
+  signIn,
+  signOut,
+} from "@/auth";
 import {
   RESET_LINK_ERRORS,
   resetPassword,
   sendPasswordResetEmail,
   type ResetPasswordResult,
 } from "@/lib/password-reset";
+import {
+  checkRateLimit,
+  rateLimitKey,
+  rateLimitMessage,
+  type RateLimitName,
+} from "@/lib/rate-limit";
 import { safeCallbackUrl } from "@/lib/safe-callback-url";
 import {
   forgotPasswordSchema,
@@ -23,7 +34,13 @@ export interface SignInState {
   success: boolean;
   email?: string;
   error?: string;
+  rateLimitError?: string;
   fieldErrors?: Record<string, string[] | undefined>;
+}
+
+async function checkActionRateLimit(name: RateLimitName, email?: string) {
+  const { success, reset } = await checkRateLimit(name, rateLimitKey(await headers(), email));
+  return success ? undefined : rateLimitMessage(reset);
 }
 
 export async function signInWithCredentials(
@@ -51,15 +68,20 @@ export async function signInWithCredentials(
     });
     return { success: true };
   } catch (error) {
-    if (error instanceof CredentialsSignin) {
+    if (error instanceof SignInRateLimitedError) {
+      return { success: false, email, rateLimitError: rateLimitMessage(error.reset) };
+    }
+    if (error instanceof EmailNotVerifiedError) {
       return {
         success: false,
         email,
-        error:
-          error.code === EMAIL_NOT_VERIFIED_CODE
-            ? "Please verify your email before signing in. We've sent you a new verification link."
-            : "Invalid email or password",
+        error: error.linkSent
+          ? "Please verify your email before signing in. We've sent you a new verification link."
+          : "Please verify your email before signing in. Check your inbox for the verification link we sent you.",
       };
+    }
+    if (error instanceof CredentialsSignin) {
+      return { success: false, email, error: "Invalid email or password" };
     }
     if (error instanceof AuthError) {
       return {
@@ -85,6 +107,7 @@ export async function signOutUser() {
 export interface ForgotPasswordState {
   success: boolean;
   email?: string;
+  rateLimitError?: string;
   fieldErrors?: Record<string, string[] | undefined>;
 }
 
@@ -102,6 +125,10 @@ export async function requestPasswordReset(
     };
   }
 
+  // Keyed by IP only, so being limited says nothing about whether the account exists
+  const rateLimitError = await checkActionRateLimit("forgotPassword");
+  if (rateLimitError) return { success: false, email, rateLimitError };
+
   // Sent after the response, so its timing can't reveal whether the account exists
   after(async () => {
     try {
@@ -117,6 +144,7 @@ export async function requestPasswordReset(
 export interface ResetPasswordState {
   success: boolean;
   error?: string;
+  rateLimitError?: string;
   linkError?: boolean;
   fieldErrors?: Record<string, string[] | undefined>;
 }
@@ -133,6 +161,9 @@ export async function resetPasswordWithToken(
   if (!parsed.success) {
     return { success: false, fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
+
+  const rateLimitError = await checkActionRateLimit("resetPassword");
+  if (rateLimitError) return { success: false, rateLimitError };
 
   let result: ResetPasswordResult;
   try {

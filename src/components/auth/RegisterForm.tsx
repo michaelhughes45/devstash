@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { FormField } from "@/components/auth/FormField";
@@ -44,6 +45,11 @@ export function RegisterForm() {
       });
       const result: RegisterResponse = await response.json();
 
+      if (response.status === 429) {
+        toast.error(result.error ?? "Too many attempts. Please try again later.");
+        setPending(false);
+        return;
+      }
       if (!result.success) {
         setError(result.error ?? "Registration failed");
         setFieldErrors(result.fieldErrors ?? {});

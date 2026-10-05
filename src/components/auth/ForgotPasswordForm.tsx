@@ -6,6 +6,7 @@ import { requestPasswordReset, type ForgotPasswordState } from "@/actions/auth";
 import { FormField } from "@/components/auth/FormField";
 import { FormMessage } from "@/components/auth/FormMessage";
 import { Button } from "@/components/ui/button";
+import { useRateLimitToast } from "@/hooks/use-rate-limit-toast";
 
 const INITIAL_STATE: ForgotPasswordState = { success: false };
 
@@ -14,6 +15,7 @@ export function ForgotPasswordForm() {
     requestPasswordReset,
     INITIAL_STATE,
   );
+  useRateLimitToast(state);
 
   if (state.success) {
     return (
