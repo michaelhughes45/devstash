@@ -1,18 +1,42 @@
-# Current Feature
+# Current Feature: Item Drawer — Edit Mode
 
-<!-- Feature name and short description -->
+Clicking the Edit (pencil) button in the item drawer's action bar switches the same open drawer from view mode to an inline edit mode with editable inputs. Spec: `context/features/item-drawer-edit-spec.md`.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+Complete
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Edit button switches the drawer into edit mode; the action bar is replaced with Save and Cancel
+- Cancel discards changes and returns to view mode
+- Save persists changes via a server action, returns to view mode and refreshes the drawer with the returned data (no second fetch)
+- Toast on save success or error
+- Editable for all types: **Title** (text input, required), **Description** (textarea, optional), **Tags** (comma-separated input, converted to a tag array on save)
+- Type-specific fields, shown only for the relevant type:
+  - **Content** (textarea) — snippet, prompt, command, note
+  - **Language** (text input) — snippet, command
+  - **URL** (text input) — link
+- Display only in edit mode: item type, collections, created/updated dates
+- Zod schema for the update payload, validated in the server action before touching the database:
+  - `title` — trimmed, non-empty
+  - `description`, `content`, `language` — string or null, optional
+  - `url` — valid URL or null, optional
+  - `tags` — array of trimmed, non-empty strings
+- Zod errors returned in `{ success: false, error }` so the client can show them
+- `updateItem(itemId, data)` server action in `src/actions/items.ts` (`{ success, data, error }` pattern): validates with Zod, gets the session via `auth()`, checks ownership, calls the query function
+- `updateItem` query in `src/lib/db/items.ts`: disconnects all existing tags, connect-or-creates the new ones, returns the updated `ItemDetail`
+- After save, `router.refresh()` so the underlying card lists reflect the changes
+- Unit tests for the server action and the query function
 
 ## Notes
 
-<!-- Any extra notes -->
+- Keep it simple: no form library, controlled inputs with local state
+- Client side: disable Save when the title is empty (basic UX guard); the server-side Zod check is the source of truth
+- The content textarea is a plain textarea — the code editor comes later
+- Collections are managed separately (not editable here)
+- Favorite, Pin and Delete in the action bar stay display-only (their own specs)
+- The spec says "link"; the system type is named `URL` (slug `links`) — map the URL field to that type
 
 ## History
 

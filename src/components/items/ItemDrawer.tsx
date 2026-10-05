@@ -6,6 +6,7 @@ import { Calendar, FolderOpen, Tag } from "lucide-react";
 import { ItemTypeIcon } from "@/components/dashboard/ItemTypeIcon";
 import { ItemDrawerActions } from "@/components/items/ItemDrawerActions";
 import { ItemDrawerContent } from "@/components/items/ItemDrawerContent";
+import { ItemEditForm } from "@/components/items/ItemEditForm";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,9 +32,19 @@ interface ItemDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   state: ItemDrawerState | null;
+  editing: boolean;
+  onEditingChange: (editing: boolean) => void;
+  onItemSaved: (item: ItemDetailData) => void;
 }
 
-export function ItemDrawer({ open, onOpenChange, state }: ItemDrawerProps) {
+export function ItemDrawer({
+  open,
+  onOpenChange,
+  state,
+  editing,
+  onEditingChange,
+  onItemSaved,
+}: ItemDrawerProps) {
   const item = state?.status === "loaded" ? state.item : null;
 
   return (
@@ -42,14 +53,27 @@ export function ItemDrawer({ open, onOpenChange, state }: ItemDrawerProps) {
         {state && (
           <>
             <DrawerHeader preview={state.preview} language={item?.language ?? null} />
-            <ItemDrawerActions item={item} />
-            <div className="flex-1 overflow-y-auto p-6">
-              {state.status === "loading" && <DrawerSkeleton />}
-              {state.status === "error" && (
-                <p className="text-sm text-destructive">{state.error}</p>
-              )}
-              {item && <DrawerBody item={item} />}
-            </div>
+            {item && editing ? (
+              <ItemEditForm
+                key={item.id}
+                item={item}
+                onCancel={() => onEditingChange(false)}
+                onSaved={onItemSaved}
+              >
+                <DrawerMeta item={item} />
+              </ItemEditForm>
+            ) : (
+              <>
+                <ItemDrawerActions item={item} onEdit={() => onEditingChange(true)} />
+                <div className="flex-1 overflow-y-auto p-6">
+                  {state.status === "loading" && <DrawerSkeleton />}
+                  {state.status === "error" && (
+                    <p className="text-sm text-destructive">{state.error}</p>
+                  )}
+                  {item && <DrawerBody item={item} />}
+                </div>
+              </>
+            )}
           </>
         )}
       </SheetContent>
@@ -153,6 +177,15 @@ function DrawerBody({ item }: { item: ItemDetailData }) {
         </DrawerSection>
       )}
 
+      <DrawerMeta item={item} />
+    </div>
+  );
+}
+
+// Collections and dates; read-only in both view and edit mode
+function DrawerMeta({ item }: { item: ItemDetailData }) {
+  return (
+    <>
       {item.collections.length > 0 && (
         <DrawerSection title="Collections" icon={FolderOpen}>
           <div className="flex flex-wrap gap-1.5">
@@ -173,6 +206,6 @@ function DrawerBody({ item }: { item: ItemDetailData }) {
           <dd className="text-right">{DATE_FORMAT.format(new Date(item.updatedAt))}</dd>
         </dl>
       </DrawerSection>
-    </div>
+    </>
   );
 }

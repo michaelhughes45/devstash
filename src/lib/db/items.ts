@@ -1,7 +1,8 @@
 import { cache } from "react";
 
-import type { ContentType, Prisma } from "@/generated/prisma/client";
+import { Prisma, type ContentType } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import type { UpdateItemData } from "@/lib/validations/items";
 
 export interface ItemCardType {
   id: string;
@@ -196,6 +197,16 @@ const ITEM_DETAIL_SELECT = {
   },
 } satisfies Prisma.ItemSelect;
 
+type ItemDetailRow = Prisma.ItemGetPayload<{ select: typeof ITEM_DETAIL_SELECT }>;
+
+function toItemDetail({ collections, ...rest }: ItemDetailRow): ItemDetail {
+  return {
+    ...rest,
+    ...toItemWithType(rest),
+    collections: collections.map(({ collection }) => collection),
+  };
+}
+
 // Scoped to the owner, so another user's item id returns null
 export async function getItemDetail(
   userId: string,
@@ -205,14 +216,46 @@ export async function getItemDetail(
     where: { id: itemId, userId },
     select: ITEM_DETAIL_SELECT,
   });
-  if (!item) return null;
+  return item ? toItemDetail(item) : null;
+}
 
-  const { collections, ...rest } = item;
-  return {
-    ...rest,
-    ...toItemWithType(rest),
-    collections: collections.map(({ collection }) => collection),
-  };
+// Replaces the item's tags with `tags`, creating any the user doesn't have yet.
+// Scoped to the owner like getItemDetail: returns null for a missing or
+// someone else's item.
+export async function updateItem(
+  userId: string,
+  itemId: string,
+  { tags, ...fields }: UpdateItemData,
+): Promise<ItemDetail | null> {
+  try {
+    const item = await prisma.item.update({
+      where: { id: itemId, userId },
+      data: {
+        ...fields,
+        tags: {
+          deleteMany: {},
+          create: tags.map((name) => ({
+            tag: {
+              connectOrCreate: {
+                where: { userId_name: { userId, name } },
+                create: { userId, name },
+              },
+            },
+          })),
+        },
+      },
+      select: ITEM_DETAIL_SELECT,
+    });
+    return toItemDetail(item);
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function getItemStats(userId: string): Promise<ItemStats> {

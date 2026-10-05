@@ -48,6 +48,7 @@ interface ItemDrawerProviderProps {
 export function ItemDrawerProvider({ children }: ItemDrawerProviderProps) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<ItemDrawerState | null>(null);
+  const [editing, setEditing] = useState(false);
   const requestRef = useRef<AbortController | null>(null);
 
   const openItem = useCallback(async (preview: ItemPreview) => {
@@ -57,6 +58,7 @@ export function ItemDrawerProvider({ children }: ItemDrawerProviderProps) {
     requestRef.current = controller;
 
     setState({ status: "loading", preview });
+    setEditing(false);
     setOpen(true);
 
     try {
@@ -74,12 +76,33 @@ export function ItemDrawerProvider({ children }: ItemDrawerProviderProps) {
     setOpen(nextOpen);
   }, []);
 
+  // The saved item replaces the loaded one, and its title updates the header
+  const handleItemSaved = useCallback((item: ItemDetailData) => {
+    setState((current) =>
+      current?.preview.id === item.id
+        ? {
+            status: "loaded",
+            preview: { ...current.preview, title: item.title },
+            item,
+          }
+        : current,
+    );
+    setEditing(false);
+  }, []);
+
   const value = useMemo(() => ({ openItem }), [openItem]);
 
   return (
     <ItemDrawerContext.Provider value={value}>
       {children}
-      <ItemDrawer open={open} onOpenChange={handleOpenChange} state={state} />
+      <ItemDrawer
+        open={open}
+        onOpenChange={handleOpenChange}
+        state={state}
+        editing={editing}
+        onEditingChange={setEditing}
+        onItemSaved={handleItemSaved}
+      />
     </ItemDrawerContext.Provider>
   );
 }

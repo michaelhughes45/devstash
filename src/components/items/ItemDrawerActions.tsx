@@ -10,6 +10,7 @@ import type { ItemDetailData } from "@/types/items";
 interface ItemDrawerActionsProps {
   // null while the item is loading or failed to load
   item: ItemDetailData | null;
+  onEdit: () => void;
 }
 
 // Labels collapse to icons on narrow screens so the bar fits on one line
@@ -17,8 +18,8 @@ function ActionLabel({ children }: { children: string }) {
   return <span className="max-sm:sr-only">{children}</span>;
 }
 
-// Favorite, Pin, Edit and Delete show state only; their behavior comes in later specs
-export function ItemDrawerActions({ item }: ItemDrawerActionsProps) {
+// Favorite, Pin and Delete show state only; their behavior comes in later specs
+export function ItemDrawerActions({ item, onEdit }: ItemDrawerActionsProps) {
   const copyText = item ? getItemCopyText(item) : null;
 
   async function handleCopy() {
@@ -51,7 +52,7 @@ export function ItemDrawerActions({ item }: ItemDrawerActionsProps) {
         <ActionLabel>Copy</ActionLabel>
       </Button>
       <div className="ml-auto flex items-center gap-1">
-        <Button variant="ghost" disabled={!item}>
+        <Button variant="ghost" disabled={!item} onClick={onEdit}>
           <Pencil />
           <ActionLabel>Edit</ActionLabel>
         </Button>
