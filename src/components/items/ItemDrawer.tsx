@@ -35,6 +35,7 @@ interface ItemDrawerProps {
   editing: boolean;
   onEditingChange: (editing: boolean) => void;
   onItemSaved: (item: ItemDetailData) => void;
+  onItemDeleted: () => void;
 }
 
 export function ItemDrawer({
@@ -44,6 +45,7 @@ export function ItemDrawer({
   editing,
   onEditingChange,
   onItemSaved,
+  onItemDeleted,
 }: ItemDrawerProps) {
   const item = state?.status === "loaded" ? state.item : null;
 
@@ -64,7 +66,11 @@ export function ItemDrawer({
               </ItemEditForm>
             ) : (
               <>
-                <ItemDrawerActions item={item} onEdit={() => onEditingChange(true)} />
+                <ItemDrawerActions
+                  item={item}
+                  onEdit={() => onEditingChange(true)}
+                  onDeleted={onItemDeleted}
+                />
                 <div className="flex-1 overflow-y-auto p-6">
                   {state.status === "loading" && <DrawerSkeleton />}
                   {state.status === "error" && (

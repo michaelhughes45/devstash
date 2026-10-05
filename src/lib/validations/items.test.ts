@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { updateItemSchema } from "@/lib/validations/items";
+import { itemIdSchema, updateItemSchema } from "@/lib/validations/items";
 
 function fieldErrors(input: unknown) {
   const result = updateItemSchema.safeParse(input);
@@ -81,5 +81,17 @@ describe("updateItemSchema", () => {
       "Tags can't be empty",
     ]);
     expect(fieldErrors({ title: "Hook" }).tags).toBeDefined();
+  });
+});
+
+describe("itemIdSchema", () => {
+  it("accepts a cuid-style id", () => {
+    expect(itemIdSchema.safeParse("cmuo7njrf000178scxnxjhms3").success).toBe(true);
+  });
+
+  it("rejects empty, overly long and non-string ids", () => {
+    expect(itemIdSchema.safeParse("").success).toBe(false);
+    expect(itemIdSchema.safeParse("a".repeat(65)).success).toBe(false);
+    expect(itemIdSchema.safeParse(null).success).toBe(false);
   });
 });

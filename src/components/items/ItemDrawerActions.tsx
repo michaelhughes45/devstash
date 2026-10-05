@@ -1,8 +1,9 @@
 "use client";
 
-import { Copy, Pencil, Pin, Star, Trash2 } from "lucide-react";
+import { Copy, Pencil, Pin, Star } from "lucide-react";
 import { toast } from "sonner";
 
+import { DeleteItemDialog } from "@/components/items/DeleteItemDialog";
 import { Button } from "@/components/ui/button";
 import { getItemCopyText } from "@/lib/item-content";
 import type { ItemDetailData } from "@/types/items";
@@ -11,6 +12,7 @@ interface ItemDrawerActionsProps {
   // null while the item is loading or failed to load
   item: ItemDetailData | null;
   onEdit: () => void;
+  onDeleted: () => void;
 }
 
 // Labels collapse to icons on narrow screens so the bar fits on one line
@@ -18,8 +20,8 @@ function ActionLabel({ children }: { children: string }) {
   return <span className="max-sm:sr-only">{children}</span>;
 }
 
-// Favorite, Pin and Delete show state only; their behavior comes in later specs
-export function ItemDrawerActions({ item, onEdit }: ItemDrawerActionsProps) {
+// Favorite and Pin show state only; their behavior comes in later specs
+export function ItemDrawerActions({ item, onEdit, onDeleted }: ItemDrawerActionsProps) {
   const copyText = item ? getItemCopyText(item) : null;
 
   async function handleCopy() {
@@ -56,15 +58,7 @@ export function ItemDrawerActions({ item, onEdit }: ItemDrawerActionsProps) {
           <Pencil />
           <ActionLabel>Edit</ActionLabel>
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled={!item}
-          aria-label="Delete item"
-          className="text-destructive hover:text-destructive"
-        >
-          <Trash2 />
-        </Button>
+        <DeleteItemDialog item={item} onDeleted={onDeleted} />
       </div>
     </div>
   );

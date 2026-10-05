@@ -102,6 +102,7 @@ export function ItemDrawerProvider({ children }: ItemDrawerProviderProps) {
         editing={editing}
         onEditingChange={setEditing}
         onItemSaved={handleItemSaved}
+        onItemDeleted={() => handleOpenChange(false)}
       />
     </ItemDrawerContext.Provider>
   );

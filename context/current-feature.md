@@ -1,18 +1,31 @@
-# Current Feature
+# Current Feature: Item Delete
 
-<!-- Feature name and short description -->
+Make the Delete button in the item drawer delete the item, after a shadcn confirmation dialog, with a toast on success.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+Completed
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Clicking Delete in the drawer's action bar (`ItemDrawerActions`) opens a shadcn `AlertDialog` confirmation naming the item (e.g. "Delete "{title}"?") with Cancel and a destructive Delete button
+- Cancel closes the dialog and leaves the drawer and item unchanged
+- Confirming calls a new `deleteItem` server action in `src/actions/items.ts`: checks the session, validates the id with Zod, and returns `{ success, error }`
+- New `deleteItem` query in `src/lib/db/items.ts` deletes only the owner's item (`where: { id, userId }`); another user's item or a missing one returns "not found"
+- Tags and collection links are removed via the existing cascades (`ItemTag`, `ItemCollection`); the collections and tags themselves are kept
+- On success: close the dialog and the drawer, show a success toast (e.g. "Item deleted"), and `router.refresh()` so the dashboard, `/items/[type]` list, sidebar counts and stats update
+- On failure: keep the dialog open (or close it) and show an error toast; the item stays
+- The Delete button is disabled while the request is pending, and Cancel can't race it
+- Unit tests for the `deleteItem` action (unauthenticated, invalid id, not found, success) and query (scoped by user, P2025 → not found) with mocks
 
 ## Notes
 
-<!-- Any extra notes -->
+- Reuse the existing shadcn `alert-dialog` (already installed, used by `DeleteAccountDialog`) and `sonner` toasts
+- Follow the `updateItem` pattern from the edit-mode feature for the action, query and P2025 handling
+- Delete isn't available while the drawer is in edit mode (the action bar is replaced by Save/Cancel)
+- No undo, bulk delete or soft delete
+- File items' R2 objects aren't deleted (uploads aren't built yet)
+- Known gap carried over: tags left with no items stay in the `Tag` table
 
 ## History
 

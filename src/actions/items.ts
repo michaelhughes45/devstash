@@ -2,9 +2,16 @@
 
 import { z } from "zod";
 
-import { updateItem as updateItemRecord } from "@/lib/db/items";
+import {
+  deleteItem as deleteItemRecord,
+  updateItem as updateItemRecord,
+} from "@/lib/db/items";
 import { getCurrentUserId } from "@/lib/session";
-import { updateItemSchema, type UpdateItemInput } from "@/lib/validations/items";
+import {
+  itemIdSchema,
+  updateItemSchema,
+  type UpdateItemInput,
+} from "@/lib/validations/items";
 import type { ItemDetailData } from "@/types/items";
 
 const NOT_SIGNED_IN = "You need to be signed in to do that.";
@@ -55,6 +62,25 @@ export async function updateItem(
     };
   } catch (error) {
     console.error("Item update failed", error);
+    return { success: false, error: GENERIC_ERROR };
+  }
+}
+
+export type DeleteItemResult = { success: true } | { success: false; error: string };
+
+export async function deleteItem(itemId: string): Promise<DeleteItemResult> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { success: false, error: NOT_SIGNED_IN };
+
+  const parsed = itemIdSchema.safeParse(itemId);
+  if (!parsed.success) return { success: false, error: NOT_FOUND };
+
+  try {
+    // Scoped to the owner, so another user's item is reported as missing
+    const deleted = await deleteItemRecord(userId, parsed.data);
+    return deleted ? { success: true } : { success: false, error: NOT_FOUND };
+  } catch (error) {
+    console.error("Item delete failed", error);
     return { success: false, error: GENERIC_ERROR };
   }
 }

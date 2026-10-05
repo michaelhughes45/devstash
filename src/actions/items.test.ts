@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { updateItem } from "@/actions/items";
-import { updateItem as updateItemRecord, type ItemDetail } from "@/lib/db/items";
+import { deleteItem, updateItem } from "@/actions/items";
+import {
+  deleteItem as deleteItemRecord,
+  updateItem as updateItemRecord,
+  type ItemDetail,
+} from "@/lib/db/items";
 import { getCurrentUserId } from "@/lib/session";
 
 vi.mock("@/lib/session", () => ({ getCurrentUserId: vi.fn() }));
-vi.mock("@/lib/db/items", () => ({ updateItem: vi.fn() }));
+vi.mock("@/lib/db/items", () => ({ updateItem: vi.fn(), deleteItem: vi.fn() }));
 
 const createdAt = new Date("2026-01-15T10:00:00Z");
 const updatedAt = new Date("2026-02-01T12:00:00Z");
@@ -112,6 +116,58 @@ describe("updateItem", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     const result = await updateItem("item-1", validInput);
+
+    expect(result).toEqual({
+      success: false,
+      error: "Something went wrong. Please try again.",
+    });
+  });
+});
+
+describe("deleteItem", () => {
+  it("rejects signed-out users without touching the item", async () => {
+    vi.mocked(getCurrentUserId).mockResolvedValue(null);
+
+    const result = await deleteItem("item-1");
+
+    expect(result).toEqual({
+      success: false,
+      error: "You need to be signed in to do that.",
+    });
+    expect(deleteItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid id without touching the database", async () => {
+    expect(await deleteItem("")).toEqual({ success: false, error: "Item not found." });
+    expect(await deleteItem(42 as unknown as string)).toEqual({
+      success: false,
+      error: "Item not found.",
+    });
+    expect(deleteItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("deletes the item for the signed-in user", async () => {
+    vi.mocked(deleteItemRecord).mockResolvedValue(true);
+
+    const result = await deleteItem("item-1");
+
+    expect(deleteItemRecord).toHaveBeenCalledWith("user-1", "item-1");
+    expect(result).toEqual({ success: true });
+  });
+
+  it("reports a missing or someone else's item as not found", async () => {
+    vi.mocked(deleteItemRecord).mockResolvedValue(false);
+
+    const result = await deleteItem("other-users-item");
+
+    expect(result).toEqual({ success: false, error: "Item not found." });
+  });
+
+  it("returns a generic error when the delete throws", async () => {
+    vi.mocked(deleteItemRecord).mockRejectedValue(new Error("db down"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const result = await deleteItem("item-1");
 
     expect(result).toEqual({
       success: false,
