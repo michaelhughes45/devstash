@@ -1,18 +1,24 @@
-# Current Feature
+# Current Feature: Items List Three Columns
 
-<!-- Feature name and short description -->
+Change the `/items/[type]` list view grid from two columns to three on larger screens, keeping it responsive.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Item cards on `/items/[type]` show three per row on large screens
+- Stays responsive: one column on phones, two on medium screens, three from extra-large (`xl`, 1280px) up
+- No change to the cards themselves, the header, empty state or data loading
 
 ## Notes
 
-<!-- Any extra notes -->
+- The grid is in `src/app/items/[type]/page.tsx` (currently `grid gap-4 md:grid-cols-2`)
+- Planned classes: `grid gap-4 md:grid-cols-2 xl:grid-cols-3`, matching the dashboard collections grid (`sm:grid-cols-2 xl:grid-cols-3`). Using `xl` rather than `lg` because the sidebar takes width, so three columns at `lg` (1024px) would make the cards cramped
+- Check cards with long titles, descriptions and several tags still look right at three columns
+- Verify in the browser at phone, tablet and desktop widths, with the sidebar expanded and collapsed
+- Layout-only change: no server actions or utilities change, so no new unit tests; `npm test` and `npm run build` should still pass
 
 ## History
 
