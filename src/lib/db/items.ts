@@ -1,6 +1,6 @@
 import { cache } from "react";
 
-import type { Prisma } from "@/generated/prisma/client";
+import type { ContentType, Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export interface ItemCardType {
@@ -166,6 +166,53 @@ export async function getItemsByType(
     orderBy: { createdAt: "desc" },
   });
   return items.map(toItemWithType);
+}
+
+export interface ItemDetail extends ItemWithType {
+  contentType: ContentType;
+  content: string | null;
+  language: string | null;
+  url: string | null;
+  fileUrl: string | null;
+  fileName: string | null;
+  fileSize: number | null;
+  updatedAt: Date;
+  collections: { id: string; name: string }[];
+}
+
+const ITEM_DETAIL_SELECT = {
+  ...ITEM_CARD_SELECT,
+  contentType: true,
+  content: true,
+  language: true,
+  url: true,
+  fileUrl: true,
+  fileName: true,
+  fileSize: true,
+  updatedAt: true,
+  collections: {
+    select: { collection: { select: { id: true, name: true } } },
+    orderBy: { collection: { name: "asc" } },
+  },
+} satisfies Prisma.ItemSelect;
+
+// Scoped to the owner, so another user's item id returns null
+export async function getItemDetail(
+  userId: string,
+  itemId: string,
+): Promise<ItemDetail | null> {
+  const item = await prisma.item.findFirst({
+    where: { id: itemId, userId },
+    select: ITEM_DETAIL_SELECT,
+  });
+  if (!item) return null;
+
+  const { collections, ...rest } = item;
+  return {
+    ...rest,
+    ...toItemWithType(rest),
+    collections: collections.map(({ collection }) => collection),
+  };
 }
 
 export async function getItemStats(userId: string): Promise<ItemStats> {
