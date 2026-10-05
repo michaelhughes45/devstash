@@ -1,12 +1,68 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildItemInput,
   formatFileSize,
+  getContentTypeForType,
+  getCreateFields,
   getEditableFields,
   getItemCopyText,
   parseTags,
   safeExternalUrl,
 } from "@/lib/item-content";
+
+describe("getCreateFields", () => {
+  it("shows content and language for snippets and commands", () => {
+    const expected = { content: true, language: true, url: false };
+    expect(getCreateFields("snippet")).toEqual(expected);
+    expect(getCreateFields("command")).toEqual(expected);
+  });
+
+  it("shows only content for prompts and notes", () => {
+    const expected = { content: true, language: false, url: false };
+    expect(getCreateFields("prompt")).toEqual(expected);
+    expect(getCreateFields("note")).toEqual(expected);
+  });
+
+  it("shows only the URL for links", () => {
+    expect(getCreateFields("link")).toEqual({ content: false, language: false, url: true });
+  });
+});
+
+describe("getContentTypeForType", () => {
+  it("stores links as URL and everything else as text", () => {
+    expect(getContentTypeForType("link")).toBe("URL");
+    expect(getContentTypeForType("snippet")).toBe("TEXT");
+    expect(getContentTypeForType("note")).toBe("TEXT");
+  });
+});
+
+describe("buildItemInput", () => {
+  const values = {
+    title: "Docs",
+    description: "Reference",
+    content: "stray content",
+    language: "ts",
+    url: "https://nextjs.org",
+    tags: "next, docs, next",
+  };
+
+  it("sends only the fields the form shows, with tags parsed", () => {
+    expect(buildItemInput(values, { content: false, language: false, url: true })).toEqual({
+      title: "Docs",
+      description: "Reference",
+      tags: ["next", "docs"],
+      url: "https://nextjs.org",
+    });
+    expect(buildItemInput(values, { content: true, language: true, url: false })).toEqual({
+      title: "Docs",
+      description: "Reference",
+      tags: ["next", "docs"],
+      content: "stray content",
+      language: "ts",
+    });
+  });
+});
 
 describe("safeExternalUrl", () => {
   it("allows http and https links", () => {

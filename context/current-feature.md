@@ -1,18 +1,34 @@
-# Current Feature
+# Current Feature: Item Create
 
-<!-- Feature name and short description -->
+Add new items through a modal dialog opened from the "New Item" button in the top bar.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- "New Item" button in the top bar opens a shadcn `Dialog`
+- Type selector with the 5 text/URL types: snippet, prompt, command, note, link
+- Fields change with the selected type:
+  - All types: title (required), description, tags
+  - Snippet / command: content, language
+  - Prompt / note: content
+  - Link: URL (required)
+- `createItem` server action with Zod validation, returning `{ success, data, error, fieldErrors }`
+- `createItem` query function in `src/lib/db/items.ts`
+- On success: toast, close the dialog and refresh (cards, sidebar counts, stats)
+- Unit tests for the new schema, action and query; `npm test` and `npm run build` pass
 
 ## Notes
 
-<!-- Any extra notes -->
+- Spec: `context/features/item-create-spec.md`
+- Reuse the edit-mode patterns: `updateItemSchema` (`src/lib/validations/items.ts`), `updateItem` action (`src/actions/items.ts`), `parseTags` and `getEditableFields` (`src/lib/item-content.ts`), `ItemEditForm` (controlled inputs, no form library), and tag `connectOrCreate` on `userId_name` from the `updateItem` query
+- The `New Item` button is in `src/components/dashboard/TopBar.tsx` (currently display only; collapses to an icon below `sm`)
+- shadcn `Dialog` isn't installed yet (`npx shadcn add dialog`); check the generated `cn` import, as with `alert-dialog`
+- Look up the system `ItemType` by name server-side (`userId: null`, `isSystem: true`); never trust a type id from the client. Link items use `contentType: URL`, the rest `TEXT`
+- File and image types are out of scope (need R2 uploads); custom types and collections are not in this spec
+- Free-tier limits (50 items) aren't in this spec either
 
 ## History
 

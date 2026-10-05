@@ -1,11 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { Prisma } from "@/generated/prisma/client";
-import { deleteItem, getItemDetail, updateItem } from "@/lib/db/items";
+import {
+  createItem,
+  deleteItem,
+  getCreatableItemTypes,
+  getItemDetail,
+  updateItem,
+} from "@/lib/db/items";
 import { prisma } from "@/lib/prisma";
 
 vi.mock("@/lib/prisma", () => ({
-  prisma: { item: { findFirst: vi.fn(), update: vi.fn(), delete: vi.fn() } },
+  prisma: {
+    item: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    itemType: { findFirst: vi.fn(), findMany: vi.fn() },
+  },
 }));
 
 const createdAt = new Date("2026-01-15T10:00:00Z");
@@ -70,6 +79,122 @@ describe("getItemDetail", () => {
       tags: ["react", "auth"],
       collections: [{ id: "col-1", name: "React Patterns" }],
     });
+  });
+});
+
+describe("createItem", () => {
+  const data = {
+    type: "snippet" as const,
+    title: "useAuth Hook",
+    description: null,
+    content: "export function useAuth() {}",
+    language: "typescript",
+    url: null,
+    tags: ["react", "hooks"],
+  };
+
+  it("looks up the system type by name", async () => {
+    vi.mocked(prisma.itemType.findFirst).mockResolvedValue(null);
+
+    await createItem("user-1", data);
+
+    expect(prisma.itemType.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { name: "snippet", isSystem: true, userId: null } }),
+    );
+  });
+
+  it("returns null without creating anything when the type is missing", async () => {
+    vi.mocked(prisma.itemType.findFirst).mockResolvedValue(null);
+
+    expect(await createItem("user-1", data)).toBeNull();
+    expect(prisma.item.create).not.toHaveBeenCalled();
+  });
+
+  it("creates the item for the user with its type, content type and tags", async () => {
+    vi.mocked(prisma.itemType.findFirst).mockResolvedValue({ id: "type-1" } as never);
+    vi.mocked(prisma.item.create).mockResolvedValue(row as never);
+
+    await createItem("user-1", data);
+
+    expect(prisma.item.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          title: "useAuth Hook",
+          description: null,
+          content: "export function useAuth() {}",
+          language: "typescript",
+          url: null,
+          contentType: "TEXT",
+          userId: "user-1",
+          typeId: "type-1",
+          tags: {
+            create: ["react", "hooks"].map((name) => ({
+              tag: {
+                connectOrCreate: {
+                  where: { userId_name: { userId: "user-1", name } },
+                  create: { userId: "user-1", name },
+                },
+              },
+            })),
+          },
+        },
+      }),
+    );
+  });
+
+  it("stores links with the URL content type", async () => {
+    vi.mocked(prisma.itemType.findFirst).mockResolvedValue({ id: "type-7" } as never);
+    vi.mocked(prisma.item.create).mockResolvedValue(row as never);
+
+    await createItem("user-1", {
+      ...data,
+      type: "link",
+      content: null,
+      language: null,
+      url: "https://nextjs.org",
+      tags: [],
+    });
+
+    expect(prisma.item.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ contentType: "URL", url: "https://nextjs.org" }),
+      }),
+    );
+  });
+
+  it("returns the created item detail", async () => {
+    vi.mocked(prisma.itemType.findFirst).mockResolvedValue({ id: "type-1" } as never);
+    vi.mocked(prisma.item.create).mockResolvedValue(row as never);
+
+    const item = await createItem("user-1", data);
+
+    expect(item?.tags).toEqual(["react", "auth"]);
+    expect(item?.type).toEqual({ id: "type-1", name: "snippet", icon: "File", color: "#6b7280" });
+  });
+});
+
+describe("getCreatableItemTypes", () => {
+  it("returns the seeded system types in dialog order with labels", async () => {
+    vi.mocked(prisma.itemType.findMany).mockResolvedValue([
+      { name: "link", icon: "Link", color: "#10b981" },
+      { name: "snippet", icon: "Code", color: "#3b82f6" },
+      { name: "note", icon: null, color: null },
+    ] as never);
+
+    expect(await getCreatableItemTypes()).toEqual([
+      { name: "snippet", label: "Snippet", icon: "Code", color: "#3b82f6" },
+      { name: "note", label: "Note", icon: "File", color: "#6b7280" },
+      { name: "link", label: "Link", icon: "Link", color: "#10b981" },
+    ]);
+    expect(prisma.itemType.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          isSystem: true,
+          userId: null,
+          name: { in: ["snippet", "prompt", "command", "note", "link"] },
+        },
+      }),
+    );
   });
 });
 

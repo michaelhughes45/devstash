@@ -1,8 +1,10 @@
 import { cache } from "react";
 
 import { Prisma, type ContentType } from "@/generated/prisma/client";
+import { CREATABLE_ITEM_TYPES, getContentTypeForType } from "@/lib/item-content";
 import { prisma } from "@/lib/prisma";
-import type { UpdateItemData } from "@/lib/validations/items";
+import type { CreateItemData, UpdateItemData } from "@/lib/validations/items";
+import type { CreatableItemTypeOption } from "@/types/items";
 
 export interface ItemCardType {
   id: string;
@@ -144,6 +146,28 @@ export const getItemTypesWithCounts = cache(
   },
 );
 
+// System types the New Item dialog offers, in CREATABLE_ITEM_TYPES order.
+// Cached per request, since every signed-in page renders the top bar.
+export const getCreatableItemTypes = cache(
+  async (): Promise<CreatableItemTypeOption[]> => {
+    const types = await prisma.itemType.findMany({
+      where: { isSystem: true, userId: null, name: { in: [...CREATABLE_ITEM_TYPES] } },
+      select: { name: true, icon: true, color: true },
+    });
+
+    return CREATABLE_ITEM_TYPES.flatMap((name) => {
+      const type = types.find((row) => row.name === name);
+      if (!type) return [];
+      return {
+        name,
+        label: name.charAt(0).toUpperCase() + name.slice(1),
+        icon: type.icon ?? DEFAULT_TYPE_ICON,
+        color: type.color ?? DEFAULT_TYPE_COLOR,
+      };
+    });
+  },
+);
+
 // Resolves an /items/[type] segment; Next.js may pass it decoded or encoded
 export async function getItemTypeBySlug(
   userId: string,
@@ -219,6 +243,43 @@ export async function getItemDetail(
   return item ? toItemDetail(item) : null;
 }
 
+// Links each tag by name, creating any the user doesn't have yet
+function tagLinks(userId: string, tags: string[]) {
+  return tags.map((name) => ({
+    tag: {
+      connectOrCreate: {
+        where: { userId_name: { userId, name } },
+        create: { userId, name },
+      },
+    },
+  }));
+}
+
+// Creates an item of a system type, looked up by name. Returns null if that
+// system type doesn't exist (e.g. an unseeded database).
+export async function createItem(
+  userId: string,
+  { type, tags, ...fields }: CreateItemData,
+): Promise<ItemDetail | null> {
+  const itemType = await prisma.itemType.findFirst({
+    where: { name: type, isSystem: true, userId: null },
+    select: { id: true },
+  });
+  if (!itemType) return null;
+
+  const item = await prisma.item.create({
+    data: {
+      ...fields,
+      contentType: getContentTypeForType(type),
+      userId,
+      typeId: itemType.id,
+      tags: { create: tagLinks(userId, tags) },
+    },
+    select: ITEM_DETAIL_SELECT,
+  });
+  return toItemDetail(item);
+}
+
 // Replaces the item's tags with `tags`, creating any the user doesn't have yet.
 // Scoped to the owner like getItemDetail: returns null for a missing or
 // someone else's item.
@@ -232,17 +293,7 @@ export async function updateItem(
       where: { id: itemId, userId },
       data: {
         ...fields,
-        tags: {
-          deleteMany: {},
-          create: tags.map((name) => ({
-            tag: {
-              connectOrCreate: {
-                where: { userId_name: { userId, name } },
-                create: { userId, name },
-              },
-            },
-          })),
-        },
+        tags: { deleteMany: {}, create: tagLinks(userId, tags) },
       },
       select: ITEM_DETAIL_SELECT,
     });

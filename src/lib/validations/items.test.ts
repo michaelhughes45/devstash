@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { itemIdSchema, updateItemSchema } from "@/lib/validations/items";
+import { createItemSchema, itemIdSchema, updateItemSchema } from "@/lib/validations/items";
 
 function fieldErrors(input: unknown) {
   const result = updateItemSchema.safeParse(input);
@@ -81,6 +81,84 @@ describe("updateItemSchema", () => {
       "Tags can't be empty",
     ]);
     expect(fieldErrors({ title: "Hook" }).tags).toBeDefined();
+  });
+});
+
+describe("createItemSchema", () => {
+  function createErrors(input: unknown) {
+    const result = createItemSchema.safeParse(input);
+    if (result.success) throw new Error("expected validation to fail");
+    return z.flattenError(result.error).fieldErrors;
+  }
+
+  it("requires one of the creatable types", () => {
+    expect(createErrors({ title: "Hook", tags: [] }).type).toEqual(["Choose an item type"]);
+    expect(createErrors({ type: "file", title: "Hook", tags: [] }).type).toEqual([
+      "Choose an item type",
+    ]);
+  });
+
+  it("applies the shared field rules", () => {
+    const errors = createErrors({ type: "note", title: " ", tags: ["  "] });
+    expect(errors.title).toEqual(["Title is required"]);
+    expect(errors.tags).toEqual(["Tags can't be empty"]);
+  });
+
+  it("parses a snippet with content and language, nulling blank fields", () => {
+    expect(
+      createItemSchema.parse({
+        type: "snippet",
+        title: " useAuth ",
+        description: "",
+        content: "  return 1;\n",
+        language: " typescript ",
+        tags: ["react", "react"],
+      }),
+    ).toEqual({
+      type: "snippet",
+      title: "useAuth",
+      description: null,
+      content: "  return 1;\n",
+      language: "typescript",
+      url: null,
+      tags: ["react"],
+    });
+  });
+
+  it("requires a valid URL for links", () => {
+    expect(createErrors({ type: "link", title: "Docs", tags: [] }).url).toEqual([
+      "URL is required",
+    ]);
+    expect(createErrors({ type: "link", title: "Docs", url: " ", tags: [] }).url).toEqual([
+      "URL is required",
+    ]);
+    expect(
+      createErrors({ type: "link", title: "Docs", url: "javascript:alert(1)", tags: [] }).url,
+    ).toEqual(["Enter a valid http or https URL"]);
+  });
+
+  it("drops fields the type doesn't use", () => {
+    expect(
+      createItemSchema.parse({
+        type: "link",
+        title: "Docs",
+        url: "https://nextjs.org/docs",
+        content: "stray",
+        language: "ts",
+        tags: [],
+      }),
+    ).toMatchObject({ url: "https://nextjs.org/docs", content: null, language: null });
+
+    expect(
+      createItemSchema.parse({
+        type: "prompt",
+        title: "Review",
+        content: "Review this code",
+        language: "ts",
+        url: "https://example.com",
+        tags: [],
+      }),
+    ).toMatchObject({ content: "Review this code", language: null, url: null });
   });
 });
 
