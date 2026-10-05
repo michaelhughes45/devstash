@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { deleteItem, updateItem } from "@/actions/items";
+import { createItem, deleteItem, updateItem } from "@/actions/items";
 import {
+  createItem as createItemRecord,
   deleteItem as deleteItemRecord,
   updateItem as updateItemRecord,
   type ItemDetail,
@@ -9,7 +10,11 @@ import {
 import { getCurrentUserId } from "@/lib/session";
 
 vi.mock("@/lib/session", () => ({ getCurrentUserId: vi.fn() }));
-vi.mock("@/lib/db/items", () => ({ updateItem: vi.fn(), deleteItem: vi.fn() }));
+vi.mock("@/lib/db/items", () => ({
+  createItem: vi.fn(),
+  updateItem: vi.fn(),
+  deleteItem: vi.fn(),
+}));
 
 const createdAt = new Date("2026-01-15T10:00:00Z");
 const updatedAt = new Date("2026-02-01T12:00:00Z");
@@ -116,6 +121,99 @@ describe("updateItem", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     const result = await updateItem("item-1", validInput);
+
+    expect(result).toEqual({
+      success: false,
+      error: "Something went wrong. Please try again.",
+    });
+  });
+});
+
+describe("createItem", () => {
+  const createInput = { type: "snippet" as const, ...validInput };
+
+  it("rejects signed-out users without creating anything", async () => {
+    vi.mocked(getCurrentUserId).mockResolvedValue(null);
+
+    const result = await createItem(createInput);
+
+    expect(result).toEqual({
+      success: false,
+      error: "You need to be signed in to do that.",
+    });
+    expect(createItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("returns field errors for invalid input", async () => {
+    const result = await createItem({ type: "link", title: "Docs", url: "", tags: [] });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error).toBe("Please fix the highlighted fields.");
+    expect(result.fieldErrors?.url).toEqual(["URL is required"]);
+    expect(createItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("rejects a type the dialog doesn't offer", async () => {
+    const result = await createItem({
+      ...createInput,
+      type: "file" as unknown as "snippet",
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.fieldErrors?.type).toEqual(["Choose an item type"]);
+    expect(createItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("creates the validated item for the signed-in user", async () => {
+    vi.mocked(createItemRecord).mockResolvedValue(savedItem);
+
+    await createItem(createInput);
+
+    expect(createItemRecord).toHaveBeenCalledWith("user-1", {
+      type: "snippet",
+      title: "useAuth Hook",
+      description: null,
+      content: "export function useAuth() {}",
+      language: "typescript",
+      url: null,
+      tags: ["react"],
+    });
+  });
+
+  it("returns the created item with ISO dates", async () => {
+    vi.mocked(createItemRecord).mockResolvedValue(savedItem);
+
+    const result = await createItem(createInput);
+
+    expect(result).toEqual({
+      success: true,
+      data: {
+        ...savedItem,
+        createdAt: "2026-01-15T10:00:00.000Z",
+        updatedAt: "2026-02-01T12:00:00.000Z",
+      },
+    });
+  });
+
+  it("returns a generic error when the system type is missing", async () => {
+    vi.mocked(createItemRecord).mockResolvedValue(null);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const result = await createItem(createInput);
+
+    expect(result).toEqual({
+      success: false,
+      error: "Something went wrong. Please try again.",
+    });
+  });
+
+  it("returns a generic error when the create throws", async () => {
+    vi.mocked(createItemRecord).mockRejectedValue(new Error("db down"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const result = await createItem(createInput);
 
     expect(result).toEqual({
       success: false,

@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { safeExternalUrl } from "@/lib/item-content";
+import {
+  CREATABLE_ITEM_TYPES,
+  getCreateFields,
+  safeExternalUrl,
+} from "@/lib/item-content";
 
 const MAX_TITLE_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 2000;
@@ -18,7 +22,8 @@ function emptyToNull(value: string): string | null {
   return value === "" ? null : value;
 }
 
-export const updateItemSchema = z.object({
+// Field rules shared by the edit and create forms
+const itemFields = {
   title: z
     .string({ error: "Title is required" })
     .trim()
@@ -66,7 +71,33 @@ export const updateItemSchema = z.object({
     )
     .max(MAX_TAGS, `Use at most ${MAX_TAGS} tags`)
     .transform((tags) => [...new Set(tags)]),
-});
+};
+
+export const updateItemSchema = z.object(itemFields);
 
 export type UpdateItemInput = z.input<typeof updateItemSchema>;
 export type UpdateItemData = z.output<typeof updateItemSchema>;
+
+export const createItemSchema = z
+  .object({
+    type: z.enum(CREATABLE_ITEM_TYPES, { error: "Choose an item type" }),
+    ...itemFields,
+  })
+  .refine((data) => data.type !== "link" || data.url, {
+    error: "URL is required",
+    path: ["url"],
+  })
+  // Fields the type doesn't use are dropped, so a stray value is never stored
+  .transform(({ type, content, language, url, ...rest }) => {
+    const fields = getCreateFields(type);
+    return {
+      ...rest,
+      type,
+      content: fields.content ? (content ?? null) : null,
+      language: fields.language ? (language ?? null) : null,
+      url: fields.url ? (url ?? null) : null,
+    };
+  });
+
+export type CreateItemInput = z.input<typeof createItemSchema>;
+export type CreateItemData = z.output<typeof createItemSchema>;

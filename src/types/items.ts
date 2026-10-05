@@ -1,4 +1,13 @@
 import type { ItemCardType, ItemDetail } from "@/lib/db/items";
+import type { CreatableItemType } from "@/lib/item-content";
+
+// A type the New Item dialog offers, e.g. { name: "snippet", label: "Snippet" }
+export interface CreatableItemTypeOption {
+  name: CreatableItemType;
+  label: string;
+  icon: string;
+  color: string;
+}
 
 // Card fields shown in the drawer header while the full item loads
 export interface ItemPreview {

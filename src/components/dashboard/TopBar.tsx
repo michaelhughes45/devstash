@@ -1,12 +1,16 @@
-import { FolderPlus, Plus, Search } from "lucide-react";
+import { FolderPlus, Search } from "lucide-react";
 
+import { NewItemDialog } from "@/components/items/NewItemDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { getCreatableItemTypes } from "@/lib/db/items";
 
-export function TopBar() {
+export async function TopBar() {
+  const creatableTypes = await getCreatableItemTypes();
+
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 sm:gap-4">
       <div className="flex items-center gap-2">
@@ -32,10 +36,7 @@ export function TopBar() {
           <FolderPlus data-icon="inline-start" />
           <span className="max-sm:sr-only">New Collection</span>
         </Button>
-        <Button size="lg" className="max-sm:w-9 max-sm:px-0">
-          <Plus data-icon="inline-start" />
-          <span className="max-sm:sr-only">New Item</span>
-        </Button>
+        <NewItemDialog types={creatableTypes} />
       </div>
     </header>
   );
