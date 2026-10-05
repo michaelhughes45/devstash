@@ -9,6 +9,9 @@ const MAX_LANGUAGE_LENGTH = 50;
 const MAX_URL_LENGTH = 2048;
 const MAX_TAG_LENGTH = 50;
 const MAX_TAGS = 20;
+const MAX_ID_LENGTH = 64;
+
+export const itemIdSchema = z.string().min(1).max(MAX_ID_LENGTH);
 
 // Blank values clear the field; undefined leaves it unchanged
 function emptyToNull(value: string): string | null {

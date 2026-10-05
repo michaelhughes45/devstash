@@ -258,6 +258,23 @@ export async function updateItem(
   }
 }
 
+// Its tag and collection links go with it (cascade); the tags and collections
+// stay. Returns false for a missing or someone else's item.
+export async function deleteItem(userId: string, itemId: string): Promise<boolean> {
+  try {
+    await prisma.item.delete({ where: { id: itemId, userId }, select: { id: true } });
+    return true;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return false;
+    }
+    throw error;
+  }
+}
+
 export async function getItemStats(userId: string): Promise<ItemStats> {
   const [total, favorites] = await Promise.all([
     prisma.item.count({ where: { userId } }),
