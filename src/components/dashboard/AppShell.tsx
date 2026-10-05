@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
+import { ItemDrawerProvider } from "@/components/items/ItemDrawerProvider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -17,7 +18,9 @@ export function AppShell({ children }: AppShellProps) {
         <AppSidebar />
         <SidebarInset className="min-w-0 overflow-hidden">
           <TopBar />
-          <div className="flex-1 overflow-y-auto p-6">{children}</div>
+          <ItemDrawerProvider>
+            <div className="flex-1 overflow-y-auto p-6">{children}</div>
+          </ItemDrawerProvider>
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>
