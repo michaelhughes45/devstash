@@ -27,7 +27,37 @@ export function getItemCopyText(item: CopyableItem): string | null {
   return text?.trim() ? text : null;
 }
 
-const SIZE_UNITS = ["B", "KB", "MB", "GB"];
+// Splits the edit form's comma-separated tags input, dropping blanks and repeats
+export function parseTags(input: string): string[] {
+  const tags = input
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+  return [...new Set(tags)];
+}
+
+// System types whose items get a language field for syntax highlighting
+const LANGUAGE_TYPES = ["snippet", "command"];
+
+export interface EditableFields {
+  content: boolean;
+  language: boolean;
+  url: boolean;
+}
+
+// Type-specific fields the edit form shows; title, description and tags always show
+export function getEditableFields(item: {
+  contentType: "TEXT" | "FILE" | "URL";
+  type: { name: string };
+}): EditableFields {
+  return {
+    content: item.contentType === "TEXT",
+    language: item.contentType === "TEXT" && LANGUAGE_TYPES.includes(item.type.name),
+    url: item.contentType === "URL",
+  };
+}
+
+const SIZE_UNITS =["B", "KB", "MB", "GB"];
 
 export function formatFileSize(bytes: number): string {
   let size = bytes;

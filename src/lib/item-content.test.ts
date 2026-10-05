@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { formatFileSize, getItemCopyText, safeExternalUrl } from "@/lib/item-content";
+import {
+  formatFileSize,
+  getEditableFields,
+  getItemCopyText,
+  parseTags,
+  safeExternalUrl,
+} from "@/lib/item-content";
 
 describe("safeExternalUrl", () => {
   it("allows http and https links", () => {
@@ -61,5 +67,29 @@ describe("formatFileSize", () => {
     expect(formatFileSize(1536)).toBe("1.5 KB");
     expect(formatFileSize(5 * 1024 * 1024)).toBe("5 MB");
     expect(formatFileSize(3 * 1024 ** 4)).toBe("3072 GB");
+  });
+});
+
+describe("parseTags", () => {
+  it("splits on commas, trims and drops blanks and repeats", () => {
+    expect(parseTags(" react, hooks ,, react ,")).toEqual(["react", "hooks"]);
+  });
+
+  it("returns an empty list for an empty input", () => {
+    expect(parseTags("   ")).toEqual([]);
+  });
+});
+
+describe("getEditableFields", () => {
+  it.each([
+    ["snippet", "TEXT", { content: true, language: true, url: false }],
+    ["command", "TEXT", { content: true, language: true, url: false }],
+    ["prompt", "TEXT", { content: true, language: false, url: false }],
+    ["note", "TEXT", { content: true, language: false, url: false }],
+    ["link", "URL", { content: false, language: false, url: true }],
+    ["file", "FILE", { content: false, language: false, url: false }],
+    ["image", "FILE", { content: false, language: false, url: false }],
+  ] as const)("shows the right fields for a %s", (name, contentType, expected) => {
+    expect(getEditableFields({ contentType, type: { name } })).toEqual(expected);
   });
 });
