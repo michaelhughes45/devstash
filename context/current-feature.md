@@ -1,24 +1,18 @@
-# Current Feature: Items List Three Columns
+# Current Feature
 
-Change the `/items/[type]` list view grid from two columns to three on larger screens, keeping it responsive.
+<!-- Feature name and short description -->
 
 ## Status
 
-In Progress
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- Item cards on `/items/[type]` show three per row on large screens
-- Stays responsive: one column on phones, two on medium screens, three from extra-large (`xl`, 1280px) up
-- No change to the cards themselves, the header, empty state or data loading
+<!-- Goals and requirements -->
 
 ## Notes
 
-- The grid is in `src/app/items/[type]/page.tsx` (currently `grid gap-4 md:grid-cols-2`)
-- Planned classes: `grid gap-4 md:grid-cols-2 xl:grid-cols-3`, matching the dashboard collections grid (`sm:grid-cols-2 xl:grid-cols-3`). Using `xl` rather than `lg` because the sidebar takes width, so three columns at `lg` (1024px) would make the cards cramped
-- Check cards with long titles, descriptions and several tags still look right at three columns
-- Verify in the browser at phone, tablet and desktop widths, with the sidebar expanded and collapsed
-- Layout-only change: no server actions or utilities change, so no new unit tests; `npm test` and `npm run build` should still pass
+<!-- Any extra notes -->
 
 ## History
 
@@ -48,3 +42,4 @@ In Progress
 - **Rate Limiting for Auth** — Completed. Installed `@upstash/ratelimit` and `@upstash/redis` and added `src/lib/rate-limit.ts`: sliding-window limiters per action (`checkRateLimit` returns `{ success, remaining, reset }`), keys from the first `x-forwarded-for` IP (then `x-real-ip`), plus the lowercased email where needed, and a "Too many attempts. Please try again in X minutes." message. It fails open: with `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` unset it warns once and allows everything, a failed check is logged and allowed, and Upstash calls time out after 1 second. Limits: credentials sign-in 5/15 min by IP + email, enforced inside `authorize` (before bcrypt) so direct calls to `/api/auth/callback/credentials` count too (`SignInRateLimitedError`, code `rate_limited`); verification resends 3/15 min by IP + email, also in `authorize` (when limited no email is sent and the message says to check the inbox instead of promising a new link; `EmailNotVerifiedError` now carries `linkSent`); `POST /api/auth/register` 3/hour by IP, returning 429 with `Retry-After`; and the forgot-password (3/hour) and reset-password (5/15 min) server actions by IP, returning a `rateLimitError` in their state. Invalid input doesn't use up an attempt. Added shadcn `sonner` (fixed to the dark theme, `next-themes` removed) with a `Toaster` in the root layout; `useRateLimitToast` shows action rate-limit errors as toasts and the register form toasts on 429, while other errors stay inline. Documented the Upstash variables in `context/project-overview.md` in place of `REDIS_URL`. Verified on the dev server with curl and Playwright: each limit blocked at the right attempt with a toast or 429, other IPs/emails were unaffected, and the not-configured, unreachable and bad-token cases all let requests through. Upstash's `reset` is the end of the current fixed window, so right after hitting a limit the message can say a short time; one attempt really is allowed then, and the next is blocked for most of the window (confirmed on register). Not tested: the resend limit, since `EMAIL_VERIFICATION_ENABLED=false` in `.env`. Spoofable `x-forwarded-for` only matters off Vercel.
 - **Items List View** — Completed. Added the `/items/[type]` route (e.g. `/items/snippets`), which lists the signed-in user's items of one type, newest first, as `ItemCard`s in a grid (one column, two from `md` up) with the type-colored left border. The header shows the type's colored icon, display name and item count; a type with no items shows "No {type} yet.", an unknown slug returns 404, and the tab title is the type name. Added `getItemTypeBySlug` (matches the sidebar's slugs, encoded or decoded) and `getItemsByType` to `src/lib/db/items.ts`, and wrapped `getItemTypesWithCounts` in React `cache()` so the sidebar, metadata and page share one query per request. `/items` uses the shared `AppShell` layout, is added to the proxy matcher, and the page redirects to `/sign-in` if the session's user is gone. Verified on the dev server with Playwright as the demo user: signed-out redirect and return, item counts matching the sidebar for snippets, prompts, commands and links, empty states for notes, files and images, 404 for an unknown type, and two columns on desktop versus one at phone width. No pagination yet (separate spec).
 - **Vitest Unit Testing Setup** — Completed. Installed Vitest 5 for unit tests of server actions and utilities only (no component tests). `vitest.config.mts` uses the Node environment (no jsdom or React Testing Library), includes only `src/**/*.test.ts`, resolves the `@/*` path natively through Vite 8 (`resolve.tsconfigPaths`, no plugin), and resets mocks and env stubs between tests. Added `npm test` (single run) and `npm run test:watch`. Vitest 5 needs `@types/node` 22 or 24+, so it moved from `^20` to `^24` (matching the local Node 24). Added co-located starter tests: `safeCallbackUrl`, the rate-limit helpers (key building, retry timing and message, failing open without Upstash), the auth validation schemas (password mismatch, 72-byte limit, longer existing passwords, required messages) and the `changePassword`/`deleteAccount` server actions with `@/auth`, `@/lib/session` and `@/lib/account` mocked. The workflow in `context/ai-interaction.md` now requires writing or updating unit tests and passing `npm test` before committing; testing conventions are in `context/coding-standards.md`, and the commands are in `CLAUDE.md` and `context/project-overview.md`. 30 tests pass; typecheck, lint and build pass. Also hid the Next.js dev indicators (`devIndicators: false`).
+- **Items List Three Columns** — Completed. The `/items/[type]` grid now shows one column on phones, two from `md` and three from `xl` (`md:grid-cols-2 xl:grid-cols-3`), matching the dashboard collections grid. Three columns start at `xl` rather than `lg` because the sidebar takes width. Layout only, so no new unit tests. Verified on the dev server with Playwright as the demo user: three columns at 1440px and 1280px, two at 1024px and 768px, one at 390px, no horizontal scroll at any width, and three columns with the sidebar collapsed (the `max-w-7xl` container keeps the cards the same width). At 1280px with the sidebar open, long titles and descriptions truncate more than before.
