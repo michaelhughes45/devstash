@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
@@ -107,37 +109,63 @@ function toPlural(name: string): string {
   return name.endsWith("s") ? name : `${name}s`;
 }
 
-export async function getItemTypesWithCounts(
+// Cached per request: the sidebar and /items/[type] both need it
+export const getItemTypesWithCounts = cache(
+  async (userId: string): Promise<ItemTypeWithCount[]> => {
+    const [types, counts] = await Promise.all([
+      prisma.itemType.findMany({
+        where: { OR: [{ isSystem: true }, { userId }] },
+        select: { id: true, name: true, icon: true, color: true, isSystem: true },
+      }),
+      prisma.item.groupBy({ by: ["typeId"], where: { userId }, _count: true }),
+    ]);
+
+    const countByTypeId = new Map(counts.map((row) => [row.typeId, row._count]));
+
+    return types
+      .sort(
+        (a, b) =>
+          getTypeRank(a.name, a.isSystem) - getTypeRank(b.name, b.isSystem) ||
+          a.name.localeCompare(b.name),
+      )
+      .map((type) => {
+        const plural = toPlural(type.name);
+        return {
+          id: type.id,
+          name: plural.charAt(0).toUpperCase() + plural.slice(1),
+          slug: encodeURIComponent(plural.toLowerCase()),
+          icon: type.icon ?? DEFAULT_TYPE_ICON,
+          color: type.color ?? DEFAULT_TYPE_COLOR,
+          count: countByTypeId.get(type.id) ?? 0,
+          isPro: type.isSystem && PRO_SYSTEM_TYPES.includes(type.name),
+        };
+      });
+  },
+);
+
+// Resolves an /items/[type] segment; Next.js may pass it decoded or encoded
+export async function getItemTypeBySlug(
   userId: string,
-): Promise<ItemTypeWithCount[]> {
-  const [types, counts] = await Promise.all([
-    prisma.itemType.findMany({
-      where: { OR: [{ isSystem: true }, { userId }] },
-      select: { id: true, name: true, icon: true, color: true, isSystem: true },
-    }),
-    prisma.item.groupBy({ by: ["typeId"], where: { userId }, _count: true }),
-  ]);
+  slug: string,
+): Promise<ItemTypeWithCount | null> {
+  const types = await getItemTypesWithCounts(userId);
+  return (
+    types.find(
+      (type) => type.slug === slug || decodeURIComponent(type.slug) === slug,
+    ) ?? null
+  );
+}
 
-  const countByTypeId = new Map(counts.map((row) => [row.typeId, row._count]));
-
-  return types
-    .sort(
-      (a, b) =>
-        getTypeRank(a.name, a.isSystem) - getTypeRank(b.name, b.isSystem) ||
-        a.name.localeCompare(b.name),
-    )
-    .map((type) => {
-      const plural = toPlural(type.name);
-      return {
-        id: type.id,
-        name: plural.charAt(0).toUpperCase() + plural.slice(1),
-        slug: encodeURIComponent(plural.toLowerCase()),
-        icon: type.icon ?? DEFAULT_TYPE_ICON,
-        color: type.color ?? DEFAULT_TYPE_COLOR,
-        count: countByTypeId.get(type.id) ?? 0,
-        isPro: type.isSystem && PRO_SYSTEM_TYPES.includes(type.name),
-      };
-    });
+export async function getItemsByType(
+  userId: string,
+  typeId: string,
+): Promise<ItemWithType[]> {
+  const items = await prisma.item.findMany({
+    where: { userId, typeId },
+    select: ITEM_CARD_SELECT,
+    orderBy: { createdAt: "desc" },
+  });
+  return items.map(toItemWithType);
 }
 
 export async function getItemStats(userId: string): Promise<ItemStats> {
