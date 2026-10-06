@@ -8,6 +8,7 @@ import {
   getEditableFields,
   getItemCopyText,
   isCodeType,
+  isImageType,
   isMarkdownType,
   parseTags,
   safeExternalUrl,
@@ -30,6 +31,15 @@ describe("isMarkdownType", () => {
     expect(isMarkdownType("snippet")).toBe(false);
     expect(isMarkdownType("command")).toBe(false);
     expect(isMarkdownType("link")).toBe(false);
+  });
+});
+
+describe("isImageType", () => {
+  it("is true for images only", () => {
+    expect(isImageType("image")).toBe(true);
+    expect(isImageType("file")).toBe(false);
+    expect(isImageType("snippet")).toBe(false);
+    expect(isImageType("Image")).toBe(false);
   });
 });
 
