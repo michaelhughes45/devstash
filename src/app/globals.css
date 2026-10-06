@@ -132,6 +132,134 @@
     }
 }
 
+/* Rendered Markdown in the markdown editor's Preview tab */
+.markdown-preview {
+  @apply text-sm leading-relaxed break-words text-foreground;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.12) transparent;
+}
+
+.markdown-preview > :first-child {
+  @apply mt-0;
+}
+
+.markdown-preview > :last-child {
+  @apply mb-0;
+}
+
+.markdown-preview :where(p, ul, ol, blockquote, pre, table, hr) {
+  @apply my-3;
+}
+
+.markdown-preview :where(h1, h2, h3, h4, h5, h6) {
+  @apply mt-5 mb-2 leading-tight font-semibold text-foreground;
+}
+
+.markdown-preview h1 {
+  @apply border-b pb-1.5 text-2xl font-bold;
+}
+
+.markdown-preview h2 {
+  @apply border-b pb-1 text-xl;
+}
+
+.markdown-preview h3 {
+  @apply text-lg;
+}
+
+.markdown-preview h4 {
+  @apply text-base;
+}
+
+.markdown-preview h5 {
+  @apply text-sm;
+}
+
+.markdown-preview h6 {
+  @apply text-xs tracking-wide text-muted-foreground uppercase;
+}
+
+.markdown-preview :where(strong) {
+  @apply font-semibold;
+}
+
+.markdown-preview a {
+  @apply text-blue-400 underline underline-offset-4 transition-colors hover:text-blue-300;
+}
+
+.markdown-preview :where(ul, ol) {
+  @apply pl-6;
+}
+
+.markdown-preview ul {
+  @apply list-disc;
+}
+
+.markdown-preview ol {
+  @apply list-decimal;
+}
+
+.markdown-preview ul ul {
+  @apply list-[circle];
+}
+
+.markdown-preview li {
+  @apply my-1;
+}
+
+.markdown-preview li > :where(ul, ol) {
+  @apply my-1;
+}
+
+.markdown-preview li::marker {
+  @apply text-muted-foreground;
+}
+
+/* GFM task lists */
+.markdown-preview ul.contains-task-list {
+  @apply list-none pl-1;
+}
+
+.markdown-preview input[type="checkbox"] {
+  @apply mr-2 align-middle accent-blue-400;
+}
+
+.markdown-preview blockquote {
+  @apply border-l-4 border-blue-400/60 pl-4 text-muted-foreground italic;
+}
+
+.markdown-preview code {
+  @apply rounded bg-muted px-1.5 py-0.5 font-mono text-[0.85em];
+}
+
+.markdown-preview pre {
+  @apply overflow-x-auto rounded-lg border bg-background p-3 font-mono text-xs leading-relaxed;
+}
+
+.markdown-preview pre code {
+  @apply rounded-none bg-transparent p-0 text-[inherit];
+}
+
+.markdown-preview table {
+  @apply block w-max max-w-full overflow-x-auto border-collapse text-xs;
+}
+
+.markdown-preview :where(th, td) {
+  @apply border px-3 py-1.5 text-left;
+}
+
+.markdown-preview th {
+  @apply bg-muted font-semibold;
+}
+
+.markdown-preview hr {
+  @apply border-t;
+}
+
+.markdown-preview img {
+  @apply max-w-full rounded-md;
+}
+
 /* Rounded scrollbar thumbs in the Monaco code editor */
 .code-editor .monaco-scrollable-element > .scrollbar > .slider {
   border-radius: 9999px;

@@ -1,7 +1,13 @@
 import { ExternalLink, File } from "lucide-react";
 
 import { CodeEditor } from "@/components/items/CodeEditor";
-import { formatFileSize, isCodeType, safeExternalUrl } from "@/lib/item-content";
+import { MarkdownEditor } from "@/components/items/MarkdownEditor";
+import {
+  formatFileSize,
+  isCodeType,
+  isMarkdownType,
+  safeExternalUrl,
+} from "@/lib/item-content";
 import type { ItemDetailData } from "@/types/items";
 
 interface ItemDrawerContentProps {
@@ -12,7 +18,7 @@ function EmptyContent() {
   return <p className="text-sm text-muted-foreground">No content.</p>;
 }
 
-// Read-only view; snippets and commands use the code editor, other text the markdown editor later
+// Read-only view; snippets and commands use the code editor, notes and prompts the markdown editor
 export function ItemDrawerContent({ item }: ItemDrawerContentProps) {
   if (item.contentType === "URL") {
     if (!item.url) return <EmptyContent />;
@@ -52,6 +58,9 @@ export function ItemDrawerContent({ item }: ItemDrawerContentProps) {
     return (
       <CodeEditor value={item.content} language={item.language} readOnly ariaLabel="Content" />
     );
+  }
+  if (isMarkdownType(item.type.name)) {
+    return <MarkdownEditor value={item.content} readOnly ariaLabel="Content" />;
   }
   return (
     <pre className="max-h-[28rem] overflow-auto rounded-lg border bg-muted/40 p-4 font-mono text-xs leading-relaxed">
