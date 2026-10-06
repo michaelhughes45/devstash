@@ -36,8 +36,12 @@ export function parseTags(input: string): string[] {
   return [...new Set(tags)];
 }
 
-// System types whose items get a language field for syntax highlighting
-const LANGUAGE_TYPES = ["snippet", "command"];
+// System types whose items get a language field and the code editor
+const CODE_TYPES = ["snippet", "command"];
+
+export function isCodeType(typeName: string): boolean {
+  return CODE_TYPES.includes(typeName);
+}
 
 export interface EditableFields {
   content: boolean;
@@ -52,7 +56,7 @@ export function getEditableFields(item: {
 }): EditableFields {
   return {
     content: item.contentType === "TEXT",
-    language: item.contentType === "TEXT" && LANGUAGE_TYPES.includes(item.type.name),
+    language: item.contentType === "TEXT" && isCodeType(item.type.name),
     url: item.contentType === "URL",
   };
 }

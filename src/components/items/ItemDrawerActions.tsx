@@ -1,10 +1,10 @@
 "use client";
 
 import { Copy, Pencil, Pin, Star } from "lucide-react";
-import { toast } from "sonner";
 
 import { DeleteItemDialog } from "@/components/items/DeleteItemDialog";
 import { Button } from "@/components/ui/button";
+import { copyToClipboard } from "@/lib/clipboard";
 import { getItemCopyText } from "@/lib/item-content";
 import type { ItemDetailData } from "@/types/items";
 
@@ -24,14 +24,8 @@ function ActionLabel({ children }: { children: string }) {
 export function ItemDrawerActions({ item, onEdit, onDeleted }: ItemDrawerActionsProps) {
   const copyText = item ? getItemCopyText(item) : null;
 
-  async function handleCopy() {
-    if (!copyText) return;
-    try {
-      await navigator.clipboard.writeText(copyText);
-      toast.success("Copied to clipboard");
-    } catch {
-      toast.error("Couldn't copy to clipboard");
-    }
+  function handleCopy() {
+    if (copyText) void copyToClipboard(copyText);
   }
 
   return (
