@@ -6,6 +6,8 @@ import {
   deleteItem,
   getCreatableItemTypes,
   getItemDetail,
+  getItemFile,
+  isUniqueViolation,
   updateItem,
 } from "@/lib/db/items";
 import { prisma } from "@/lib/prisma";
@@ -162,6 +164,28 @@ describe("createItem", () => {
     );
   });
 
+  it("stores file and image items with the FILE content type and file details", async () => {
+    vi.mocked(prisma.itemType.findFirst).mockResolvedValue({ id: "type-5" } as never);
+    vi.mocked(prisma.item.create).mockResolvedValue(row as never);
+    const file = {
+      fileUrl: "https://files.example.com/user1/abc.png",
+      fileName: "diagram.png",
+      fileSize: 1234,
+    };
+
+    await createItem(
+      "user-1",
+      { ...data, type: "image", content: null, language: null, tags: [] },
+      file,
+    );
+
+    expect(prisma.item.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ contentType: "FILE", ...file }),
+      }),
+    );
+  });
+
   it("returns the created item detail", async () => {
     vi.mocked(prisma.itemType.findFirst).mockResolvedValue({ id: "type-1" } as never);
     vi.mocked(prisma.item.create).mockResolvedValue(row as never);
@@ -191,7 +215,7 @@ describe("getCreatableItemTypes", () => {
         where: {
           isSystem: true,
           userId: null,
-          name: { in: ["snippet", "prompt", "command", "note", "link"] },
+          name: { in: ["snippet", "prompt", "command", "note", "file", "image", "link"] },
         },
       }),
     );
@@ -263,9 +287,9 @@ describe("updateItem", () => {
 
 describe("deleteItem", () => {
   it("only deletes the item for its owner", async () => {
-    vi.mocked(prisma.item.delete).mockResolvedValue({ id: "item-1" } as never);
+    vi.mocked(prisma.item.delete).mockResolvedValue({ fileUrl: null } as never);
 
-    expect(await deleteItem("user-1", "item-1")).toBe(true);
+    expect(await deleteItem("user-1", "item-1")).toEqual({ fileUrl: null });
     expect(prisma.item.delete).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "item-1", userId: "user-1" } }),
     );
@@ -279,12 +303,48 @@ describe("deleteItem", () => {
       }),
     );
 
-    expect(await deleteItem("user-1", "item-1")).toBe(false);
+    expect(await deleteItem("user-1", "item-1")).toBeNull();
   });
 
   it("rethrows other database errors", async () => {
     vi.mocked(prisma.item.delete).mockRejectedValue(new Error("db down"));
 
     await expect(deleteItem("user-1", "item-1")).rejects.toThrow("db down");
+  });
+});
+
+describe("isUniqueViolation", () => {
+  it("is true only for Prisma's unique constraint error", () => {
+    const error = (code: string) =>
+      new Prisma.PrismaClientKnownRequestError("failed", { code, clientVersion: "test" });
+
+    expect(isUniqueViolation(error("P2002"))).toBe(true);
+    expect(isUniqueViolation(error("P2025"))).toBe(false);
+    expect(isUniqueViolation(new Error("P2002"))).toBe(false);
+  });
+});
+
+describe("getItemFile", () => {
+  it("only looks up the owner's file items", async () => {
+    vi.mocked(prisma.item.findFirst).mockResolvedValue(null);
+
+    expect(await getItemFile("user-1", "item-1")).toBeNull();
+    expect(prisma.item.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "item-1", userId: "user-1", contentType: "FILE", fileUrl: { not: null } },
+      }),
+    );
+  });
+
+  it("returns the stored file URL and name", async () => {
+    vi.mocked(prisma.item.findFirst).mockResolvedValue({
+      fileUrl: "https://files.example.com/a.pdf",
+      fileName: "a.pdf",
+    } as never);
+
+    expect(await getItemFile("user-1", "item-1")).toEqual({
+      fileUrl: "https://files.example.com/a.pdf",
+      fileName: "a.pdf",
+    });
   });
 });

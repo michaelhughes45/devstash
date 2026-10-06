@@ -53,7 +53,7 @@ model Item {
   language String? // e.g. "typescript", used for syntax highlighting
 
   // FILE types (file, image) — stored in Cloudflare R2
-  fileUrl  String?
+  fileUrl  String? @unique // one item per stored file, so deleting one can't break another
   fileName String?
   fileSize Int? // bytes
 

@@ -57,8 +57,10 @@ describe("getCreateFields", () => {
 });
 
 describe("getContentTypeForType", () => {
-  it("stores links as URL and everything else as text", () => {
+  it("stores links as URL, uploads as FILE and everything else as text", () => {
     expect(getContentTypeForType("link")).toBe("URL");
+    expect(getContentTypeForType("file")).toBe("FILE");
+    expect(getContentTypeForType("image")).toBe("FILE");
     expect(getContentTypeForType("snippet")).toBe("TEXT");
     expect(getContentTypeForType("note")).toBe("TEXT");
   });

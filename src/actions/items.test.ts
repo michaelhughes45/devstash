@@ -4,9 +4,11 @@ import { createItem, deleteItem, updateItem } from "@/actions/items";
 import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
+  isUniqueViolation,
   updateItem as updateItemRecord,
   type ItemDetail,
 } from "@/lib/db/items";
+import { copyObject, deleteObjectQuietly, headObject } from "@/lib/r2";
 import { getCurrentUserId } from "@/lib/session";
 
 vi.mock("@/lib/session", () => ({ getCurrentUserId: vi.fn() }));
@@ -14,7 +16,17 @@ vi.mock("@/lib/db/items", () => ({
   createItem: vi.fn(),
   updateItem: vi.fn(),
   deleteItem: vi.fn(),
+  isUniqueViolation: vi.fn(),
 }));
+// Key and URL helpers stay real; only the calls to R2 are mocked
+vi.mock("@/lib/r2", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/r2")>()),
+  headObject: vi.fn(),
+  copyObject: vi.fn(),
+  deleteObjectQuietly: vi.fn(),
+}));
+
+const R2_PUBLIC_URL = "https://files.example.com";
 
 const createdAt = new Date("2026-01-15T10:00:00Z");
 const updatedAt = new Date("2026-02-01T12:00:00Z");
@@ -49,6 +61,7 @@ const validInput = {
 
 beforeEach(() => {
   vi.mocked(getCurrentUserId).mockResolvedValue("user-1");
+  vi.stubEnv("R2_PUBLIC_URL", R2_PUBLIC_URL);
 });
 
 describe("updateItem", () => {
@@ -157,7 +170,7 @@ describe("createItem", () => {
   it("rejects a type the dialog doesn't offer", async () => {
     const result = await createItem({
       ...createInput,
-      type: "file" as unknown as "snippet",
+      type: "folder" as unknown as "snippet",
     });
 
     expect(result.success).toBe(false);
@@ -179,7 +192,7 @@ describe("createItem", () => {
       language: "typescript",
       url: null,
       tags: ["react"],
-    });
+    }, null);
   });
 
   it("returns the created item with ISO dates", async () => {
@@ -222,6 +235,159 @@ describe("createItem", () => {
   });
 });
 
+describe("createItem with an upload", () => {
+  const fileKey = "pending/user1/0f8fad5b-d9cb-469f-a165-70867728950e.pdf";
+  const finalKey = "user1/0f8fad5b-d9cb-469f-a165-70867728950e.pdf";
+  const fileInput = { type: "file" as const, title: "Spec", tags: [], fileKey };
+  const UPLOAD_NOT_FOUND = "The upload wasn't found. Please choose the file again.";
+
+  beforeEach(() => {
+    vi.mocked(getCurrentUserId).mockResolvedValue("user1");
+    vi.mocked(headObject).mockResolvedValue({
+      size: 2048,
+      contentType: "application/pdf",
+      originalName: "API Spec.pdf",
+    });
+    vi.mocked(createItemRecord).mockResolvedValue(savedItem);
+  });
+
+  it("moves the upload out of pending/ and stores the details read from R2", async () => {
+    const result = await createItem(fileInput);
+
+    expect(result.success).toBe(true);
+    expect(headObject).toHaveBeenCalledWith(fileKey);
+    expect(copyObject).toHaveBeenCalledWith(fileKey, finalKey);
+    expect(createItemRecord).toHaveBeenCalledWith(
+      "user1",
+      expect.objectContaining({ type: "file", title: "Spec" }),
+      {
+        fileUrl: `${R2_PUBLIC_URL}/${finalKey}`,
+        fileName: "API Spec.pdf",
+        fileSize: 2048,
+      },
+    );
+    expect(deleteObjectQuietly).toHaveBeenCalledWith(fileKey);
+    expect(deleteObjectQuietly).not.toHaveBeenCalledWith(finalKey);
+  });
+
+  it("requires an upload for file and image items", async () => {
+    const result = await createItem({ ...fileInput, fileKey: undefined });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.fieldErrors?.file).toEqual(["Choose a file to upload"]);
+    expect(createItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("rejects another user's upload without reading or deleting it", async () => {
+    const result = await createItem({
+      ...fileInput,
+      fileKey: "pending/user2/0f8fad5b-d9cb-469f-a165-70867728950e.pdf",
+    });
+
+    expect(result.success).toBe(false);
+    expect(headObject).not.toHaveBeenCalled();
+    expect(deleteObjectQuietly).not.toHaveBeenCalled();
+    expect(createItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("rejects an item's final key, so an attached file can't be reused", async () => {
+    const result = await createItem({ ...fileInput, fileKey: finalKey });
+
+    expect(result.success).toBe(false);
+    expect(headObject).not.toHaveBeenCalled();
+    expect(deleteObjectQuietly).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing upload", async () => {
+    vi.mocked(headObject).mockResolvedValue(null);
+
+    const result = await createItem(fileInput);
+
+    expect(result).toEqual(
+      expect.objectContaining({ success: false, error: UPLOAD_NOT_FOUND }),
+    );
+    expect(copyObject).not.toHaveBeenCalled();
+    expect(createItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("rejects and deletes a stored file over the type's size limit", async () => {
+    vi.mocked(headObject).mockResolvedValue({
+      size: 11 * 1024 * 1024,
+      contentType: "application/pdf",
+      originalName: "big.pdf",
+    });
+
+    const result = await createItem(fileInput);
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.fieldErrors?.file).toEqual(["File is too large. The limit is 10 MB."]);
+    expect(deleteObjectQuietly).toHaveBeenCalledWith(fileKey);
+    expect(copyObject).not.toHaveBeenCalled();
+    expect(createItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("rejects a file upload used as an image", async () => {
+    const result = await createItem({ ...fileInput, type: "image" });
+
+    expect(result.success).toBe(false);
+    expect(deleteObjectQuietly).toHaveBeenCalledWith(fileKey);
+    expect(createItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("deletes the upload when the other fields are invalid", async () => {
+    const result = await createItem({ ...fileInput, title: " " });
+
+    expect(result.success).toBe(false);
+    expect(deleteObjectQuietly).toHaveBeenCalledWith(fileKey);
+  });
+
+  it("deletes both copies when the create throws", async () => {
+    vi.mocked(createItemRecord).mockRejectedValue(new Error("db down"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const result = await createItem(fileInput);
+
+    expect(result).toEqual({
+      success: false,
+      error: "Something went wrong. Please try again.",
+    });
+    expect(deleteObjectQuietly).toHaveBeenCalledWith(fileKey);
+    expect(deleteObjectQuietly).toHaveBeenCalledWith(finalKey);
+  });
+
+  it("deletes both copies when the system type is missing", async () => {
+    vi.mocked(createItemRecord).mockResolvedValue(null);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect((await createItem(fileInput)).success).toBe(false);
+    expect(deleteObjectQuietly).toHaveBeenCalledWith(finalKey);
+  });
+
+  it("keeps the final file when another create already attached it", async () => {
+    vi.mocked(createItemRecord).mockRejectedValue(new Error("unique"));
+    vi.mocked(isUniqueViolation).mockReturnValue(true);
+
+    const result = await createItem(fileInput);
+
+    expect(result).toEqual({ success: false, error: UPLOAD_NOT_FOUND });
+    expect(deleteObjectQuietly).not.toHaveBeenCalledWith(finalKey);
+  });
+
+  it("ignores a stray upload key on a text item", async () => {
+    await createItem({ type: "snippet" as const, ...validInput, fileKey });
+
+    expect(headObject).not.toHaveBeenCalled();
+    expect(deleteObjectQuietly).not.toHaveBeenCalled();
+    expect(createItemRecord).toHaveBeenCalledWith(
+      "user1",
+      expect.not.objectContaining({ fileKey }),
+      null,
+    );
+  });
+});
+
 describe("deleteItem", () => {
   it("rejects signed-out users without touching the item", async () => {
     vi.mocked(getCurrentUserId).mockResolvedValue(null);
@@ -245,16 +411,37 @@ describe("deleteItem", () => {
   });
 
   it("deletes the item for the signed-in user", async () => {
-    vi.mocked(deleteItemRecord).mockResolvedValue(true);
+    vi.mocked(deleteItemRecord).mockResolvedValue({ fileUrl: null });
 
     const result = await deleteItem("item-1");
 
     expect(deleteItemRecord).toHaveBeenCalledWith("user-1", "item-1");
     expect(result).toEqual({ success: true });
+    expect(deleteObjectQuietly).not.toHaveBeenCalled();
+  });
+
+  it("deletes a file item's stored file from R2", async () => {
+    vi.mocked(deleteItemRecord).mockResolvedValue({
+      fileUrl: `${R2_PUBLIC_URL}/user-1/abc.pdf`,
+    });
+
+    const result = await deleteItem("item-1");
+
+    expect(result).toEqual({ success: true });
+    expect(deleteObjectQuietly).toHaveBeenCalledWith("user-1/abc.pdf");
+  });
+
+  it("leaves a file URL that isn't in the bucket alone", async () => {
+    vi.mocked(deleteItemRecord).mockResolvedValue({
+      fileUrl: "https://elsewhere.example.com/user-1/abc.pdf",
+    });
+
+    expect(await deleteItem("item-1")).toEqual({ success: true });
+    expect(deleteObjectQuietly).not.toHaveBeenCalled();
   });
 
   it("reports a missing or someone else's item as not found", async () => {
-    vi.mocked(deleteItemRecord).mockResolvedValue(false);
+    vi.mocked(deleteItemRecord).mockResolvedValue(null);
 
     const result = await deleteItem("other-users-item");
 

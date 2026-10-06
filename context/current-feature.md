@@ -1,18 +1,54 @@
-# Current Feature
+# Current Feature: File Upload with Cloudflare R2
 
-<!-- Feature name and short description -->
+Add file and image upload using Cloudflare R2 storage.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Upload API route that stores files in R2
+- Keep Prisma/database functions in `src/lib/db/items.ts`
+- `FileUpload` component with drag-and-drop and an upload progress indicator
+- New Item dialog uses `FileUpload` for the file and image types
+- Deleting an item also deletes its file from R2
+- Download proxy API route (avoids CORS issues)
+- Download button in the item drawer for file types
+- Image preview for images, file info (name, size) for files
+- Enforce the file constraints below on the server, not just the client
 
 ## Notes
 
-<!-- Any extra notes -->
+Spec: `context/features/file-image-spec.md`
+
+**File constraints**
+
+| Type   | Max size | Extensions |
+| ------ | -------- | ---------- |
+| Images | 5 MB     | `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg` |
+| Files  | 10 MB    | `.pdf`, `.txt`, `.md`, `.json`, `.yaml`, `.yml`, `.xml`, `.csv`, `.toml`, `.ini` |
+
+**MIME types**
+
+- Images: `image/png`, `image/jpeg`, `image/gif`, `image/webp`, `image/svg+xml`
+- Files: `application/pdf`, `text/plain` (also `.ini`), `text/markdown`, `application/json`, `application/x-yaml`, `text/yaml`, `application/xml`, `text/xml`, `text/csv`, `application/toml`
+
+**Existing context**
+
+- `Item` already has `fileUrl`, `fileName` and `fileSize`, and `ContentType.FILE`; the `file` and `image` system types are seeded.
+- R2 env vars are listed in `context/project-overview.md` (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`).
+- `createItemSchema` / `CREATABLE_ITEM_TYPES` currently allow only snippet, prompt, command, note and link; file and image need adding.
+- The drawer already shows file name and size; Delete currently leaves R2 files behind (noted in Item Delete history).
+- The spec doesn't mention Pro gating (files are Pro in the overview; the sidebar PRO badge is display only).
+- SVG uploads can carry scripts, so serving them needs care (e.g. download proxy with safe `Content-Type`/`Content-Disposition`, not inline from the app origin).
+
+**Review fixes (done)**
+
+- Upload route returns 411 without `Content-Length` and rate-limits uploads to 20/hour per user.
+- Uploads go to `pending/{userId}/…`; `createItem` copies them to `{userId}/…` and deletes the pending copy. A bucket lifecycle rule should delete `pending/` after 1 day — the app's R2 token can't set it (AccessDenied), so it must be added in the Cloudflare dashboard or with `npm run r2:lifecycle -- --confirm` using an admin token.
+- Upload key check accepts any user id format.
+- `Item.fileUrl` is unique (`item_file_url_unique` migration, applied to the development branch; production needs `prisma migrate deploy`).
 
 ## History
 

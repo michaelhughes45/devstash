@@ -1,3 +1,5 @@
+import { isFileItemType } from "@/lib/file-constraints";
+
 interface CopyableItem {
   contentType: "TEXT" | "FILE" | "URL";
   content: string | null;
@@ -103,13 +105,22 @@ export function buildItemInput(values: ItemFormValues, fields: EditableFields) {
   };
 }
 
-// System types the New Item dialog can create; file and image need uploads
-export const CREATABLE_ITEM_TYPES = ["snippet", "prompt", "command", "note", "link"] as const;
+// System types the New Item dialog can create, in sidebar order; file and image are uploads
+export const CREATABLE_ITEM_TYPES = [
+  "snippet",
+  "prompt",
+  "command",
+  "note",
+  "file",
+  "image",
+  "link",
+] as const;
 
 export type CreatableItemType = (typeof CREATABLE_ITEM_TYPES)[number];
 
-export function getContentTypeForType(type: CreatableItemType): "TEXT" | "URL" {
-  return type === "link" ? "URL" : "TEXT";
+export function getContentTypeForType(type: CreatableItemType): "TEXT" | "FILE" | "URL" {
+  if (type === "link") return "URL";
+  return isFileItemType(type) ? "FILE" : "TEXT";
 }
 
 // Fields the create form shows for a type, matching what the edit form would show

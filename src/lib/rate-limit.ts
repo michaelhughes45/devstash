@@ -7,6 +7,8 @@ const RATE_LIMITS = {
   forgotPassword: { limit: 3, window: "1 h" },
   resetPassword: { limit: 5, window: "15 m" },
   resendVerification: { limit: 3, window: "15 m" },
+  // Per user; keeps one account from filling the R2 bucket
+  upload: { limit: 20, window: "1 h" },
 } satisfies Record<string, { limit: number; window: Duration }>;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;
@@ -27,7 +29,7 @@ function createLimiters() {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) {
-    console.warn("Upstash is not configured; auth rate limiting is disabled");
+    console.warn("Upstash is not configured; rate limiting is disabled");
     return null;
   }
 
