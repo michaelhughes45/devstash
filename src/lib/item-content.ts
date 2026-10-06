@@ -43,9 +43,18 @@ export function isCodeType(typeName: string): boolean {
   return CODE_TYPES.includes(typeName);
 }
 
+// System types whose content is Markdown, written and previewed in the markdown editor
+const MARKDOWN_TYPES = ["note", "prompt"];
+
+export function isMarkdownType(typeName: string): boolean {
+  return MARKDOWN_TYPES.includes(typeName);
+}
+
 export interface EditableFields {
   content: boolean;
   language: boolean;
+  // Content is edited with the markdown editor instead of a plain textarea
+  markdown: boolean;
   url: boolean;
 }
 
@@ -54,9 +63,11 @@ export function getEditableFields(item: {
   contentType: "TEXT" | "FILE" | "URL";
   type: { name: string };
 }): EditableFields {
+  const isText = item.contentType === "TEXT";
   return {
-    content: item.contentType === "TEXT",
-    language: item.contentType === "TEXT" && isCodeType(item.type.name),
+    content: isText,
+    language: isText && isCodeType(item.type.name),
+    markdown: isText && isMarkdownType(item.type.name),
     url: item.contentType === "URL",
   };
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { CodeEditor } from "@/components/items/CodeEditor";
+import { MarkdownEditor } from "@/components/items/MarkdownEditor";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -93,7 +94,20 @@ export function ItemFormFields({
         </FormField>
       )}
 
-      {fields.content && !fields.language && (
+      {fields.content && fields.markdown && (
+        <FormField id={id("content")} label="Content" error={error("content")}>
+          <MarkdownEditor
+            id={id("content")}
+            value={values.content}
+            onChange={(value) => onChange("content", value)}
+            ariaLabel="Content"
+            ariaDescribedBy={error("content") && `${id("content")}-error`}
+            invalid={Boolean(error("content"))}
+          />
+        </FormField>
+      )}
+
+      {fields.content && !fields.language && !fields.markdown && (
         <FormField id={id("content")} label="Content" error={error("content")}>
           <Textarea
             id={id("content")}

@@ -8,6 +8,7 @@ import {
   getEditableFields,
   getItemCopyText,
   isCodeType,
+  isMarkdownType,
   parseTags,
   safeExternalUrl,
 } from "@/lib/item-content";
@@ -22,21 +23,36 @@ describe("isCodeType", () => {
   });
 });
 
+describe("isMarkdownType", () => {
+  it("is true for notes and prompts only", () => {
+    expect(isMarkdownType("note")).toBe(true);
+    expect(isMarkdownType("prompt")).toBe(true);
+    expect(isMarkdownType("snippet")).toBe(false);
+    expect(isMarkdownType("command")).toBe(false);
+    expect(isMarkdownType("link")).toBe(false);
+  });
+});
+
 describe("getCreateFields", () => {
   it("shows content and language for snippets and commands", () => {
-    const expected = { content: true, language: true, url: false };
+    const expected = { content: true, language: true, markdown: false, url: false };
     expect(getCreateFields("snippet")).toEqual(expected);
     expect(getCreateFields("command")).toEqual(expected);
   });
 
-  it("shows only content for prompts and notes", () => {
-    const expected = { content: true, language: false, url: false };
+  it("shows markdown content for prompts and notes", () => {
+    const expected = { content: true, language: false, markdown: true, url: false };
     expect(getCreateFields("prompt")).toEqual(expected);
     expect(getCreateFields("note")).toEqual(expected);
   });
 
   it("shows only the URL for links", () => {
-    expect(getCreateFields("link")).toEqual({ content: false, language: false, url: true });
+    expect(getCreateFields("link")).toEqual({
+      content: false,
+      language: false,
+      markdown: false,
+      url: true,
+    });
   });
 });
 
@@ -59,13 +75,13 @@ describe("buildItemInput", () => {
   };
 
   it("sends only the fields the form shows, with tags parsed", () => {
-    expect(buildItemInput(values, { content: false, language: false, url: true })).toEqual({
+    expect(buildItemInput(values, { content: false, language: false, markdown: false, url: true })).toEqual({
       title: "Docs",
       description: "Reference",
       tags: ["next", "docs"],
       url: "https://nextjs.org",
     });
-    expect(buildItemInput(values, { content: true, language: true, url: false })).toEqual({
+    expect(buildItemInput(values, { content: true, language: true, markdown: false, url: false })).toEqual({
       title: "Docs",
       description: "Reference",
       tags: ["next", "docs"],
@@ -149,13 +165,14 @@ describe("parseTags", () => {
 
 describe("getEditableFields", () => {
   it.each([
-    ["snippet", "TEXT", { content: true, language: true, url: false }],
-    ["command", "TEXT", { content: true, language: true, url: false }],
-    ["prompt", "TEXT", { content: true, language: false, url: false }],
-    ["note", "TEXT", { content: true, language: false, url: false }],
-    ["link", "URL", { content: false, language: false, url: true }],
-    ["file", "FILE", { content: false, language: false, url: false }],
-    ["image", "FILE", { content: false, language: false, url: false }],
+    ["snippet", "TEXT", { content: true, language: true, markdown: false, url: false }],
+    ["command", "TEXT", { content: true, language: true, markdown: false, url: false }],
+    ["prompt", "TEXT", { content: true, language: false, markdown: true, url: false }],
+    ["note", "TEXT", { content: true, language: false, markdown: true, url: false }],
+    ["link", "URL", { content: false, language: false, markdown: false, url: true }],
+    ["file", "FILE", { content: false, language: false, markdown: false, url: false }],
+    ["image", "FILE", { content: false, language: false, markdown: false, url: false }],
+    ["recipe", "TEXT", { content: true, language: false, markdown: false, url: false }],
   ] as const)("shows the right fields for a %s", (name, contentType, expected) => {
     expect(getEditableFields({ contentType, type: { name } })).toEqual(expected);
   });
