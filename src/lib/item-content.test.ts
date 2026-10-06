@@ -7,9 +7,20 @@ import {
   getCreateFields,
   getEditableFields,
   getItemCopyText,
+  isCodeType,
   parseTags,
   safeExternalUrl,
 } from "@/lib/item-content";
+
+describe("isCodeType", () => {
+  it("is true for snippets and commands only", () => {
+    expect(isCodeType("snippet")).toBe(true);
+    expect(isCodeType("command")).toBe(true);
+    expect(isCodeType("prompt")).toBe(false);
+    expect(isCodeType("note")).toBe(false);
+    expect(isCodeType("link")).toBe(false);
+  });
+});
 
 describe("getCreateFields", () => {
   it("shows content and language for snippets and commands", () => {

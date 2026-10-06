@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { CodeEditor } from "@/components/items/CodeEditor";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,7 +81,19 @@ export function ItemFormFields({
         />
       </FormField>
 
-      {fields.content && (
+      {fields.content && fields.language && (
+        <FormField id={id("content")} label="Content" error={error("content")}>
+          <CodeEditor
+            value={values.content}
+            language={values.language}
+            onChange={(value) => onChange("content", value)}
+            ariaLabel="Content"
+            invalid={Boolean(error("content"))}
+          />
+        </FormField>
+      )}
+
+      {fields.content && !fields.language && (
         <FormField id={id("content")} label="Content" error={error("content")}>
           <Textarea
             id={id("content")}
