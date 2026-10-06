@@ -20,6 +20,8 @@ export interface ItemWithType {
   isFavorite: boolean;
   isPinned: boolean;
   createdAt: Date;
+  // Public R2 URL for file and image items; image cards use it as the thumbnail
+  fileUrl: string | null;
   type: ItemCardType;
   tags: string[];
 }
@@ -39,6 +41,7 @@ const ITEM_CARD_SELECT = {
   isFavorite: true,
   isPinned: true,
   createdAt: true,
+  fileUrl: true,
   type: { select: { id: true, name: true, icon: true, color: true } },
   tags: { select: { tag: { select: { name: true } } } },
 } satisfies Prisma.ItemSelect;
@@ -198,7 +201,6 @@ export interface ItemDetail extends ItemWithType {
   content: string | null;
   language: string | null;
   url: string | null;
-  fileUrl: string | null;
   fileName: string | null;
   fileSize: number | null;
   updatedAt: Date;
@@ -211,7 +213,6 @@ const ITEM_DETAIL_SELECT = {
   content: true,
   language: true,
   url: true,
-  fileUrl: true,
   fileName: true,
   fileSize: true,
   updatedAt: true,

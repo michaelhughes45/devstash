@@ -1,18 +1,28 @@
-# Current Feature
+# Current Feature: Image Gallery View
 
-<!-- Feature name and short description -->
+Show image items as a gallery of thumbnail cards instead of the regular item card.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Create an image thumbnail card that replaces the regular `ItemCard` for image items
+- Show image items in a 3-column grid/gallery
+- Thumbnail uses a 16:9 aspect ratio (`aspect-video`)
+- Image fills the card with `object-cover` (edges may be cropped)
+- Subtle hover zoom on the image (5% scale, 300ms transition)
 
 ## Notes
 
-<!-- Any extra notes -->
+- Spec: `context/features/image-display-spec.md`
+- Main target is `/items/[type]` (`src/app/items/[type]/page.tsx`), which renders `ItemCard`s in a `md:grid-cols-2 xl:grid-cols-3` grid; the existing responsive breakpoints (one column on phones) should stay so it doesn't overflow at phone width
+- The thumbnail comes from the item's public `fileUrl` (R2, `R2_PUBLIC_URL`), the same source the drawer's image preview uses; `getItemsByType` may need to return `fileUrl`
+- Clicking a thumbnail card should still open the item drawer (wrap in `ItemCardTrigger`)
+- Keep the title visible on the card; handle a missing `fileUrl` with a placeholder
+- Clip the zoom with `overflow-hidden` on the image container
+- Unit tests only for any changed query/utility (components aren't unit-tested)
 
 ## History
 

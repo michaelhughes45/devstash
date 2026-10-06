@@ -52,6 +52,11 @@ export function isMarkdownType(typeName: string): boolean {
   return MARKDOWN_TYPES.includes(typeName);
 }
 
+// Image items are shown as thumbnails in a gallery instead of regular item cards
+export function isImageType(typeName: string): boolean {
+  return typeName === "image";
+}
+
 export interface EditableFields {
   content: boolean;
   language: boolean;
