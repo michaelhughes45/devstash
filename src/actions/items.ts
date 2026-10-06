@@ -5,9 +5,26 @@ import { z } from "zod";
 import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
+  isUniqueViolation,
   updateItem as updateItemRecord,
   type ItemDetail,
+  type ItemFileData,
 } from "@/lib/db/items";
+import {
+  getStoredContentType,
+  isFileItemType,
+  validateUploadFile,
+  type FileItemType,
+} from "@/lib/file-constraints";
+import {
+  copyObject,
+  deleteObjectQuietly,
+  finalKeyFor,
+  headObject,
+  isUserUploadKey,
+  keyFromPublicUrl,
+  publicUrlForKey,
+} from "@/lib/r2";
 import { getCurrentUserId } from "@/lib/session";
 import {
   createItemSchema,
@@ -22,6 +39,8 @@ const NOT_SIGNED_IN = "You need to be signed in to do that.";
 const NOT_FOUND = "Item not found.";
 const INVALID_INPUT = "Please fix the highlighted fields.";
 const GENERIC_ERROR = "Something went wrong. Please try again.";
+const UPLOAD_NOT_FOUND = "The upload wasn't found. Please choose the file again.";
+const INVALID_UPLOAD = "This file can't be used for this item type.";
 
 export type ItemMutationResult =
   | { success: true; data: ItemDetailData }
@@ -42,12 +61,62 @@ function toItemDetailData(item: ItemDetail): ItemDetailData {
   };
 }
 
+// Deletes the user's own pending upload, so a failed create doesn't leave it
+// behind until the lifecycle rule runs. Pending keys are never stored on an
+// item, so this can't break one; another user's key is ignored.
+async function discardUpload(userId: string, fileKey: unknown): Promise<void> {
+  if (typeof fileKey !== "string" || !isUserUploadKey(userId, fileKey)) return;
+  await deleteObjectQuietly(fileKey);
+}
+
+type FileResolution = { file: ItemFileData } | { error: string };
+
+// Checks a pending upload against the item type's rules, reading its real size
+// and type from R2 rather than trusting the client
+async function resolveUpload(
+  userId: string,
+  type: FileItemType,
+  pendingKey: string,
+): Promise<FileResolution> {
+  if (!isUserUploadKey(userId, pendingKey)) return { error: UPLOAD_NOT_FOUND };
+
+  const stored = await headObject(pendingKey);
+  if (!stored) return { error: UPLOAD_NOT_FOUND };
+
+  const fileName = stored.originalName ?? pendingKey.slice(pendingKey.lastIndexOf("/") + 1);
+  const error = validateUploadFile(type, {
+    name: fileName,
+    size: stored.size,
+    type: stored.contentType ?? "",
+  });
+  // The key's extension must match too, since the stored type came from it
+  if (error || getStoredContentType(type, pendingKey) !== stored.contentType) {
+    return { error: error ?? INVALID_UPLOAD };
+  }
+
+  const fileUrl = publicUrlForKey(finalKeyFor(pendingKey));
+  return { file: { fileUrl, fileName, fileSize: stored.size } };
+}
+
+// Validates the pending upload and copies it to its final key, out of reach of
+// the pending/ lifecycle rule
+async function attachUpload(
+  userId: string,
+  type: FileItemType,
+  pendingKey: string,
+): Promise<FileResolution> {
+  const resolved = await resolveUpload(userId, type, pendingKey);
+  if ("file" in resolved) await copyObject(pendingKey, finalKeyFor(pendingKey));
+  return resolved;
+}
+
 export async function createItem(data: CreateItemInput): Promise<CreateItemResult> {
   const userId = await getCurrentUserId();
   if (!userId) return { success: false, error: NOT_SIGNED_IN };
 
   const parsed = createItemSchema.safeParse(data);
   if (!parsed.success) {
+    await discardUpload(userId, (data as { fileKey?: unknown } | null)?.fileKey);
     return {
       success: false,
       error: INVALID_INPUT,
@@ -55,15 +124,33 @@ export async function createItem(data: CreateItemInput): Promise<CreateItemResul
     };
   }
 
+  const { fileKey, ...itemData } = parsed.data;
+  const { type } = itemData;
+  const uploadKey = isFileItemType(type) ? fileKey : null;
+  let finalKey: string | null = null;
   try {
-    const item = await createItemRecord(userId, parsed.data);
-    if (!item) {
-      console.error(`System item type "${parsed.data.type}" not found`);
-      return { success: false, error: GENERIC_ERROR };
+    let file: ItemFileData | null = null;
+    if (isFileItemType(type) && uploadKey) {
+      const attached = await attachUpload(userId, type, uploadKey);
+      if ("error" in attached) {
+        await discardUpload(userId, uploadKey);
+        return { success: false, error: attached.error, fieldErrors: { file: [attached.error] } };
+      }
+      file = attached.file;
+      finalKey = finalKeyFor(uploadKey);
     }
+
+    const item = await createItemRecord(userId, itemData, file);
+    if (!item) throw new Error(`System item type "${type}" not found`);
+    await discardUpload(userId, uploadKey);
     return { success: true, data: toItemDetailData(item) };
   } catch (error) {
+    await discardUpload(userId, uploadKey);
+    // Another create already attached this upload; its file must stay
+    if (isUniqueViolation(error)) return { success: false, error: UPLOAD_NOT_FOUND };
+
     console.error("Item create failed", error);
+    if (finalKey) await deleteObjectQuietly(finalKey);
     return { success: false, error: GENERIC_ERROR };
   }
 }
@@ -112,7 +199,12 @@ export async function deleteItem(itemId: string): Promise<DeleteItemResult> {
   try {
     // Scoped to the owner, so another user's item is reported as missing
     const deleted = await deleteItemRecord(userId, parsed.data);
-    return deleted ? { success: true } : { success: false, error: NOT_FOUND };
+    if (!deleted) return { success: false, error: NOT_FOUND };
+
+    // The item is already gone, so a failed R2 delete is only logged
+    const fileKey = deleted.fileUrl ? keyFromPublicUrl(deleted.fileUrl) : null;
+    if (fileKey) await deleteObjectQuietly(fileKey);
+    return { success: true };
   } catch (error) {
     console.error("Item delete failed", error);
     return { success: false, error: GENERIC_ERROR };

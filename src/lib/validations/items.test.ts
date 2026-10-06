@@ -85,7 +85,7 @@ describe("updateItemSchema", () => {
 });
 
 describe("createItemSchema", () => {
-  function createErrors(input: unknown) {
+  function createErrors(input: unknown): Record<string, string[] | undefined> {
     const result = createItemSchema.safeParse(input);
     if (result.success) throw new Error("expected validation to fail");
     return z.flattenError(result.error).fieldErrors;
@@ -93,7 +93,7 @@ describe("createItemSchema", () => {
 
   it("requires one of the creatable types", () => {
     expect(createErrors({ title: "Hook", tags: [] }).type).toEqual(["Choose an item type"]);
-    expect(createErrors({ type: "file", title: "Hook", tags: [] }).type).toEqual([
+    expect(createErrors({ type: "folder", title: "Hook", tags: [] }).type).toEqual([
       "Choose an item type",
     ]);
   });
@@ -121,8 +121,28 @@ describe("createItemSchema", () => {
       content: "  return 1;\n",
       language: "typescript",
       url: null,
+      fileKey: null,
       tags: ["react"],
     });
+  });
+
+  it("requires an upload for file and image items", () => {
+    expect(createErrors({ type: "file", title: "Spec", tags: [] }).file).toEqual([
+      "Choose a file to upload",
+    ]);
+    expect(createErrors({ type: "image", title: "Logo", fileKey: " ", tags: [] }).file).toEqual([
+      "Choose a file to upload",
+    ]);
+  });
+
+  it("keeps the upload key only for file and image items", () => {
+    const fileKey = "user1/0f8fad5b-d9cb-469f-a165-70867728950e.png";
+    expect(
+      createItemSchema.parse({ type: "image", title: "Logo", content: "stray", fileKey, tags: [] }),
+    ).toMatchObject({ fileKey, content: null, language: null, url: null });
+    expect(
+      createItemSchema.parse({ type: "note", title: "Note", fileKey, tags: [] }),
+    ).toMatchObject({ fileKey: null });
   });
 
   it("requires a valid URL for links", () => {

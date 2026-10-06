@@ -255,11 +255,21 @@ function tagLinks(userId: string, tags: string[]) {
   }));
 }
 
+// The uploaded file behind a file or image item, as stored on the item
+export interface ItemFileData {
+  fileUrl: string;
+  fileName: string;
+  fileSize: number;
+}
+
 // Creates an item of a system type, looked up by name. Returns null if that
-// system type doesn't exist (e.g. an unseeded database).
+// system type doesn't exist (e.g. an unseeded database). `file` is the
+// verified upload for file and image items.
 export async function createItem(
   userId: string,
-  { type, tags, ...fields }: CreateItemData,
+  // The caller resolves fileKey into `file`
+  { type, tags, ...fields }: Omit<CreateItemData, "fileKey">,
+  file: ItemFileData | null = null,
 ): Promise<ItemDetail | null> {
   const itemType = await prisma.itemType.findFirst({
     where: { name: type, isSystem: true, userId: null },
@@ -270,6 +280,7 @@ export async function createItem(
   const item = await prisma.item.create({
     data: {
       ...fields,
+      ...file,
       contentType: getContentTypeForType(type),
       userId,
       typeId: itemType.id,
@@ -309,18 +320,43 @@ export async function updateItem(
   }
 }
 
+// True for a unique constraint failure, e.g. createItem with a fileUrl another
+// item already has
+export function isUniqueViolation(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+}
+
+// The owner's file or image item's stored file, for the download route
+export async function getItemFile(
+  userId: string,
+  itemId: string,
+): Promise<{ fileUrl: string; fileName: string | null } | null> {
+  const item = await prisma.item.findFirst({
+    where: { id: itemId, userId, contentType: "FILE", fileUrl: { not: null } },
+    select: { fileUrl: true, fileName: true },
+  });
+  return item?.fileUrl ? { fileUrl: item.fileUrl, fileName: item.fileName } : null;
+}
+
+export interface DeletedItem {
+  // Set for file and image items, so the caller can delete the stored file
+  fileUrl: string | null;
+}
+
 // Its tag and collection links go with it (cascade); the tags and collections
-// stay. Returns false for a missing or someone else's item.
-export async function deleteItem(userId: string, itemId: string): Promise<boolean> {
+// stay. Returns null for a missing or someone else's item.
+export async function deleteItem(userId: string, itemId: string): Promise<DeletedItem | null> {
   try {
-    await prisma.item.delete({ where: { id: itemId, userId }, select: { id: true } });
-    return true;
+    return await prisma.item.delete({
+      where: { id: itemId, userId },
+      select: { fileUrl: true },
+    });
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2025"
     ) {
-      return false;
+      return null;
     }
     throw error;
   }

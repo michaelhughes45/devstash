@@ -431,13 +431,15 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-  UI["🖥️ UI"] -->|"request upload"| S["⚙️ Server"]
-  S -->|"check plan & size"| S
-  S -->|"presigned URL"| UI
-  UI -->|"PUT file"| R2[("🗂️ R2")]
-  UI -->|"save metadata"| S
-  S --> DB[("🐘 Postgres")]
+  UI["🖥️ UI"] -->|"POST /api/upload (progress)"| S["⚙️ Server"]
+  S -->|"check type, size, rate limit"| S
+  S -->|"put pending/{user}/{uuid}"| R2[("🗂️ R2")]
+  UI -->|"createItem(fileKey)"| S
+  S -->|"verify, copy to {user}/{uuid}"| R2
+  S -->|"save item"| DB[("🐘 Postgres")]
 ```
+
+Uploads pass through the app server, so on Vercel they're capped at its ~4.5 MB request body limit. An R2 lifecycle rule deletes anything left under `pending/` after a day (abandoned uploads); see `npm run r2:lifecycle`. Downloads go through `/api/items/[id]/download`.
 
 ---
 

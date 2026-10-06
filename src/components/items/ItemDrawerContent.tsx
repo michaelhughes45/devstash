@@ -1,7 +1,8 @@
-import { ExternalLink, File } from "lucide-react";
+import { Download, ExternalLink, File } from "lucide-react";
 
 import { CodeEditor } from "@/components/items/CodeEditor";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
+import { buttonVariants } from "@/components/ui/button";
 import {
   formatFileSize,
   isCodeType,
@@ -16,6 +17,53 @@ interface ItemDrawerContentProps {
 
 function EmptyContent() {
   return <p className="text-sm text-muted-foreground">No content.</p>;
+}
+
+// Image preview (images only), then the file's name and size with a download link
+function FileContent({ item }: ItemDrawerContentProps) {
+  const imageUrl = item.type.name === "image" ? safeExternalUrl(item.fileUrl) : null;
+
+  return (
+    <div className="flex flex-col gap-3">
+      {imageUrl && (
+        <a
+          href={imageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block overflow-hidden rounded-lg border bg-muted/40"
+        >
+          {/* Served from R2's public URL; next/image would need it as a remote pattern */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt={item.fileName ?? item.title}
+            className="mx-auto max-h-[28rem] w-auto object-contain"
+          />
+        </a>
+      )}
+      <div className="flex items-center gap-3 rounded-lg border bg-muted/40 p-3 text-sm">
+        <File className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate">{item.fileName}</span>
+          {item.fileSize !== null && (
+            <span className="text-xs text-muted-foreground">
+              {formatFileSize(item.fileSize)}
+            </span>
+          )}
+        </div>
+        {item.fileUrl && (
+          <a
+            href={`/api/items/${encodeURIComponent(item.id)}/download`}
+            download
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <Download />
+            Download
+          </a>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // Read-only view; snippets and commands use the code editor, notes and prompts the markdown editor
@@ -40,17 +88,7 @@ export function ItemDrawerContent({ item }: ItemDrawerContentProps) {
 
   if (item.contentType === "FILE") {
     if (!item.fileName) return <EmptyContent />;
-    return (
-      <div className="flex items-center gap-3 rounded-lg border bg-muted/40 p-3 text-sm">
-        <File className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-        <span className="min-w-0 flex-1 truncate">{item.fileName}</span>
-        {item.fileSize !== null && (
-          <span className="shrink-0 text-muted-foreground">
-            {formatFileSize(item.fileSize)}
-          </span>
-        )}
-      </div>
-    );
+    return <FileContent item={item} />;
   }
 
   if (!item.content) return <EmptyContent />;
