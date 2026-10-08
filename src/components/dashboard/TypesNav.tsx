@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import type { ItemTypeWithCount } from "@/lib/db/items";
+import type { ItemTypeWithCount } from "@/lib/db/item-types";
 import { getItemTypeIcon } from "@/lib/item-type-icons";
 
 interface TypesNavProps {

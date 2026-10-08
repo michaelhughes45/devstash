@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { getCreatableItemTypes } from "@/lib/db/items";
+import { getCreatableItemTypes } from "@/lib/db/item-types";
 
 export async function TopBar() {
   const creatableTypes = await getCreatableItemTypes();

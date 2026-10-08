@@ -14,19 +14,15 @@ import {
 } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user/UserAvatar";
 import { getCollectionStats } from "@/lib/db/collections";
-import { getItemStats, getItemTypesWithCounts } from "@/lib/db/items";
+import { getItemTypesWithCounts } from "@/lib/db/item-types";
+import { getItemStats } from "@/lib/db/items";
 import { getUserProfile } from "@/lib/db/users";
+import { formatLongDate } from "@/lib/format-date";
 import { getCurrentUserId } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Profile · DevStash",
 };
-
-const JOINED_DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
-  month: "long",
-  day: "numeric",
-  year: "numeric",
-});
 
 export default async function ProfilePage() {
   const userId = await getCurrentUserId();
@@ -65,7 +61,7 @@ export default async function ProfilePage() {
             <p className="truncate text-lg font-semibold">{profile.name ?? "No name set"}</p>
             <p className="truncate text-sm text-muted-foreground">{profile.email}</p>
             <p className="text-sm text-muted-foreground">
-              Joined {JOINED_DATE_FORMAT.format(profile.createdAt)}
+              Joined {formatLongDate(profile.createdAt)}
             </p>
           </div>
         </CardContent>

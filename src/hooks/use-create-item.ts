@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { createItem } from "@/actions/items";
-import type { FieldErrors } from "@/components/items/ItemFormFields";
 import { isFileItemType, type FileItemType } from "@/lib/file-constraints";
 import {
   buildItemInput,
@@ -13,7 +11,9 @@ import {
   type ItemFormValues,
 } from "@/lib/item-content";
 import { uploadFile } from "@/lib/upload-file";
+import { fieldErrorsOf } from "@/lib/validations/field-errors";
 import { updateItemSchema } from "@/lib/validations/items";
+import type { FieldErrors } from "@/types/forms";
 
 function withoutFileError(errors: FieldErrors): FieldErrors {
   return Object.fromEntries(Object.entries(errors).filter(([field]) => field !== "file"));
@@ -51,7 +51,7 @@ export function useCreateItem(onCreated: () => void) {
       // Check the other fields first, so a rejected form doesn't upload for nothing
       const check = updateItemSchema.safeParse(input);
       if (!check.success) {
-        setFieldErrors(z.flattenError(check.error).fieldErrors);
+        setFieldErrors(fieldErrorsOf(check.error));
         toast.error("Please fix the highlighted fields.");
         return;
       }

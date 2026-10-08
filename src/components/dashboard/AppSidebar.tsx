@@ -15,7 +15,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { getSidebarCollections } from "@/lib/db/collections";
-import { getItemTypesWithCounts } from "@/lib/db/items";
+import { getItemTypesWithCounts } from "@/lib/db/item-types";
 import { getSession } from "@/lib/session";
 
 const SIDEBAR_RECENT_COLLECTIONS_LIMIT = 5;

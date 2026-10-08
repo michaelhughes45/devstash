@@ -10,23 +10,14 @@ import { ItemEditForm } from "@/components/items/ItemEditForm";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatLongDate } from "@/lib/format-date";
+import { capitalize } from "@/lib/item-type-names";
 import type { ItemDetailData, ItemPreview } from "@/types/items";
 
 export type ItemDrawerState =
   | { status: "loading"; preview: ItemPreview }
   | { status: "loaded"; preview: ItemPreview; item: ItemDetailData }
   | { status: "error"; preview: ItemPreview; error: string };
-
-const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
-  month: "long",
-  day: "numeric",
-  year: "numeric",
-  timeZone: "UTC",
-});
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
 
 interface ItemDrawerProps {
   open: boolean;
@@ -207,9 +198,9 @@ function DrawerMeta({ item }: { item: ItemDetailData }) {
       <DrawerSection title="Details" icon={Calendar}>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="text-muted-foreground">Created</dt>
-          <dd className="text-right">{DATE_FORMAT.format(new Date(item.createdAt))}</dd>
+          <dd className="text-right">{formatLongDate(new Date(item.createdAt))}</dd>
           <dt className="text-muted-foreground">Updated</dt>
-          <dd className="text-right">{DATE_FORMAT.format(new Date(item.updatedAt))}</dd>
+          <dd className="text-right">{formatLongDate(new Date(item.updatedAt))}</dd>
         </dl>
       </DrawerSection>
     </>

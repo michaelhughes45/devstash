@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { EditableFields, ItemFormValues } from "@/lib/item-content";
-
-export type FieldErrors = Record<string, string[] | undefined>;
+import type { FieldErrors } from "@/types/forms";
 
 interface FormFieldProps {
   id: string;

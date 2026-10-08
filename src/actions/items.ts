@@ -1,7 +1,5 @@
 "use server";
 
-import { z } from "zod";
-
 import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
@@ -22,6 +20,7 @@ import {
 } from "@/lib/item-uploads";
 import { deleteObjectQuietly, finalKeyFor, keyFromPublicUrl } from "@/lib/r2";
 import { getCurrentUserId } from "@/lib/session";
+import { fieldErrorsOf } from "@/lib/validations/field-errors";
 import {
   createItemSchema,
   itemIdSchema,
@@ -31,6 +30,7 @@ import {
   type UpdateItemData,
   type UpdateItemInput,
 } from "@/lib/validations/items";
+import type { FieldErrors } from "@/types/forms";
 import type { ItemDetailData } from "@/types/items";
 
 const NOT_SIGNED_IN = "You need to be signed in to do that.";
@@ -43,7 +43,7 @@ export type ItemMutationResult =
   | {
       success: false;
       error: string;
-      fieldErrors?: Record<string, string[] | undefined>;
+      fieldErrors?: FieldErrors;
     };
 
 export type UpdateItemResult = ItemMutationResult;
@@ -67,7 +67,7 @@ export async function createItem(data: CreateItemInput): Promise<CreateItemResul
     return {
       success: false,
       error: INVALID_INPUT,
-      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+      fieldErrors: fieldErrorsOf(parsed.error),
     };
   }
 
@@ -133,7 +133,7 @@ export async function updateItem(
     return {
       success: false,
       error: INVALID_INPUT,
-      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+      fieldErrors: fieldErrorsOf(parsed.error),
     };
   }
 

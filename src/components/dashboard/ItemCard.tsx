@@ -6,13 +6,8 @@ import { ItemCardTrigger } from "@/components/items/ItemCardTrigger";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ItemWithType } from "@/lib/db/items";
+import { formatShortDate } from "@/lib/format-date";
 import { getCardCopySource } from "@/lib/item-content";
-
-const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  timeZone: "UTC",
-});
 
 interface ItemCardProps {
   item: ItemWithType;
@@ -67,7 +62,7 @@ export function ItemCard({ item }: ItemCardProps) {
               dateTime={item.createdAt.toISOString()}
               className="shrink-0 text-xs text-muted-foreground"
             >
-              {DATE_FORMAT.format(item.createdAt)}
+              {formatShortDate(item.createdAt)}
             </time>
           </CardContent>
         </Card>

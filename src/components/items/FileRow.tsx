@@ -14,6 +14,7 @@ import {
 import { ItemCardTrigger } from "@/components/items/ItemCardTrigger";
 import { buttonVariants } from "@/components/ui/button";
 import type { ItemWithType } from "@/lib/db/items";
+import { formatShortDateWithYear } from "@/lib/format-date";
 import { formatFileSize, getFileIconName, type FileIconName } from "@/lib/item-content";
 
 const FILE_ICONS: Record<FileIconName, LucideIcon> = {
@@ -24,13 +25,6 @@ const FILE_ICONS: Record<FileIconName, LucideIcon> = {
   FileCog,
   FileSpreadsheet,
 };
-
-const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-  timeZone: "UTC",
-});
 
 interface FileRowProps {
   item: ItemWithType;
@@ -43,7 +37,7 @@ export function FileRow({ item }: FileRowProps) {
   const Icon = FILE_ICONS[getFileIconName(item.fileName)];
   const size = item.fileSize !== null ? formatFileSize(item.fileSize) : null;
   const date = (
-    <time dateTime={item.createdAt.toISOString()}>{DATE_FORMAT.format(item.createdAt)}</time>
+    <time dateTime={item.createdAt.toISOString()}>{formatShortDateWithYear(item.createdAt)}</time>
   );
 
   return (
