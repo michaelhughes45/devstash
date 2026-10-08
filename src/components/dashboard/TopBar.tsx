@@ -1,7 +1,7 @@
-import { FolderPlus, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
+import { NewCollectionDialog } from "@/components/collections/NewCollectionDialog";
 import { NewItemDialog } from "@/components/items/NewItemDialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Separator } from "@/components/ui/separator";
@@ -32,10 +32,7 @@ export async function TopBar() {
       </div>
       {/* Labels collapse to icons on phones so both buttons fit beside the search */}
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="outline" size="lg" className="max-sm:w-9 max-sm:px-0">
-          <FolderPlus data-icon="inline-start" />
-          <span className="max-sm:sr-only">New Collection</span>
-        </Button>
+        <NewCollectionDialog />
         <NewItemDialog types={creatableTypes} />
       </div>
     </header>
