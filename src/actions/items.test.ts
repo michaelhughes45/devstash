@@ -4,6 +4,7 @@ import { createItem, deleteItem, updateItem } from "@/actions/items";
 import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
+  getItemKind,
   isUniqueViolation,
   updateItem as updateItemRecord,
   type ItemDetail,
@@ -16,6 +17,7 @@ vi.mock("@/lib/db/items", () => ({
   createItem: vi.fn(),
   updateItem: vi.fn(),
   deleteItem: vi.fn(),
+  getItemKind: vi.fn(),
   isUniqueViolation: vi.fn(),
 }));
 // Key and URL helpers stay real; only the calls to R2 are mocked
@@ -65,6 +67,13 @@ beforeEach(() => {
 });
 
 describe("updateItem", () => {
+  beforeEach(() => {
+    vi.mocked(getItemKind).mockResolvedValue({
+      contentType: "TEXT",
+      type: { name: "snippet" },
+    });
+  });
+
   it("rejects signed-out users without touching the item", async () => {
     vi.mocked(getCurrentUserId).mockResolvedValue(null);
 
@@ -122,11 +131,95 @@ describe("updateItem", () => {
   });
 
   it("reports a missing or someone else's item as not found", async () => {
-    vi.mocked(updateItemRecord).mockResolvedValue(null);
+    vi.mocked(getItemKind).mockResolvedValue(null);
 
     const result = await updateItem("other-users-item", validInput);
 
     expect(result).toEqual({ success: false, error: "Item not found." });
+    expect(getItemKind).toHaveBeenCalledWith("user-1", "other-users-item");
+    expect(updateItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("reports the item as not found when it's deleted before the update", async () => {
+    vi.mocked(updateItemRecord).mockResolvedValue(null);
+
+    const result = await updateItem("item-1", validInput);
+
+    expect(result).toEqual({ success: false, error: "Item not found." });
+  });
+
+  it("rejects a blank URL on a link without saving", async () => {
+    vi.mocked(getItemKind).mockResolvedValue({ contentType: "URL", type: { name: "link" } });
+
+    const result = await updateItem("item-1", { title: "Docs", url: " ", tags: [] });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Please fix the highlighted fields.",
+      fieldErrors: { url: ["URL is required"] },
+    });
+    expect(updateItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("keeps a link's URL and drops content and language", async () => {
+    vi.mocked(getItemKind).mockResolvedValue({ contentType: "URL", type: { name: "link" } });
+    vi.mocked(updateItemRecord).mockResolvedValue(savedItem);
+
+    await updateItem("item-1", {
+      title: "Docs",
+      url: "https://nextjs.org",
+      content: "stray",
+      language: "ts",
+      tags: [],
+    });
+
+    expect(updateItemRecord).toHaveBeenCalledWith("user-1", "item-1", {
+      title: "Docs",
+      url: "https://nextjs.org",
+      tags: [],
+    });
+  });
+
+  it("sends no content, language or URL for a file item", async () => {
+    vi.mocked(getItemKind).mockResolvedValue({ contentType: "FILE", type: { name: "file" } });
+    vi.mocked(updateItemRecord).mockResolvedValue(savedItem);
+
+    await updateItem("item-1", {
+      title: "Report",
+      content: "stray",
+      language: "ts",
+      url: "https://example.com",
+      tags: [],
+    });
+
+    expect(updateItemRecord).toHaveBeenCalledWith("user-1", "item-1", {
+      title: "Report",
+      tags: [],
+    });
+  });
+
+  it("drops a URL from a snippet and keeps its content and language", async () => {
+    vi.mocked(updateItemRecord).mockResolvedValue(savedItem);
+
+    await updateItem("item-1", { ...validInput, url: "https://example.com" });
+
+    const [, , data] = vi.mocked(updateItemRecord).mock.calls[0];
+    expect(data).not.toHaveProperty("url");
+    expect(data).toMatchObject({
+      content: "export function useAuth() {}",
+      language: "typescript",
+    });
+  });
+
+  it("drops the language from a prompt", async () => {
+    vi.mocked(getItemKind).mockResolvedValue({ contentType: "TEXT", type: { name: "prompt" } });
+    vi.mocked(updateItemRecord).mockResolvedValue(savedItem);
+
+    await updateItem("item-1", validInput);
+
+    const [, , data] = vi.mocked(updateItemRecord).mock.calls[0];
+    expect(data).not.toHaveProperty("language");
+    expect(data).toMatchObject({ content: "export function useAuth() {}" });
   });
 
   it("returns a generic error when the update throws", async () => {

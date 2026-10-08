@@ -5,11 +5,14 @@ import { z } from "zod";
 import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
+  getItemKind,
   isUniqueViolation,
   updateItem as updateItemRecord,
   type ItemDetail,
   type ItemFileData,
+  type ItemKind,
 } from "@/lib/db/items";
+import { getEditableFields } from "@/lib/item-content";
 import {
   getStoredContentType,
   isFileItemType,
@@ -30,7 +33,9 @@ import {
   createItemSchema,
   itemIdSchema,
   updateItemSchema,
+  URL_REQUIRED,
   type CreateItemInput,
+  type UpdateItemData,
   type UpdateItemInput,
 } from "@/lib/validations/items";
 import type { ItemDetailData } from "@/types/items";
@@ -155,6 +160,21 @@ export async function createItem(data: CreateItemInput): Promise<CreateItemResul
   }
 }
 
+// Keeps only the type-specific fields the item's type uses, so a stray value is
+// never stored; title, description and tags always apply
+function fieldsForItemType(
+  { content, language, url, ...rest }: UpdateItemData,
+  item: ItemKind,
+): UpdateItemData {
+  const fields = getEditableFields(item);
+  return {
+    ...rest,
+    ...(fields.content && { content }),
+    ...(fields.language && { language }),
+    ...(fields.url && { url }),
+  };
+}
+
 export async function updateItem(
   itemId: string,
   data: UpdateItemInput,
@@ -177,7 +197,15 @@ export async function updateItem(
 
   try {
     // Scoped to the owner, so another user's item is reported as missing
-    const item = await updateItemRecord(userId, itemId, parsed.data);
+    const kind = await getItemKind(userId, itemId);
+    if (!kind) return { success: false, error: NOT_FOUND };
+
+    // A link can't be left without a URL (undefined leaves the stored one)
+    if (kind.contentType === "URL" && parsed.data.url === null) {
+      return { success: false, error: INVALID_INPUT, fieldErrors: { url: [URL_REQUIRED] } };
+    }
+
+    const item = await updateItemRecord(userId, itemId, fieldsForItemType(parsed.data, kind));
     if (!item) return { success: false, error: NOT_FOUND };
 
     return { success: true, data: toItemDetailData(item) };

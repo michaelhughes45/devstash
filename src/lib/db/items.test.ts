@@ -7,6 +7,7 @@ import {
   getCreatableItemTypes,
   getItemDetail,
   getItemFile,
+  getItemKind,
   getItemsByType,
   isUniqueViolation,
   updateItem,
@@ -96,6 +97,25 @@ describe("getItemsByType", () => {
     };
     expect(select).not.toHaveProperty("content");
     expect(select).toMatchObject({ contentType: true, url: true, fileUrl: true });
+  });
+});
+
+describe("getItemKind", () => {
+  it("looks up the owner's item content type and type name", async () => {
+    const kind = { contentType: "URL", type: { name: "link" } };
+    vi.mocked(prisma.item.findFirst).mockResolvedValue(kind as never);
+
+    expect(await getItemKind("user-1", "item-1")).toEqual(kind);
+    expect(prisma.item.findFirst).toHaveBeenCalledWith({
+      where: { id: "item-1", userId: "user-1" },
+      select: { contentType: true, type: { select: { name: true } } },
+    });
+  });
+
+  it("returns null when the item is missing or belongs to someone else", async () => {
+    vi.mocked(prisma.item.findFirst).mockResolvedValue(null);
+
+    expect(await getItemKind("user-1", "item-1")).toBeNull();
   });
 });
 

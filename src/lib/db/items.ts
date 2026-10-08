@@ -247,6 +247,21 @@ export async function getItemDetail(
   return item ? toItemDetail(item) : null;
 }
 
+export interface ItemKind {
+  contentType: ContentType;
+  type: { name: string };
+}
+
+// The content type and type name that decide which fields an update may change.
+// Scoped to the owner like getItemDetail: returns null for a missing or someone
+// else's item.
+export async function getItemKind(userId: string, itemId: string): Promise<ItemKind | null> {
+  return prisma.item.findFirst({
+    where: { id: itemId, userId },
+    select: { contentType: true, type: { select: { name: true } } },
+  });
+}
+
 // Links each tag by name, creating any the user doesn't have yet
 function tagLinks(userId: string, tags: string[]) {
   return tags.map((name) => ({
