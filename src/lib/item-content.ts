@@ -1,4 +1,4 @@
-import { isFileItemType } from "@/lib/file-constraints";
+import { getFileExtension, isFileItemType } from "@/lib/file-constraints";
 
 interface CopyableItem {
   contentType: "TEXT" | "FILE" | "URL";
@@ -55,6 +55,31 @@ export function isMarkdownType(typeName: string): boolean {
 // Image items are shown as thumbnails in a gallery instead of regular item cards
 export function isImageType(typeName: string): boolean {
   return typeName === "image";
+}
+
+// File items are shown as rows in a single-column list instead of regular item cards
+export function isFileType(typeName: string): boolean {
+  return typeName === "file";
+}
+
+export type FileIconName = "File" | "FileText" | "FileBraces" | "FileCode" | "FileCog" | "FileSpreadsheet";
+
+const FILE_ICONS: Record<string, FileIconName> = {
+  ".pdf": "FileText",
+  ".txt": "FileText",
+  ".md": "FileText",
+  ".json": "FileBraces",
+  ".xml": "FileCode",
+  ".csv": "FileSpreadsheet",
+  ".yaml": "FileCog",
+  ".yml": "FileCog",
+  ".toml": "FileCog",
+  ".ini": "FileCog",
+};
+
+// Lucide icon for a file by its extension, falling back to a plain file
+export function getFileIconName(fileName: string | null): FileIconName {
+  return (fileName && FILE_ICONS[getFileExtension(fileName)]) || "File";
 }
 
 export interface EditableFields {

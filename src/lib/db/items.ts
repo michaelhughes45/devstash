@@ -22,6 +22,9 @@ export interface ItemWithType {
   createdAt: Date;
   // Public R2 URL for file and image items; image cards use it as the thumbnail
   fileUrl: string | null;
+  // Original name and size in bytes of an uploaded file, shown in the file list
+  fileName: string | null;
+  fileSize: number | null;
   type: ItemCardType;
   tags: string[];
 }
@@ -42,6 +45,8 @@ const ITEM_CARD_SELECT = {
   isPinned: true,
   createdAt: true,
   fileUrl: true,
+  fileName: true,
+  fileSize: true,
   type: { select: { id: true, name: true, icon: true, color: true } },
   tags: { select: { tag: { select: { name: true } } } },
 } satisfies Prisma.ItemSelect;
@@ -201,8 +206,6 @@ export interface ItemDetail extends ItemWithType {
   content: string | null;
   language: string | null;
   url: string | null;
-  fileName: string | null;
-  fileSize: number | null;
   updatedAt: Date;
   collections: { id: string; name: string }[];
 }
@@ -213,8 +216,6 @@ const ITEM_DETAIL_SELECT = {
   content: true,
   language: true,
   url: true,
-  fileName: true,
-  fileSize: true,
   updatedAt: true,
   collections: {
     select: { collection: { select: { id: true, name: true } } },
