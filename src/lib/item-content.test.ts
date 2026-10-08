@@ -6,8 +6,10 @@ import {
   getContentTypeForType,
   getCreateFields,
   getEditableFields,
+  getFileIconName,
   getItemCopyText,
   isCodeType,
+  isFileType,
   isImageType,
   isMarkdownType,
   parseTags,
@@ -152,6 +154,32 @@ describe("getItemCopyText", () => {
     expect(getItemCopyText({ ...base, contentType: "TEXT" })).toBeNull();
     expect(getItemCopyText({ ...base, contentType: "TEXT", content: "   " })).toBeNull();
     expect(getItemCopyText({ ...base, contentType: "URL" })).toBeNull();
+  });
+});
+
+describe("isFileType", () => {
+  it("is true for files only", () => {
+    expect(isFileType("file")).toBe(true);
+    expect(isFileType("image")).toBe(false);
+    expect(isFileType("snippet")).toBe(false);
+  });
+});
+
+describe("getFileIconName", () => {
+  it("picks an icon by extension, case-insensitive", () => {
+    expect(getFileIconName("report.pdf")).toBe("FileText");
+    expect(getFileIconName("README.MD")).toBe("FileText");
+    expect(getFileIconName("package.json")).toBe("FileBraces");
+    expect(getFileIconName("feed.xml")).toBe("FileCode");
+    expect(getFileIconName("data.csv")).toBe("FileSpreadsheet");
+    expect(getFileIconName("config.yml")).toBe("FileCog");
+  });
+
+  it("falls back to a plain file for unknown, missing or no extensions", () => {
+    expect(getFileIconName("archive.zip")).toBe("File");
+    expect(getFileIconName("Makefile")).toBe("File");
+    expect(getFileIconName(".env")).toBe("File");
+    expect(getFileIconName(null)).toBe("File");
   });
 });
 
