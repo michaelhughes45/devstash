@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import { DEFAULT_TYPE_COLOR, DEFAULT_TYPE_ICON } from "@/lib/item-type-icons";
 import { prisma } from "@/lib/prisma";
+import type { CreateCollectionData } from "@/lib/validations/collections";
 
 export interface CollectionType {
   id: string;
@@ -128,4 +129,22 @@ export async function getCollectionStats(userId: string): Promise<CollectionStat
     prisma.collection.count({ where: { userId, isFavorite: true } }),
   ]);
   return { total, favorites };
+}
+
+export interface CreatedCollection {
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: Date;
+}
+
+// The owner always comes from the session, never from the client
+export async function createCollection(
+  userId: string,
+  data: CreateCollectionData,
+): Promise<CreatedCollection> {
+  return prisma.collection.create({
+    data: { userId, name: data.name, description: data.description },
+    select: { id: true, name: true, description: true, createdAt: true },
+  });
 }

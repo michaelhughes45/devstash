@@ -1,10 +1,25 @@
-# Current Feature
+# Current Feature: Collection Create
 
 ## Status
 
+In Progress
+
 ## Goals
 
+- The top bar's existing New Collection button (`src/components/dashboard/TopBar.tsx`, display only today) opens a shadcn `Dialog` (`NewCollectionDialog`) with Name (required) and Description (optional) fields
+- Create is disabled until there's a name; server field errors show under each field; the form unmounts on close so each opening starts blank, and the dialog can't be dismissed while saving
+- A `createCollection` server action (`src/actions/collections.ts`) checks the session, validates with a new `createCollectionSchema` (`src/lib/validations/collections.ts`: trimmed required name, blank description saved as null, length limits) and returns `{ success, data }` or `{ success: false, error, fieldErrors }` (shared `FieldErrors` / `fieldErrorsOf`)
+- A `createCollection` query in `src/lib/db/collections.ts` creates the collection scoped to the signed-in user (`userId` from the session, never the client)
+- Toast on success ("Collection created") and on failure; on success the dialog closes and `router.refresh()` updates the dashboard collections grid, the sidebar collections and the collection stats
+- Unit tests for the schema, action and query (Prisma, `@/auth`/`@/lib/session` mocked); `npm test`, typecheck, lint and build pass
+
 ## Notes
+
+- Follow the item create patterns: `NewItemDialog`, `createItem` action/query, `createItemSchema`, `ItemFormFields`, shared `FieldErrors` and `fieldErrorsOf`
+- Collections are user-scoped: reads stay in server components via `src/lib/db` functions; any client-side reads go through API routes that check the session (like `GET /api/items/[id]`). The create mutation itself uses a server action, matching `createItem`
+- No new client-side read is needed for create, so no new API route is expected
+- Check whether a new collection with no items renders sensibly in the dashboard grid and sidebar (no most-used type → default color/icons)
+- Out of scope: editing, deleting, favoriting collections, adding items to collections, the `/collections` page, and free-tier limits (3 collections)
 
 ## History
 
