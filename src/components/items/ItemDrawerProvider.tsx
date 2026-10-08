@@ -11,16 +11,11 @@ import {
 } from "react";
 
 import { ItemDrawer, type ItemDrawerState } from "@/components/items/ItemDrawer";
+import { fetchItemDetail } from "@/lib/fetch-item";
 import type { ItemDetailData, ItemPreview } from "@/types/items";
 
 interface ItemDrawerContextValue {
   openItem: (preview: ItemPreview) => void;
-}
-
-interface ItemDetailResponse {
-  success: boolean;
-  data?: ItemDetailData;
-  error?: string;
 }
 
 const ItemDrawerContext = createContext<ItemDrawerContextValue | null>(null);
@@ -29,15 +24,6 @@ export function useItemDrawer(): ItemDrawerContextValue {
   const context = useContext(ItemDrawerContext);
   if (!context) throw new Error("useItemDrawer must be used within ItemDrawerProvider");
   return context;
-}
-
-async function fetchItemDetail(id: string, signal: AbortSignal): Promise<ItemDetailData> {
-  const response = await fetch(`/api/items/${encodeURIComponent(id)}`, { signal });
-  const body = (await response.json().catch(() => null)) as ItemDetailResponse | null;
-  if (!response.ok || !body?.success || !body.data) {
-    throw new Error(body?.error ?? "Failed to load item");
-  }
-  return body.data;
 }
 
 interface ItemDrawerProviderProps {

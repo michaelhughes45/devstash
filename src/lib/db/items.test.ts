@@ -7,6 +7,7 @@ import {
   getCreatableItemTypes,
   getItemDetail,
   getItemFile,
+  getItemsByType,
   isUniqueViolation,
   updateItem,
 } from "@/lib/db/items";
@@ -14,7 +15,7 @@ import { prisma } from "@/lib/prisma";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    item: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    item: { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
     itemType: { findFirst: vi.fn(), findMany: vi.fn() },
   },
 }));
@@ -81,6 +82,20 @@ describe("getItemDetail", () => {
       tags: ["react", "auth"],
       collections: [{ id: "col-1", name: "React Patterns" }],
     });
+  });
+});
+
+describe("getItemsByType", () => {
+  it("leaves text content out of the card query", async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue([]);
+
+    await getItemsByType("user-1", "type-1");
+
+    const { select } = vi.mocked(prisma.item.findMany).mock.calls[0][0] as {
+      select: Record<string, unknown>;
+    };
+    expect(select).not.toHaveProperty("content");
+    expect(select).toMatchObject({ contentType: true, url: true, fileUrl: true });
   });
 });
 

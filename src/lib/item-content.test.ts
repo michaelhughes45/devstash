@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildItemInput,
   formatFileSize,
+  getCardCopySource,
   getContentTypeForType,
   getCreateFields,
   getEditableFields,
@@ -154,6 +155,32 @@ describe("getItemCopyText", () => {
     expect(getItemCopyText({ ...base, contentType: "TEXT" })).toBeNull();
     expect(getItemCopyText({ ...base, contentType: "TEXT", content: "   " })).toBeNull();
     expect(getItemCopyText({ ...base, contentType: "URL" })).toBeNull();
+  });
+});
+
+describe("getCardCopySource", () => {
+  const base = { url: null, fileUrl: null };
+
+  it("fetches text items, since cards don't load their content", () => {
+    expect(getCardCopySource({ ...base, contentType: "TEXT" })).toEqual({ kind: "fetch" });
+  });
+
+  it("copies a link's URL straight away", () => {
+    expect(
+      getCardCopySource({ ...base, contentType: "URL", url: "https://example.com" }),
+    ).toEqual({ kind: "text", text: "https://example.com" });
+  });
+
+  it("copies a file's URL straight away", () => {
+    expect(
+      getCardCopySource({ ...base, contentType: "FILE", fileUrl: "https://cdn.test/a.pdf" }),
+    ).toEqual({ kind: "text", text: "https://cdn.test/a.pdf" });
+  });
+
+  it("returns null for a link or file without a URL", () => {
+    expect(getCardCopySource({ ...base, contentType: "URL" })).toBeNull();
+    expect(getCardCopySource({ ...base, contentType: "URL", url: "  " })).toBeNull();
+    expect(getCardCopySource({ ...base, contentType: "FILE" })).toBeNull();
   });
 });
 
