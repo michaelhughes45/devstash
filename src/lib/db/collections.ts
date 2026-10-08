@@ -3,6 +3,7 @@ import { cache } from "react";
 import { DEFAULT_TYPE_COLOR, DEFAULT_TYPE_ICON } from "@/lib/item-type-icons";
 import { prisma } from "@/lib/prisma";
 import type { CreateCollectionData } from "@/lib/validations/collections";
+import type { CollectionOption } from "@/types/collections";
 
 export interface CollectionType {
   id: string;
@@ -147,4 +148,25 @@ export async function createCollection(
     data: { userId, name: data.name, description: data.description },
     select: { id: true, name: true, description: true, createdAt: true },
   });
+}
+
+// The user's collections by name, for the item forms' collection picker. Cached
+// per request, since the top bar and the item drawer both need it.
+export const getCollectionOptions = cache(
+  async (userId: string): Promise<CollectionOption[]> =>
+    prisma.collection.findMany({
+      where: { userId },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+);
+
+// Whether every id is one of the user's collections, so an item is never linked
+// to someone else's
+export async function ownsCollections(userId: string, collectionIds: string[]): Promise<boolean> {
+  if (collectionIds.length === 0) return true;
+  const owned = await prisma.collection.count({
+    where: { userId, id: { in: collectionIds } },
+  });
+  return owned === collectionIds.length;
 }

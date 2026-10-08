@@ -24,19 +24,28 @@ import {
   EMPTY_ITEM_FORM_VALUES,
   getCreateFields,
   type CreatableItemType,
+  type ItemFormChange,
   type ItemFormValues,
 } from "@/lib/item-content";
+import type { CollectionOption } from "@/types/collections";
 import type { CreatableItemTypeOption } from "@/types/items";
 
 interface NewItemFormProps {
   types: CreatableItemTypeOption[];
+  collections: CollectionOption[];
   isPending: boolean;
   startTransition: (action: () => Promise<void>) => void;
   onCreated: () => void;
 }
 
 // Mounted only while the dialog is open, so each opening starts blank
-function NewItemForm({ types, isPending, startTransition, onCreated }: NewItemFormProps) {
+function NewItemForm({
+  types,
+  collections,
+  isPending,
+  startTransition,
+  onCreated,
+}: NewItemFormProps) {
   const [type, setType] = useState<CreatableItemType>(types[0]?.name ?? "snippet");
   const [values, setValues] = useState<ItemFormValues>(EMPTY_ITEM_FORM_VALUES);
   const [file, setFile] = useState<File | null>(null);
@@ -48,9 +57,9 @@ function NewItemForm({ types, isPending, startTransition, onCreated }: NewItemFo
     (!fields.url || values.url.trim() !== "") &&
     (!fileType || file !== null);
 
-  function handleChange(field: keyof ItemFormValues, value: string) {
+  const handleChange: ItemFormChange = (field, value) => {
     setValues((current) => ({ ...current, [field]: value }));
-  }
+  };
 
   // Files and images have different rules, so a chosen file doesn't carry over
   function handleTypeChange(nextType: CreatableItemType) {
@@ -66,38 +75,39 @@ function NewItemForm({ types, isPending, startTransition, onCreated }: NewItemFo
 
   return (
     <form onSubmit={handleSubmit} className="flex min-h-0 flex-col gap-4" noValidate>
-      <fieldset
-        disabled={isPending}
-        className="-mx-4 flex min-h-0 flex-col gap-5 overflow-y-auto px-4 py-1"
-      >
-        <TypeSelector types={types} value={type} onChange={handleTypeChange} />
-        {fileType && (
-          <div className="grid gap-2">
-            <Label htmlFor="new-item-file">{fileType === "image" ? "Image" : "File"}</Label>
-            {/* Keyed by type so switching file ↔ image also resets its own errors */}
-            <FileUpload
-              key={fileType}
-              id="new-item-file"
-              type={fileType}
-              file={file}
-              onFileChange={(next) => {
-                setFile(next);
-                clearFileError();
-              }}
-              progress={progress}
-              error={fieldErrors.file?.[0]}
-              disabled={isPending}
-            />
-          </div>
-        )}
-        <ItemFormFields
-          idPrefix="new-item"
-          values={values}
-          onChange={handleChange}
-          fields={fields}
-          fieldErrors={fieldErrors}
-        />
-      </fieldset>
+      {/* The div scrolls rather than the fieldset, which browsers don't scroll as a flex item */}
+      <div className="-mx-4 min-h-0 overflow-y-auto px-4 py-1">
+        <fieldset disabled={isPending} className="flex flex-col gap-5">
+          <TypeSelector types={types} value={type} onChange={handleTypeChange} />
+          {fileType && (
+            <div className="grid gap-2">
+              <Label htmlFor="new-item-file">{fileType === "image" ? "Image" : "File"}</Label>
+              {/* Keyed by type so switching file ↔ image also resets its own errors */}
+              <FileUpload
+                key={fileType}
+                id="new-item-file"
+                type={fileType}
+                file={file}
+                onFileChange={(next) => {
+                  setFile(next);
+                  clearFileError();
+                }}
+                progress={progress}
+                error={fieldErrors.file?.[0]}
+                disabled={isPending}
+              />
+            </div>
+          )}
+          <ItemFormFields
+            idPrefix="new-item"
+            values={values}
+            onChange={handleChange}
+            fields={fields}
+            collections={collections}
+            fieldErrors={fieldErrors}
+          />
+        </fieldset>
+      </div>
 
       <DialogFooter>
         <DialogClose render={<Button variant="outline" disabled={isPending} />}>
@@ -113,9 +123,10 @@ function NewItemForm({ types, isPending, startTransition, onCreated }: NewItemFo
 
 interface NewItemDialogProps {
   types: CreatableItemTypeOption[];
+  collections: CollectionOption[];
 }
 
-export function NewItemDialog({ types }: NewItemDialogProps) {
+export function NewItemDialog({ types, collections }: NewItemDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -141,6 +152,7 @@ export function NewItemDialog({ types }: NewItemDialogProps) {
         </DialogHeader>
         <NewItemForm
           types={types}
+          collections={collections}
           isPending={isPending}
           startTransition={startTransition}
           onCreated={() => setOpen(false)}

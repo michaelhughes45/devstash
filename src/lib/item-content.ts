@@ -117,7 +117,8 @@ export function getEditableFields(item: {
   };
 }
 
-// Raw text of the item form's inputs; tags are the comma-separated string
+// The item form's inputs as raw text (tags are the comma-separated string), plus
+// the ids of the collections picked for the item
 export interface ItemFormValues {
   title: string;
   description: string;
@@ -125,7 +126,13 @@ export interface ItemFormValues {
   language: string;
   url: string;
   tags: string;
+  collectionIds: string[];
 }
+
+export type ItemFormChange = <K extends keyof ItemFormValues>(
+  field: K,
+  value: ItemFormValues[K],
+) => void;
 
 export const EMPTY_ITEM_FORM_VALUES: ItemFormValues = {
   title: "",
@@ -134,6 +141,7 @@ export const EMPTY_ITEM_FORM_VALUES: ItemFormValues = {
   language: "",
   url: "",
   tags: "",
+  collectionIds: [],
 };
 
 // Builds the action input from the form, sending only the fields it shows
@@ -142,6 +150,7 @@ export function buildItemInput(values: ItemFormValues, fields: EditableFields) {
     title: values.title,
     description: values.description,
     tags: parseTags(values.tags),
+    collectionIds: values.collectionIds,
     ...(fields.content && { content: values.content }),
     ...(fields.language && { language: values.language }),
     ...(fields.url && { url: values.url }),

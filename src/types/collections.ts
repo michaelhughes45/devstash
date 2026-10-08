@@ -5,3 +5,9 @@ export interface CollectionData {
   description: string | null;
   createdAt: string;
 }
+
+// A collection the item forms' picker offers
+export interface CollectionOption {
+  id: string;
+  name: string;
+}

@@ -126,6 +126,7 @@ describe("createItem", () => {
     language: "typescript",
     url: null,
     tags: ["react", "hooks"],
+    collectionIds: [],
   };
 
   it("looks up the system type by name", async () => {
@@ -172,7 +173,23 @@ describe("createItem", () => {
               },
             })),
           },
+          collections: { create: [] },
         },
+      }),
+    );
+  });
+
+  it("links the item to the given collections", async () => {
+    vi.mocked(prisma.itemType.findFirst).mockResolvedValue({ id: "type-1" } as never);
+    vi.mocked(prisma.item.create).mockResolvedValue(row as never);
+
+    await createItem("user-1", { ...data, collectionIds: ["col-1", "col-2"] });
+
+    expect(prisma.item.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          collections: { create: [{ collectionId: "col-1" }, { collectionId: "col-2" }] },
+        }),
       }),
     );
   });
@@ -262,6 +279,40 @@ describe("updateItem", () => {
             })),
           },
         },
+      }),
+    );
+  });
+
+  it("replaces the item's collections, keeping the ones that stay", async () => {
+    vi.mocked(prisma.item.update).mockResolvedValue(row as never);
+
+    await updateItem("user-1", "item-1", { ...data, collectionIds: ["col-1", "col-2"] });
+
+    expect(prisma.item.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          collections: {
+            deleteMany: { collectionId: { notIn: ["col-1", "col-2"] } },
+            connectOrCreate: ["col-1", "col-2"].map((collectionId) => ({
+              where: { itemId_collectionId: { itemId: "item-1", collectionId } },
+              create: { collectionId },
+            })),
+          },
+        }),
+      }),
+    );
+  });
+
+  it("removes every collection link for an empty list", async () => {
+    vi.mocked(prisma.item.update).mockResolvedValue(row as never);
+
+    await updateItem("user-1", "item-1", { ...data, collectionIds: [] });
+
+    expect(prisma.item.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          collections: { deleteMany: { collectionId: { notIn: [] } }, connectOrCreate: [] },
+        }),
       }),
     );
   });

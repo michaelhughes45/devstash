@@ -16,6 +16,7 @@ const MAX_TAG_LENGTH = 50;
 const MAX_TAGS = 20;
 const MAX_ID_LENGTH = 64;
 const MAX_FILE_KEY_LENGTH = 200;
+const MAX_COLLECTIONS = 100;
 
 export const URL_REQUIRED = "URL is required";
 
@@ -75,6 +76,12 @@ const itemFields = {
     )
     .max(MAX_TAGS, `Use at most ${MAX_TAGS} tags`)
     .transform((tags) => [...new Set(tags)]),
+  // Ownership is checked by the action; undefined leaves an item's collections unchanged
+  collectionIds: z
+    .array(itemIdSchema, { error: "Choose valid collections" })
+    .max(MAX_COLLECTIONS, `Choose at most ${MAX_COLLECTIONS} collections`)
+    .transform((ids) => [...new Set(ids)])
+    .optional(),
 };
 
 export const updateItemSchema = z.object(itemFields);
@@ -98,11 +105,12 @@ export const createItemSchema = z
     path: ["file"],
   })
   // Fields the type doesn't use are dropped, so a stray value is never stored
-  .transform(({ type, content, language, url, fileKey, ...rest }) => {
+  .transform(({ type, content, language, url, fileKey, collectionIds, ...rest }) => {
     const fields = getCreateFields(type);
     return {
       ...rest,
       type,
+      collectionIds: collectionIds ?? [],
       content: fields.content ? (content ?? null) : null,
       language: fields.language ? (language ?? null) : null,
       url: fields.url ? (url ?? null) : null,

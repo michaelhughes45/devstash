@@ -12,6 +12,7 @@ import {
 
 import { ItemDrawer, type ItemDrawerState } from "@/components/items/ItemDrawer";
 import { fetchItemDetail } from "@/lib/fetch-item";
+import type { CollectionOption } from "@/types/collections";
 import type { ItemDetailData, ItemPreview } from "@/types/items";
 
 interface ItemDrawerContextValue {
@@ -27,11 +28,13 @@ export function useItemDrawer(): ItemDrawerContextValue {
 }
 
 interface ItemDrawerProviderProps {
+  // Offered by the drawer's edit form
+  collections: CollectionOption[];
   children: ReactNode;
 }
 
 // Owns the drawer so server-rendered item cards can open it by item id
-export function ItemDrawerProvider({ children }: ItemDrawerProviderProps) {
+export function ItemDrawerProvider({ collections, children }: ItemDrawerProviderProps) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<ItemDrawerState | null>(null);
   const [editing, setEditing] = useState(false);
@@ -85,6 +88,7 @@ export function ItemDrawerProvider({ children }: ItemDrawerProviderProps) {
         open={open}
         onOpenChange={handleOpenChange}
         state={state}
+        collections={collections}
         editing={editing}
         onEditingChange={setEditing}
         onItemSaved={handleItemSaved}

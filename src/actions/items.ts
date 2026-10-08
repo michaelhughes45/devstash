@@ -1,5 +1,6 @@
 "use server";
 
+import { ownsCollections } from "@/lib/db/collections";
 import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
@@ -37,6 +38,8 @@ const NOT_SIGNED_IN = "You need to be signed in to do that.";
 const NOT_FOUND = "Item not found.";
 const INVALID_INPUT = "Please fix the highlighted fields.";
 const GENERIC_ERROR = "Something went wrong. Please try again.";
+const COLLECTION_NOT_FOUND = "One or more collections weren't found.";
+
 
 export type ItemMutationResult =
   | { success: true; data: ItemDetailData }
@@ -47,6 +50,14 @@ export type ItemMutationResult =
     };
 
 export type UpdateItemResult = ItemMutationResult;
+
+function collectionNotFound(): ItemMutationResult {
+  return {
+    success: false,
+    error: COLLECTION_NOT_FOUND,
+    fieldErrors: { collectionIds: [COLLECTION_NOT_FOUND] },
+  };
+}
 export type CreateItemResult = ItemMutationResult;
 
 function toItemDetailData(item: ItemDetail): ItemDetailData {
@@ -76,6 +87,12 @@ export async function createItem(data: CreateItemInput): Promise<CreateItemResul
   const uploadKey = isFileItemType(type) ? fileKey : null;
   let finalKey: string | null = null;
   try {
+    // Never link to another user's collection; a deleted one is reported the same way
+    if (!(await ownsCollections(userId, itemData.collectionIds))) {
+      await discardUpload(userId, uploadKey);
+      return collectionNotFound();
+    }
+
     let file: ItemFileData | null = null;
     if (isFileItemType(type) && uploadKey) {
       const attached = await attachUpload(userId, type, uploadKey);
@@ -145,6 +162,11 @@ export async function updateItem(
     // A link can't be left without a URL (undefined leaves the stored one)
     if (kind.contentType === "URL" && parsed.data.url === null) {
       return { success: false, error: INVALID_INPUT, fieldErrors: { url: [URL_REQUIRED] } };
+    }
+
+    const { collectionIds } = parsed.data;
+    if (collectionIds && !(await ownsCollections(userId, collectionIds))) {
+      return collectionNotFound();
     }
 
     const item = await updateItemRecord(userId, itemId, fieldsForItemType(parsed.data, kind));

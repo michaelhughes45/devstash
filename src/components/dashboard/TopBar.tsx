@@ -7,8 +7,13 @@ import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { getCreatableItemTypes } from "@/lib/db/item-types";
+import type { CollectionOption } from "@/types/collections";
 
-export async function TopBar() {
+interface TopBarProps {
+  collections: CollectionOption[];
+}
+
+export async function TopBar({ collections }: TopBarProps) {
   const creatableTypes = await getCreatableItemTypes();
 
   return (
@@ -33,7 +38,7 @@ export async function TopBar() {
       {/* Labels collapse to icons on phones so both buttons fit beside the search */}
       <div className="ml-auto flex items-center gap-2">
         <NewCollectionDialog />
-        <NewItemDialog types={creatableTypes} />
+        <NewItemDialog types={creatableTypes} collections={collections} />
       </div>
     </header>
   );

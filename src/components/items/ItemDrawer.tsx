@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatLongDate } from "@/lib/format-date";
 import { capitalize } from "@/lib/item-type-names";
+import type { CollectionOption } from "@/types/collections";
 import type { ItemDetailData, ItemPreview } from "@/types/items";
 
 export type ItemDrawerState =
@@ -23,6 +24,7 @@ interface ItemDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   state: ItemDrawerState | null;
+  collections: CollectionOption[];
   editing: boolean;
   onEditingChange: (editing: boolean) => void;
   onItemSaved: (item: ItemDetailData) => void;
@@ -33,6 +35,7 @@ export function ItemDrawer({
   open,
   onOpenChange,
   state,
+  collections,
   editing,
   onEditingChange,
   onItemSaved,
@@ -50,10 +53,11 @@ export function ItemDrawer({
               <ItemEditForm
                 key={item.id}
                 item={item}
+                collections={collections}
                 onCancel={() => onEditingChange(false)}
                 onSaved={onItemSaved}
               >
-                <DrawerMeta item={item} />
+                <DrawerDates item={item} />
               </ItemEditForm>
             ) : (
               <>
@@ -174,15 +178,6 @@ function DrawerBody({ item }: { item: ItemDetailData }) {
         </DrawerSection>
       )}
 
-      <DrawerMeta item={item} />
-    </div>
-  );
-}
-
-// Collections and dates; read-only in both view and edit mode
-function DrawerMeta({ item }: { item: ItemDetailData }) {
-  return (
-    <>
       {item.collections.length > 0 && (
         <DrawerSection title="Collections" icon={FolderOpen}>
           <div className="flex flex-wrap gap-1.5">
@@ -195,14 +190,21 @@ function DrawerMeta({ item }: { item: ItemDetailData }) {
         </DrawerSection>
       )}
 
-      <DrawerSection title="Details" icon={Calendar}>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-          <dt className="text-muted-foreground">Created</dt>
-          <dd className="text-right">{formatLongDate(new Date(item.createdAt))}</dd>
-          <dt className="text-muted-foreground">Updated</dt>
-          <dd className="text-right">{formatLongDate(new Date(item.updatedAt))}</dd>
-        </dl>
-      </DrawerSection>
-    </>
+      <DrawerDates item={item} />
+    </div>
+  );
+}
+
+// Read-only in both view and edit mode
+function DrawerDates({ item }: { item: ItemDetailData }) {
+  return (
+    <DrawerSection title="Details" icon={Calendar}>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+        <dt className="text-muted-foreground">Created</dt>
+        <dd className="text-right">{formatLongDate(new Date(item.createdAt))}</dd>
+        <dt className="text-muted-foreground">Updated</dt>
+        <dd className="text-right">{formatLongDate(new Date(item.updatedAt))}</dd>
+      </dl>
+    </DrawerSection>
   );
 }
