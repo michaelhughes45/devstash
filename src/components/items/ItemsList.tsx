@@ -4,30 +4,12 @@ import { ImageCard } from "@/components/items/ImageCard";
 import type { ItemWithType } from "@/lib/db/items";
 import { isFileType, isImageType } from "@/lib/item-content";
 
-interface ItemsListProps {
-  // Display name, e.g. "Snippets", for the empty state
-  typeName: string;
+interface ItemsProps {
   items: ItemWithType[];
 }
 
-// Files show as a list, images as a gallery and everything else as cards. Every
-// item on the page shares one type; the page's type only has the display name,
-// so the stored name comes from the first item.
-export function ItemsList({ typeName, items }: ItemsListProps) {
-  if (items.length === 0) {
-    return <p className="text-sm text-muted-foreground">No {typeName.toLowerCase()} yet.</p>;
-  }
-
-  if (isFileType(items[0].type.name)) {
-    return (
-      <ul className="divide-y overflow-hidden rounded-xl border bg-card">
-        {items.map((item) => (
-          <FileRow key={item.id} item={item} />
-        ))}
-      </ul>
-    );
-  }
-
+// Images as gallery cards, everything else as item cards
+export function ItemGrid({ items }: ItemsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {items.map((item) =>
@@ -39,4 +21,30 @@ export function ItemsList({ typeName, items }: ItemsListProps) {
       )}
     </div>
   );
+}
+
+export function FileList({ items }: ItemsProps) {
+  return (
+    <ul className="divide-y overflow-hidden rounded-xl border bg-card">
+      {items.map((item) => (
+        <FileRow key={item.id} item={item} />
+      ))}
+    </ul>
+  );
+}
+
+interface ItemsListProps extends ItemsProps {
+  // Display name, e.g. "Snippets", for the empty state
+  typeName: string;
+}
+
+// Files show as a list, images as a gallery and everything else as cards. Every
+// item on the page shares one type; the page's type only has the display name,
+// so the stored name comes from the first item.
+export function ItemsList({ typeName, items }: ItemsListProps) {
+  if (items.length === 0) {
+    return <p className="text-sm text-muted-foreground">No {typeName.toLowerCase()} yet.</p>;
+  }
+
+  return isFileType(items[0].type.name) ? <FileList items={items} /> : <ItemGrid items={items} />;
 }

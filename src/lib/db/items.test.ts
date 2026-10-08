@@ -7,6 +7,7 @@ import {
   getItemDetail,
   getItemFile,
   getItemKind,
+  getItemsByCollection,
   getItemsByType,
   updateItem,
 } from "@/lib/db/items";
@@ -16,6 +17,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     item: { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
     itemType: { findFirst: vi.fn() },
+    itemCollection: { findMany: vi.fn() },
   },
 }));
 
@@ -95,6 +97,37 @@ describe("getItemsByType", () => {
     };
     expect(select).not.toHaveProperty("content");
     expect(select).toMatchObject({ contentType: true, url: true, fileUrl: true });
+  });
+});
+
+describe("getItemsByCollection", () => {
+  it("only lists the user's items in the collection, most recently added first", async () => {
+    vi.mocked(prisma.itemCollection.findMany).mockResolvedValue([]);
+
+    await getItemsByCollection("user-1", "col-1");
+
+    expect(prisma.itemCollection.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { collectionId: "col-1", item: { userId: "user-1" } },
+        orderBy: { addedAt: "desc" },
+      }),
+    );
+  });
+
+  it("maps the linked items to cards and leaves text content out of the query", async () => {
+    vi.mocked(prisma.itemCollection.findMany).mockResolvedValue([{ item: row }] as never);
+
+    const [item] = await getItemsByCollection("user-1", "col-1");
+
+    expect(item).toMatchObject({
+      id: "item-1",
+      type: { id: "type-1", name: "snippet", icon: "File", color: "#6b7280" },
+      tags: ["react", "auth"],
+    });
+    const { select } = vi.mocked(prisma.itemCollection.findMany).mock.calls[0][0] as {
+      select: { item: { select: Record<string, unknown> } };
+    };
+    expect(select.item.select).not.toHaveProperty("content");
   });
 });
 

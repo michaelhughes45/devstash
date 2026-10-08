@@ -1,11 +1,35 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createCollection, getCollectionOptions, ownsCollections } from "@/lib/db/collections";
+import {
+  createCollection,
+  getCollection,
+  getCollectionOptions,
+  ownsCollections,
+} from "@/lib/db/collections";
 import { prisma } from "@/lib/prisma";
 
 vi.mock("@/lib/prisma", () => ({
-  prisma: { collection: { create: vi.fn(), findMany: vi.fn(), count: vi.fn() } },
+  prisma: { collection: { create: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), count: vi.fn() } },
 }));
+
+describe("getCollection", () => {
+  it("only looks up the collection for its owner", async () => {
+    const collection = { id: "col-1", name: "DevOps", description: null, isFavorite: true };
+    vi.mocked(prisma.collection.findFirst).mockResolvedValue(collection as never);
+
+    expect(await getCollection("user-1", "col-1")).toEqual(collection);
+    expect(prisma.collection.findFirst).toHaveBeenCalledWith({
+      where: { id: "col-1", userId: "user-1" },
+      select: { id: true, name: true, description: true, isFavorite: true },
+    });
+  });
+
+  it("returns null when the collection is missing or someone else's", async () => {
+    vi.mocked(prisma.collection.findFirst).mockResolvedValue(null);
+
+    expect(await getCollection("user-2", "col-1")).toBeNull();
+  });
+});
 
 describe("getCollectionOptions", () => {
   it("lists only the user's collections by name", async () => {

@@ -42,6 +42,28 @@ export async function getRecentCollections(
   return collections.slice(0, limit);
 }
 
+// Every collection, most recently used first, for the collections page
+export async function getAllCollections(userId: string): Promise<CollectionWithTypes[]> {
+  return getCollectionsByRecentUse(userId);
+}
+
+export interface CollectionSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  isFavorite: boolean;
+}
+
+// One of the user's collections, or null when it's missing or someone else's.
+// Cached per request, since the collection page and its metadata both need it.
+export const getCollection = cache(
+  async (userId: string, id: string): Promise<CollectionSummary | null> =>
+    prisma.collection.findFirst({
+      where: { id, userId },
+      select: { id: true, name: true, description: true, isFavorite: true },
+    }),
+);
+
 // Favorites plus the most recently used non-favorite collections
 export async function getSidebarCollections(
   userId: string,

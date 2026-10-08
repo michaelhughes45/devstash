@@ -107,6 +107,19 @@ export async function getItemsByType(
   return items.map(toItemWithType);
 }
 
+// The items in one of the user's collections, most recently added first
+export async function getItemsByCollection(
+  userId: string,
+  collectionId: string,
+): Promise<ItemWithType[]> {
+  const links = await prisma.itemCollection.findMany({
+    where: { collectionId, item: { userId } },
+    select: { item: { select: ITEM_CARD_SELECT } },
+    orderBy: { addedAt: "desc" },
+  });
+  return links.map(({ item }) => toItemWithType(item));
+}
+
 export interface ItemDetail extends ItemWithType {
   content: string | null;
   language: string | null;
