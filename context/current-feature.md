@@ -1,24 +1,18 @@
-# Current Feature: Split Item Create Code
+# Current Feature
 
-Split the two large item-create files flagged by the 2026-10-08 code scan into focused pieces, with no change in behavior.
+<!-- Feature name and short description -->
 
 ## Status
 
-Completed
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- Move `TypeSelector` (and its props) from `NewItemDialog.tsx` to `src/components/items/TypeSelector.tsx`
-- Move the create sequence (check other fields, upload with progress, `createItem`, toasts) into a `useCreateItem` hook in `src/hooks/use-create-item.ts`, along with `uploadChosenFile` and `withoutFileError`; `NewItemForm` keeps the form state, `canSubmit`, type-change reset and JSX
-- Move `discardUpload`, `resolveUpload`, `attachUpload`, `FileResolution` and the upload error messages from `src/actions/items.ts` to a server-only `src/lib/item-uploads.ts` (no `"use server"`, so they aren't exposed as actions)
-- Replace the `fileKey` cast in `createItem` with a `getFileKey(data: unknown)` helper
-- New `src/lib/item-uploads.test.ts` for the moved helpers; `src/actions/items.test.ts` keeps the action behavior, with every current case still covered
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Spec: `context/features/code-scan-fixes/code-scan-fixes-5-split-item-create-spec.md`
-- Last of the 2026-10-08 code scan fixes. Refactor only: step order, messages, disabled state while saving and the reset on close stay the same.
-- Verify in the browser: create a snippet, a link and an image (progress bar, toast, sidebar count), a `javascript:` URL still rejected, an oversized file still rejected in the dialog.
+<!-- Any extra notes -->
 
 ## History
 
