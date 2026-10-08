@@ -4,7 +4,6 @@ import { Prisma } from "@/generated/prisma/client";
 import {
   createItem,
   deleteItem,
-  getCreatableItemTypes,
   getItemDetail,
   getItemFile,
   getItemKind,
@@ -16,7 +15,7 @@ import { prisma } from "@/lib/prisma";
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     item: { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
-    itemType: { findFirst: vi.fn(), findMany: vi.fn() },
+    itemType: { findFirst: vi.fn() },
   },
 }));
 
@@ -228,31 +227,6 @@ describe("createItem", () => {
 
     expect(item?.tags).toEqual(["react", "auth"]);
     expect(item?.type).toEqual({ id: "type-1", name: "snippet", icon: "File", color: "#6b7280" });
-  });
-});
-
-describe("getCreatableItemTypes", () => {
-  it("returns the seeded system types in dialog order with labels", async () => {
-    vi.mocked(prisma.itemType.findMany).mockResolvedValue([
-      { name: "link", icon: "Link", color: "#10b981" },
-      { name: "snippet", icon: "Code", color: "#3b82f6" },
-      { name: "note", icon: null, color: null },
-    ] as never);
-
-    expect(await getCreatableItemTypes()).toEqual([
-      { name: "snippet", label: "Snippet", icon: "Code", color: "#3b82f6" },
-      { name: "note", label: "Note", icon: "File", color: "#6b7280" },
-      { name: "link", label: "Link", icon: "Link", color: "#10b981" },
-    ]);
-    expect(prisma.itemType.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          isSystem: true,
-          userId: null,
-          name: { in: ["snippet", "prompt", "command", "note", "file", "image", "link"] },
-        },
-      }),
-    );
   });
 });
 

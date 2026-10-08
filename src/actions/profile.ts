@@ -1,10 +1,11 @@
 "use server";
 
-import { z } from "zod";
 import { signOut } from "@/auth";
 import { changeUserPassword, deleteUserAccount } from "@/lib/account";
 import { getCurrentUserId } from "@/lib/session";
 import { changePasswordSchema, deleteAccountSchema } from "@/lib/validations/auth";
+import { fieldErrorsOf } from "@/lib/validations/field-errors";
+import type { FieldErrors } from "@/types/forms";
 
 const NOT_SIGNED_IN = "You need to be signed in to do that.";
 const GENERIC_ERROR = "Something went wrong. Please try again.";
@@ -12,7 +13,7 @@ const GENERIC_ERROR = "Something went wrong. Please try again.";
 export interface ChangePasswordState {
   success: boolean;
   error?: string;
-  fieldErrors?: Record<string, string[] | undefined>;
+  fieldErrors?: FieldErrors;
 }
 
 export async function changePassword(
@@ -28,7 +29,7 @@ export async function changePassword(
     confirmPassword: formData.get("confirmPassword"),
   });
   if (!parsed.success) {
-    return { success: false, fieldErrors: z.flattenError(parsed.error).fieldErrors };
+    return { success: false, fieldErrors: fieldErrorsOf(parsed.error) };
   }
 
   try {
@@ -60,7 +61,7 @@ export async function changePassword(
 export interface DeleteAccountState {
   success: boolean;
   error?: string;
-  fieldErrors?: Record<string, string[] | undefined>;
+  fieldErrors?: FieldErrors;
 }
 
 export async function deleteAccount(
@@ -74,7 +75,7 @@ export async function deleteAccount(
     confirmation: formData.get("confirmation"),
   });
   if (!parsed.success) {
-    return { success: false, fieldErrors: z.flattenError(parsed.error).fieldErrors };
+    return { success: false, fieldErrors: fieldErrorsOf(parsed.error) };
   }
 
   try {

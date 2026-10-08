@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { jsonResponse, rateLimitedResponse } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { isUniqueViolation } from "@/lib/prisma-errors";
@@ -9,12 +8,14 @@ import {
 import { hashPassword } from "@/lib/password";
 import { checkRateLimit, rateLimitKey } from "@/lib/rate-limit";
 import { registerSchema } from "@/lib/validations/auth";
+import { fieldErrorsOf } from "@/lib/validations/field-errors";
+import type { FieldErrors } from "@/types/forms";
 
 interface RegisterResponse {
   success: boolean;
   data?: { id: string; name: string | null; email: string };
   error?: string;
-  fieldErrors?: Record<string, string[] | undefined>;
+  fieldErrors?: FieldErrors;
 }
 
 const respond = jsonResponse<RegisterResponse>;
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
       {
         success: false,
         error: parsed.error.issues[0]?.message ?? "Invalid input",
-        fieldErrors: z.flattenError(parsed.error).fieldErrors,
+        fieldErrors: fieldErrorsOf(parsed.error),
       },
       400,
     );

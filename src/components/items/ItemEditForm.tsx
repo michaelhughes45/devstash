@@ -6,13 +6,14 @@ import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { updateItem } from "@/actions/items";
-import { ItemFormFields, type FieldErrors } from "@/components/items/ItemFormFields";
+import { ItemFormFields } from "@/components/items/ItemFormFields";
 import { Button } from "@/components/ui/button";
 import {
   buildItemInput,
   getEditableFields,
   type ItemFormValues,
 } from "@/lib/item-content";
+import type { FieldErrors } from "@/types/forms";
 import type { ItemDetailData } from "@/types/items";
 
 interface ItemEditFormProps {

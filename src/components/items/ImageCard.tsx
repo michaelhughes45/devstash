@@ -3,13 +3,8 @@ import { ImageIcon, Pin, Star } from "lucide-react";
 import { ItemCardTrigger } from "@/components/items/ItemCardTrigger";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ItemWithType } from "@/lib/db/items";
+import { formatShortDate } from "@/lib/format-date";
 import { safeExternalUrl } from "@/lib/item-content";
-
-const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  timeZone: "UTC",
-});
 
 interface ImageCardProps {
   item: ItemWithType;
@@ -52,7 +47,7 @@ export function ImageCard({ item }: ImageCardProps) {
             dateTime={item.createdAt.toISOString()}
             className="shrink-0 text-xs text-muted-foreground"
           >
-            {DATE_FORMAT.format(item.createdAt)}
+            {formatShortDate(item.createdAt)}
           </time>
         </CardContent>
       </Card>

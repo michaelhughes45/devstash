@@ -3,14 +3,13 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { FormField } from "@/components/auth/FormField";
 import { FormMessage } from "@/components/auth/FormMessage";
 import { Button } from "@/components/ui/button";
 import { registerSchema } from "@/lib/validations/auth";
-
-type FieldErrors = Record<string, string[] | undefined>;
+import { fieldErrorsOf } from "@/lib/validations/field-errors";
+import type { FieldErrors } from "@/types/forms";
 
 interface RegisterResponse {
   success: boolean;
@@ -31,7 +30,7 @@ export function RegisterForm() {
     const values = Object.fromEntries(new FormData(event.currentTarget));
     const parsed = registerSchema.safeParse(values);
     if (!parsed.success) {
-      setFieldErrors(z.flattenError(parsed.error).fieldErrors);
+      setFieldErrors(fieldErrorsOf(parsed.error));
       return;
     }
     setFieldErrors({});

@@ -1,18 +1,23 @@
-# Current Feature
-
-<!-- Feature name and short description -->
+# Current Feature: Extract Shared Helpers
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Split `src/lib/db/items.ts`: move the item type queries (`getItemTypesWithCounts`, `getCreatableItemTypes`, `getItemTypeBySlug`, `ItemTypeWithCount`) to `src/lib/db/item-types.ts`, and the pure type-name helpers (type ordering, pluralizing, display name, slug, PRO flag) to `src/lib/item-type-names.ts` so they can be unit-tested without mocking Prisma
+- Add a shared `FieldErrors` type (`src/types/forms.ts`) and a `fieldErrorsOf(error)` helper (`src/lib/validations/field-errors.ts`), replacing the inline `Record<string, string[] | undefined>` types and `z.flattenError(...).fieldErrors` calls in the auth, profile and item actions, the register route, `RegisterForm` and `use-create-item`; `FieldErrors` is no longer imported from a component file
+- Add `src/lib/format-date.ts` with shared date formatters, replacing the copies in `ItemCard`, `ImageCard`, `FileRow`, `ItemDrawer` and the profile page
+- Add a shared `capitalize` helper, replacing the three copies
+- No change in behavior or UI; existing tests keep passing, with new unit tests for the extracted helpers
 
 ## Notes
 
-<!-- Any extra notes -->
+- From the 2026-10-08 code-scanner refactoring scan (findings 1, 2, 4 and 5).
+- The profile page's join date formatter has no `timeZone: "UTC"` while the others do. Use UTC everywhere, as the stored dates are UTC timestamps.
+- Callers import the type queries from `@/lib/db/item-types` directly (no re-export from `items.ts`).
+- Existing `getCreatableItemTypes` tests move from `src/lib/db/items.test.ts` to `src/lib/db/item-types.test.ts`.
 
 ## History
 

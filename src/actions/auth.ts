@@ -4,7 +4,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { AuthError, CredentialsSignin } from "next-auth";
-import { z } from "zod";
 import {
   EmailNotVerifiedError,
   SignInRateLimitedError,
@@ -29,13 +28,15 @@ import {
   resetPasswordSchema,
   signInSchema,
 } from "@/lib/validations/auth";
+import { fieldErrorsOf } from "@/lib/validations/field-errors";
+import type { FieldErrors } from "@/types/forms";
 
 export interface SignInState {
   success: boolean;
   email?: string;
   error?: string;
   rateLimitError?: string;
-  fieldErrors?: Record<string, string[] | undefined>;
+  fieldErrors?: FieldErrors;
 }
 
 async function checkActionRateLimit(name: RateLimitName, email?: string) {
@@ -56,7 +57,7 @@ export async function signInWithCredentials(
     return {
       success: false,
       email,
-      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+      fieldErrors: fieldErrorsOf(parsed.error),
     };
   }
 
@@ -108,7 +109,7 @@ export interface ForgotPasswordState {
   success: boolean;
   email?: string;
   rateLimitError?: string;
-  fieldErrors?: Record<string, string[] | undefined>;
+  fieldErrors?: FieldErrors;
 }
 
 export async function requestPasswordReset(
@@ -121,7 +122,7 @@ export async function requestPasswordReset(
     return {
       success: false,
       email,
-      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+      fieldErrors: fieldErrorsOf(parsed.error),
     };
   }
 
@@ -146,7 +147,7 @@ export interface ResetPasswordState {
   error?: string;
   rateLimitError?: string;
   linkError?: boolean;
-  fieldErrors?: Record<string, string[] | undefined>;
+  fieldErrors?: FieldErrors;
 }
 
 export async function resetPasswordWithToken(
@@ -159,7 +160,7 @@ export async function resetPasswordWithToken(
     confirmPassword: formData.get("confirmPassword"),
   });
   if (!parsed.success) {
-    return { success: false, fieldErrors: z.flattenError(parsed.error).fieldErrors };
+    return { success: false, fieldErrors: fieldErrorsOf(parsed.error) };
   }
 
   const rateLimitError = await checkActionRateLimit("resetPassword");

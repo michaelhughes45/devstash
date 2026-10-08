@@ -3,7 +3,8 @@ import { notFound, redirect } from "next/navigation";
 
 import { ItemTypeIcon } from "@/components/dashboard/ItemTypeIcon";
 import { ItemsList } from "@/components/items/ItemsList";
-import { getItemsByType, getItemTypeBySlug } from "@/lib/db/items";
+import { getItemTypeBySlug } from "@/lib/db/item-types";
+import { getItemsByType } from "@/lib/db/items";
 import { getCurrentUserId } from "@/lib/session";
 
 export async function generateMetadata({
