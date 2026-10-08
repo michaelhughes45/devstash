@@ -1,25 +1,18 @@
-# Current Feature: Card Copy Payload
+# Current Feature
 
-Stop item cards loading and sending every item's full text to the browser for quick copy. Text content is fetched only when the copy button is clicked.
+<!-- Feature name and short description -->
 
 ## Status
 
-Completed
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- Remove `content` from the card query (`ITEM_CARD_SELECT` / `ItemWithType`) and keep it on `ItemDetail`, so the drawer and `GET /api/items/[id]` are unchanged
-- Text item cards fetch `GET /api/items/{id}` on copy click; link and file cards keep copying their URL inline
-- Text item cards always show the copy button, with a "Nothing to copy" toast when the content is blank
-- Disable the button while fetching, and show the existing error toast on 401, 404 or a network error
-- A clipboard helper that works after an `await` in Safari (`ClipboardItem` with a promise, falling back to `writeText`)
-- Unit tests for the new card copy helper and updated card query tests
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Spec: `context/features/code-scan-fixes/code-scan-fixes-2-card-copy-payload-spec.md`
-- From the 2026-10-08 code scan (Medium). The other Medium finding, where `updateItem` doesn't enforce the per-type rules `createItem` does, is in `code-scan-fixes-3-update-item-type-rules-spec.md`.
-- Verify the long snippet text is gone from the `/items/snippets` response, and that copy still works for snippet, command, link and file cards.
+<!-- Any extra notes -->
 
 ## History
 
