@@ -18,7 +18,7 @@ export function safeExternalUrl(value: string | null): string | null {
   }
 }
 
-// What the drawer's Copy button puts on the clipboard, or null if there's nothing
+// What the drawer's and cards' Copy buttons put on the clipboard, or null if there's nothing
 export function getItemCopyText(item: CopyableItem): string | null {
   const text =
     item.contentType === "URL"

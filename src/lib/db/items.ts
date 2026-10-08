@@ -25,6 +25,10 @@ export interface ItemWithType {
   // Original name and size in bytes of an uploaded file, shown in the file list
   fileName: string | null;
   fileSize: number | null;
+  // What the card's quick copy button copies (see getItemCopyText)
+  contentType: ContentType;
+  content: string | null;
+  url: string | null;
   type: ItemCardType;
   tags: string[];
 }
@@ -47,6 +51,9 @@ const ITEM_CARD_SELECT = {
   fileUrl: true,
   fileName: true,
   fileSize: true,
+  contentType: true,
+  content: true,
+  url: true,
   type: { select: { id: true, name: true, icon: true, color: true } },
   tags: { select: { tag: { select: { name: true } } } },
 } satisfies Prisma.ItemSelect;
@@ -202,20 +209,14 @@ export async function getItemsByType(
 }
 
 export interface ItemDetail extends ItemWithType {
-  contentType: ContentType;
-  content: string | null;
   language: string | null;
-  url: string | null;
   updatedAt: Date;
   collections: { id: string; name: string }[];
 }
 
 const ITEM_DETAIL_SELECT = {
   ...ITEM_CARD_SELECT,
-  contentType: true,
-  content: true,
   language: true,
-  url: true,
   updatedAt: true,
   collections: {
     select: { collection: { select: { id: true, name: true } } },
