@@ -5,7 +5,7 @@
 
 | | |
 | --- | --- |
-| **Status** | 🟢 In development — Phase 1 (MVP): setup, database, dashboard UI and auth (email/password + GitHub, email verification, password reset, profile) done; item CRUD next |
+| **Status** | 🟢 In development — Phase 1 (MVP): setup, database, dashboard UI, auth (email/password + GitHub, email verification, password reset, profile, rate limiting) and item CRUD (drawer, create/edit/delete, code and Markdown editors, R2 file and image uploads) done; collections, search, favorites/pinned next |
 | **Type** | SaaS (Free + Pro subscription) |
 | **Stack** | Next.js · TypeScript · Prisma · Neon Postgres · Tailwind v4 · shadcn/ui · Auth.js · Stripe · Cloudflare R2 · OpenAI |
 
@@ -190,7 +190,7 @@ model Item {
   language String?        // e.g. "typescript", used for syntax highlighting
 
   // FILE types (file, image) — stored in Cloudflare R2
-  fileUrl  String?
+  fileUrl  String?        @unique
   fileName String?
   fileSize Int?           // bytes
 
@@ -505,23 +505,28 @@ devstash/
 │   ├── migrations/
 │   └── seed.ts              # seeds system types + demo data
 ├── prisma.config.ts         # Prisma 7 config (connection URLs, seed)
-├── scripts/                 # e.g. test-db.ts
+├── scripts/                 # test-db.ts, clean-users.ts, r2-lifecycle.ts
+├── vitest.config.mts        # unit tests (src/**/*.test.ts)
 ├── src/
-│   ├── auth.ts               # Auth.js config
+│   ├── auth.config.ts        # edge-safe Auth.js config (used by the proxy)
+│   ├── auth.ts               # Auth.js config with Prisma adapter + credentials
 │   ├── proxy.ts              # route protection (Next.js 16 renamed middleware → proxy)
 │   ├── app/
-│   │   ├── (auth)/           # sign-in, register
-│   │   ├── (dashboard)/      # items, collections, settings
+│   │   ├── (auth)/           # sign-in, register, forgot/reset password
+│   │   ├── dashboard/        # dashboard (shares AppShell layout)
+│   │   ├── items/[type]/     # items list per type
+│   │   ├── profile/          # profile, change password, delete account
 │   │   └── api/
-│   │       ├── auth/[...nextauth]/
-│   │       └── webhooks/stripe/
-│   ├── actions/              # server actions (items, collections, ai)
+│   │       ├── auth/         # [...nextauth], register, verify-email
+│   │       ├── items/[id]/   # item detail + download
+│   │       └── upload/       # file uploads to R2
+│   ├── actions/              # server actions (auth, profile, items; later collections, ai)
 │   ├── components/
 │   │   ├── ui/               # shadcn components
-│   │   └── ...
+│   │   └── ...               # feature folders (items, dashboard, auth, ...)
 │   ├── generated/prisma/     # generated Prisma client (gitignored)
 │   ├── hooks/
-│   ├── lib/                  # prisma, db queries, stripe, r2, openai clients
+│   ├── lib/                  # prisma, db/ queries, validations/, r2, rate limiting, email
 │   └── types/
 └── .env
 ```
@@ -607,7 +612,7 @@ Refer to the screenshots below as a base for the dashboard UI.  It does not have
 ### 🟢 Phase 1 — MVP
 - [x] Project setup (Next.js, Tailwind, shadcn, Prisma, Neon)
 - [x] Authentication (email + GitHub)
-- [ ] Item CRUD for system types
+- [x] Item CRUD for system types
 - [ ] Collections
 - [ ] Tags
 - [ ] Search & filters
@@ -616,7 +621,7 @@ Refer to the screenshots below as a base for the dashboard UI.  It does not have
 
 ### 🟣 Phase 2 — Pro
 - [ ] Stripe billing & upgrade flow
-- [ ] File uploads (R2)
+- [ ] File uploads (R2) — uploads, gallery/list views and downloads done; Pro gating still to do
 - [ ] Custom item types
 - [ ] AI features (auto‑tag, summarize, explain, optimize prompt)
 - [ ] Export (JSON / ZIP)
