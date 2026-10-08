@@ -1,15 +1,11 @@
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
-import { z } from "zod";
 
-import { createItem } from "@/actions/items";
-import { ItemTypeIcon } from "@/components/dashboard/ItemTypeIcon";
 import { FileUpload } from "@/components/items/FileUpload";
-import { ItemFormFields, type FieldErrors } from "@/components/items/ItemFormFields";
+import { ItemFormFields } from "@/components/items/ItemFormFields";
+import { TypeSelector } from "@/components/items/TypeSelector";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -22,55 +18,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { isFileItemType, type FileItemType } from "@/lib/file-constraints";
+import { useCreateItem } from "@/hooks/use-create-item";
+import { isFileItemType } from "@/lib/file-constraints";
 import {
   EMPTY_ITEM_FORM_VALUES,
-  buildItemInput,
   getCreateFields,
   type CreatableItemType,
   type ItemFormValues,
 } from "@/lib/item-content";
-import { uploadFile } from "@/lib/upload-file";
-import { cn } from "@/lib/utils";
-import { updateItemSchema } from "@/lib/validations/items";
 import type { CreatableItemTypeOption } from "@/types/items";
-
-interface TypeSelectorProps {
-  types: CreatableItemTypeOption[];
-  value: CreatableItemType;
-  onChange: (type: CreatableItemType) => void;
-}
-
-// Native radios styled as chips, so arrow keys move between types
-function TypeSelector({ types, value, onChange }: TypeSelectorProps) {
-  return (
-    <fieldset className="grid gap-2">
-      <legend className="mb-2 text-sm leading-none font-medium">Type</legend>
-      <div className="flex flex-wrap gap-2">
-        {types.map((type) => (
-          <label
-            key={type.name}
-            className={cn(
-              "flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm transition-colors hover:bg-muted has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
-              value === type.name && "border-foreground/40 bg-muted",
-            )}
-          >
-            <input
-              type="radio"
-              name="item-type"
-              value={type.name}
-              checked={value === type.name}
-              onChange={() => onChange(type.name)}
-              className="sr-only"
-            />
-            <ItemTypeIcon icon={type.icon} className="size-4" style={{ color: type.color }} />
-            {type.label}
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
 
 interface NewItemFormProps {
   types: CreatableItemTypeOption[];
@@ -79,36 +35,12 @@ interface NewItemFormProps {
   onCreated: () => void;
 }
 
-function withoutFileError(errors: FieldErrors): FieldErrors {
-  return Object.fromEntries(Object.entries(errors).filter(([field]) => field !== "file"));
-}
-
-// Uploads the chosen file, reporting progress; returns its R2 key, or null after
-// showing the error
-async function uploadChosenFile(
-  type: FileItemType,
-  file: File,
-  setProgress: (percent: number | null) => void,
-  setFieldErrors: (errors: FieldErrors) => void,
-): Promise<string | null> {
-  setProgress(0);
-  const upload = await uploadFile(type, file, setProgress);
-  setProgress(null);
-  if (upload.success) return upload.key;
-
-  setFieldErrors({ file: [upload.error] });
-  toast.error(upload.error);
-  return null;
-}
-
 // Mounted only while the dialog is open, so each opening starts blank
 function NewItemForm({ types, isPending, startTransition, onCreated }: NewItemFormProps) {
-  const router = useRouter();
   const [type, setType] = useState<CreatableItemType>(types[0]?.name ?? "snippet");
   const [values, setValues] = useState<ItemFormValues>(EMPTY_ITEM_FORM_VALUES);
   const [file, setFile] = useState<File | null>(null);
-  const [progress, setProgress] = useState<number | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const { progress, fieldErrors, submit, clearFileError } = useCreateItem(onCreated);
   const fields = getCreateFields(type);
   const fileType = isFileItemType(type) ? type : null;
   const canSubmit =
@@ -124,46 +56,12 @@ function NewItemForm({ types, isPending, startTransition, onCreated }: NewItemFo
   function handleTypeChange(nextType: CreatableItemType) {
     setType(nextType);
     setFile(null);
-    setFieldErrors(withoutFileError);
-  }
-
-  async function submit() {
-    const input = buildItemInput(values, fields);
-    let fileKey: string | undefined;
-    if (fileType && file) {
-      // Check the other fields first, so a rejected form doesn't upload for nothing
-      const check = updateItemSchema.safeParse(input);
-      if (!check.success) {
-        setFieldErrors(z.flattenError(check.error).fieldErrors);
-        toast.error("Please fix the highlighted fields.");
-        return;
-      }
-      const key = await uploadChosenFile(fileType, file, setProgress, setFieldErrors);
-      if (!key) return;
-      fileKey = key;
-    }
-
-    const result = await createItem({ type, ...input, fileKey });
-    if (!result.success) {
-      setFieldErrors(result.fieldErrors ?? {});
-      toast.error(result.error);
-      return;
-    }
-    onCreated();
-    toast.success("Item created");
-    router.refresh();
+    clearFileError();
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    startTransition(async () => {
-      try {
-        await submit();
-      } catch {
-        setProgress(null);
-        toast.error("Couldn't create the item. Please try again.");
-      }
-    });
+    startTransition(() => submit(type, values, file));
   }
 
   return (
@@ -184,7 +82,7 @@ function NewItemForm({ types, isPending, startTransition, onCreated }: NewItemFo
               file={file}
               onFileChange={(next) => {
                 setFile(next);
-                setFieldErrors(withoutFileError);
+                clearFileError();
               }}
               progress={progress}
               error={fieldErrors.file?.[0]}

@@ -13,21 +13,14 @@ import {
 } from "@/lib/db/items";
 import { getEditableFields } from "@/lib/item-content";
 import { isUniqueViolation } from "@/lib/prisma-errors";
+import { isFileItemType } from "@/lib/file-constraints";
 import {
-  getStoredContentType,
-  isFileItemType,
-  validateUploadFile,
-  type FileItemType,
-} from "@/lib/file-constraints";
-import {
-  copyObject,
-  deleteObjectQuietly,
-  finalKeyFor,
-  headObject,
-  isUserUploadKey,
-  keyFromPublicUrl,
-  publicUrlForKey,
-} from "@/lib/r2";
+  attachUpload,
+  discardUpload,
+  getFileKey,
+  UPLOAD_NOT_FOUND,
+} from "@/lib/item-uploads";
+import { deleteObjectQuietly, finalKeyFor, keyFromPublicUrl } from "@/lib/r2";
 import { getCurrentUserId } from "@/lib/session";
 import {
   createItemSchema,
@@ -44,8 +37,6 @@ const NOT_SIGNED_IN = "You need to be signed in to do that.";
 const NOT_FOUND = "Item not found.";
 const INVALID_INPUT = "Please fix the highlighted fields.";
 const GENERIC_ERROR = "Something went wrong. Please try again.";
-const UPLOAD_NOT_FOUND = "The upload wasn't found. Please choose the file again.";
-const INVALID_UPLOAD = "This file can't be used for this item type.";
 
 export type ItemMutationResult =
   | { success: true; data: ItemDetailData }
@@ -66,62 +57,13 @@ function toItemDetailData(item: ItemDetail): ItemDetailData {
   };
 }
 
-// Deletes the user's own pending upload, so a failed create doesn't leave it
-// behind until the lifecycle rule runs. Pending keys are never stored on an
-// item, so this can't break one; another user's key is ignored.
-async function discardUpload(userId: string, fileKey: unknown): Promise<void> {
-  if (typeof fileKey !== "string" || !isUserUploadKey(userId, fileKey)) return;
-  await deleteObjectQuietly(fileKey);
-}
-
-type FileResolution = { file: ItemFileData } | { error: string };
-
-// Checks a pending upload against the item type's rules, reading its real size
-// and type from R2 rather than trusting the client
-async function resolveUpload(
-  userId: string,
-  type: FileItemType,
-  pendingKey: string,
-): Promise<FileResolution> {
-  if (!isUserUploadKey(userId, pendingKey)) return { error: UPLOAD_NOT_FOUND };
-
-  const stored = await headObject(pendingKey);
-  if (!stored) return { error: UPLOAD_NOT_FOUND };
-
-  const fileName = stored.originalName ?? pendingKey.slice(pendingKey.lastIndexOf("/") + 1);
-  const error = validateUploadFile(type, {
-    name: fileName,
-    size: stored.size,
-    type: stored.contentType ?? "",
-  });
-  // The key's extension must match too, since the stored type came from it
-  if (error || getStoredContentType(type, pendingKey) !== stored.contentType) {
-    return { error: error ?? INVALID_UPLOAD };
-  }
-
-  const fileUrl = publicUrlForKey(finalKeyFor(pendingKey));
-  return { file: { fileUrl, fileName, fileSize: stored.size } };
-}
-
-// Validates the pending upload and copies it to its final key, out of reach of
-// the pending/ lifecycle rule
-async function attachUpload(
-  userId: string,
-  type: FileItemType,
-  pendingKey: string,
-): Promise<FileResolution> {
-  const resolved = await resolveUpload(userId, type, pendingKey);
-  if ("file" in resolved) await copyObject(pendingKey, finalKeyFor(pendingKey));
-  return resolved;
-}
-
 export async function createItem(data: CreateItemInput): Promise<CreateItemResult> {
   const userId = await getCurrentUserId();
   if (!userId) return { success: false, error: NOT_SIGNED_IN };
 
   const parsed = createItemSchema.safeParse(data);
   if (!parsed.success) {
-    await discardUpload(userId, (data as { fileKey?: unknown } | null)?.fileKey);
+    await discardUpload(userId, getFileKey(data));
     return {
       success: false,
       error: INVALID_INPUT,
