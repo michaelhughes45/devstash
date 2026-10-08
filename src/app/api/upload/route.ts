@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-
+import { jsonResponse, rateLimitedResponse } from "@/lib/api-response";
 import {
   FILE_CONSTRAINTS,
   getStoredContentType,
@@ -7,7 +6,7 @@ import {
   validateUploadFile,
 } from "@/lib/file-constraints";
 import { createUploadKey, putObject } from "@/lib/r2";
-import { checkRateLimit, rateLimitMessage, retryAfterSeconds } from "@/lib/rate-limit";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { getCurrentUserId } from "@/lib/session";
 
 interface UploadResponse {
@@ -16,9 +15,7 @@ interface UploadResponse {
   error?: string;
 }
 
-function respond(body: UploadResponse, status: number) {
-  return NextResponse.json(body, { status });
-}
+const respond = jsonResponse<UploadResponse>;
 
 // Largest allowed file plus room for the multipart boundaries and other fields
 const MAX_BODY_SIZE =
@@ -62,12 +59,7 @@ export async function POST(request: Request) {
 
   // Checked after validation, so a rejected file doesn't use up an attempt
   const limit = await checkRateLimit("upload", userId);
-  if (!limit.success) {
-    return NextResponse.json(
-      { success: false, error: rateLimitMessage(limit.reset) } satisfies UploadResponse,
-      { status: 429, headers: { "Retry-After": String(retryAfterSeconds(limit.reset)) } },
-    );
-  }
+  if (!limit.success) return rateLimitedResponse(limit.reset);
 
   try {
     const key = createUploadKey(userId, file.name);

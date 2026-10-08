@@ -439,7 +439,7 @@ flowchart LR
   S -->|"save item"| DB[("🐘 Postgres")]
 ```
 
-Uploads pass through the app server, so on Vercel they're capped at its ~4.5 MB request body limit. An R2 lifecycle rule deletes anything left under `pending/` after a day (abandoned uploads); see `npm run r2:lifecycle`. Downloads go through `/api/items/[id]/download`.
+Uploads pass through the app server, so on Vercel they're capped at its ~4.5 MB request body limit. An R2 lifecycle rule deletes anything left under `pending/` after a day (abandoned uploads); see `npm run r2:lifecycle`. Downloads go through `/api/items/[id]/download`. `R2_PUBLIC_URL` must be on a domain separate from the app (not a subdomain of it): uploaded files, including SVGs, are served from it as-is, so the app never links to them directly except as `<img>` sources.
 
 ---
 

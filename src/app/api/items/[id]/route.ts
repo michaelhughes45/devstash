@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-
+import { jsonResponse } from "@/lib/api-response";
 import { getItemDetail, type ItemDetail } from "@/lib/db/items";
 import { getCurrentUserId } from "@/lib/session";
 
@@ -9,9 +8,7 @@ interface ItemDetailResponse {
   error?: string;
 }
 
-function respond(body: ItemDetailResponse, status: number) {
-  return NextResponse.json(body, { status });
-}
+const respond = jsonResponse<ItemDetailResponse>;
 
 // The proxy doesn't cover /api, so this route checks the session itself
 export async function GET(_request: Request, ctx: RouteContext<"/api/items/[id]">) {

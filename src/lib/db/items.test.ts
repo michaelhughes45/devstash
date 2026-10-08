@@ -9,7 +9,6 @@ import {
   getItemFile,
   getItemKind,
   getItemsByType,
-  isUniqueViolation,
   updateItem,
 } from "@/lib/db/items";
 import { prisma } from "@/lib/prisma";
@@ -345,17 +344,6 @@ describe("deleteItem", () => {
     vi.mocked(prisma.item.delete).mockRejectedValue(new Error("db down"));
 
     await expect(deleteItem("user-1", "item-1")).rejects.toThrow("db down");
-  });
-});
-
-describe("isUniqueViolation", () => {
-  it("is true only for Prisma's unique constraint error", () => {
-    const error = (code: string) =>
-      new Prisma.PrismaClientKnownRequestError("failed", { code, clientVersion: "test" });
-
-    expect(isUniqueViolation(error("P2002"))).toBe(true);
-    expect(isUniqueViolation(error("P2025"))).toBe(false);
-    expect(isUniqueViolation(new Error("P2002"))).toBe(false);
   });
 });
 

@@ -1,11 +1,10 @@
-import { NextResponse } from "next/server";
-
+import { jsonResponse } from "@/lib/api-response";
 import { getItemFile } from "@/lib/db/items";
 import { getObject, keyFromPublicUrl } from "@/lib/r2";
 import { getCurrentUserId } from "@/lib/session";
 
 function errorResponse(error: string, status: number) {
-  return NextResponse.json({ success: false, error }, { status });
+  return jsonResponse({ success: false, error }, status);
 }
 
 // attachment with an ASCII fallback plus the UTF-8 name (RFC 6266 / 5987)
