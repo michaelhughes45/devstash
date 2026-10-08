@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { createCollectionSchema } from "@/lib/validations/collections";
+import {
+  collectionIdSchema,
+  createCollectionSchema,
+  updateCollectionSchema,
+} from "@/lib/validations/collections";
 
 describe("createCollectionSchema", () => {
   it("trims the name and description", () => {
@@ -28,5 +32,23 @@ describe("createCollectionSchema", () => {
     expect(
       createCollectionSchema.safeParse({ name: "A", description: "a".repeat(501) }).success,
     ).toBe(false);
+  });
+});
+
+describe("updateCollectionSchema", () => {
+  it("uses the create rules", () => {
+    expect(updateCollectionSchema.parse({ name: " DevOps ", description: " " })).toEqual({
+      name: "DevOps",
+      description: null,
+    });
+    expect(updateCollectionSchema.safeParse({ name: "" }).success).toBe(false);
+  });
+});
+
+describe("collectionIdSchema", () => {
+  it("accepts ids of 1 to 64 characters", () => {
+    expect(collectionIdSchema.safeParse("col-1").success).toBe(true);
+    expect(collectionIdSchema.safeParse("").success).toBe(false);
+    expect(collectionIdSchema.safeParse("a".repeat(65)).success).toBe(false);
   });
 });

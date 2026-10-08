@@ -1,10 +1,27 @@
-# Current Feature
+# Current Feature: Collection Actions (Edit, Delete, Favorite)
 
 ## Status
 
+In Progress
+
 ## Goals
 
+- `/collections/[id]` header has Edit, Delete and Favorite buttons
+- Edit opens a modal to change the collection's metadata (name, description), pre-filled with current values; saves via a new `updateCollection` server action, validated with Zod (same rules as create), scoped to the owner
+- Delete opens a confirmation dialog; confirming deletes the collection only — its items are **not** deleted, they just no longer belong to it (only `ItemCollection` links go, via the existing cascade); then redirects to `/collections` with a toast
+- Favorite is a button/icon only (shows current state, e.g. filled yellow star when favorited) — no toggle logic yet
+- On collection cards (`/collections` and dashboard), the existing 3-dots button opens a dropdown with Edit, Delete and Favorite, using the same edit modal and delete confirmation
+- Clicking anywhere else on a card still navigates to the collection page; opening the dropdown or its actions never navigates
+- Sidebar, stats and lists update after edit/delete (`router.refresh()`)
+- Unit tests for the new server actions, queries and schema; `npm test` and `npm run build` pass
+
 ## Notes
+
+- `CollectionCard` (`src/components/dashboard/CollectionCard.tsx`) already has a `MoreHorizontal` button sitting above the stretched link (`after:absolute after:inset-0`); it becomes a client dropdown trigger (shadcn `dropdown-menu` is installed)
+- Follow existing patterns: `createCollection` action / `createCollectionSchema` / `NewCollectionDialog` for the edit modal; `DeleteItemDialog` (`AlertDialog`, can't dismiss while pending) for the delete confirmation
+- Actions return `{ success, data, error, fieldErrors }`; queries scope by `{ id, userId }` and treat P2025 as "Collection not found." (`isRecordNotFound`)
+- Favorite toggle is out of scope (separate favorites spec); the menu item / button should be inert or clearly a placeholder
+- Deleting the currently viewed collection from its own page redirects away; deleting from a card just refreshes
 
 ## History
 

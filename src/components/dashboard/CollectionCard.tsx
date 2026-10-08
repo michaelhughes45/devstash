@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { MoreHorizontal, Star } from "lucide-react";
+import { Star } from "lucide-react";
 
+import { CollectionCardMenu } from "@/components/collections/CollectionCardMenu";
 import { ItemTypeIcon } from "@/components/dashboard/ItemTypeIcon";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CollectionWithTypes } from "@/lib/db/collections";
 
@@ -38,14 +38,14 @@ export function CollectionCard({ collection }: CollectionCardProps) {
               {collection.itemCount} {collection.itemCount === 1 ? "item" : "items"}
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="relative"
-            aria-label={`${collection.name} options`}
-          >
-            <MoreHorizontal />
-          </Button>
+          <CollectionCardMenu
+            collection={{
+              id: collection.id,
+              name: collection.name,
+              description: collection.description,
+              isFavorite: collection.isFavorite,
+            }}
+          />
         </div>
         {collection.description && (
           <p className="line-clamp-2 text-sm text-muted-foreground">

@@ -2,10 +2,9 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { FolderPlus } from "lucide-react";
 import { toast } from "sonner";
 
-import { createCollection } from "@/actions/collections";
+import { updateCollection } from "@/actions/collections";
 import { CollectionFormFields } from "@/components/collections/CollectionFormFields";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,36 +15,42 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import type { CollectionSummary } from "@/types/collections";
 import type { FieldErrors } from "@/types/forms";
 
-interface NewCollectionFormProps {
+interface EditCollectionFormProps {
+  collection: CollectionSummary;
   isPending: boolean;
   startTransition: (action: () => Promise<void>) => void;
-  onCreated: () => void;
+  onSaved: () => void;
 }
 
-// Mounted only while the dialog is open, so each opening starts blank
-function NewCollectionForm({ isPending, startTransition, onCreated }: NewCollectionFormProps) {
+// Mounted only while the dialog is open, so each opening starts from the saved values
+function EditCollectionForm({
+  collection,
+  isPending,
+  startTransition,
+  onSaved,
+}: EditCollectionFormProps) {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState(collection.name);
+  const [description, setDescription] = useState(collection.description ?? "");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   async function submit() {
     try {
-      const result = await createCollection({ name, description });
+      const result = await updateCollection(collection.id, { name, description });
       if (!result.success) {
         setFieldErrors(result.fieldErrors ?? {});
         toast.error(result.error);
         return;
       }
-      onCreated();
-      toast.success("Collection created");
+      onSaved();
+      toast.success("Collection saved");
       router.refresh();
     } catch {
-      toast.error("Couldn't create the collection. Please try again.");
+      toast.error("Couldn't save the collection. Please try again.");
     }
   }
 
@@ -58,7 +63,7 @@ function NewCollectionForm({ isPending, startTransition, onCreated }: NewCollect
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
       <fieldset disabled={isPending} className="flex flex-col gap-5">
         <CollectionFormFields
-          idPrefix="new-collection"
+          idPrefix="edit-collection"
           name={name}
           description={description}
           fieldErrors={fieldErrors}
@@ -72,40 +77,43 @@ function NewCollectionForm({ isPending, startTransition, onCreated }: NewCollect
           Cancel
         </DialogClose>
         <Button type="submit" disabled={name.trim() === "" || isPending}>
-          {isPending ? "Creating…" : "Create"}
+          {isPending ? "Saving…" : "Save"}
         </Button>
       </DialogFooter>
     </form>
   );
 }
 
-export function NewCollectionDialog() {
-  const [open, setOpen] = useState(false);
+interface EditCollectionDialogProps {
+  collection: CollectionSummary;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function EditCollectionDialog({
+  collection,
+  open,
+  onOpenChange,
+}: EditCollectionDialogProps) {
   const [isPending, startTransition] = useTransition();
 
   function handleOpenChange(nextOpen: boolean) {
-    // Stay open until the create finishes
-    if (!isPending) setOpen(nextOpen);
+    // Stay open until the save finishes
+    if (!isPending) onOpenChange(nextOpen);
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      {/* Label collapses to an icon on phones so it fits beside the search */}
-      <DialogTrigger
-        render={<Button variant="outline" size="lg" className="max-sm:w-9 max-sm:px-0" />}
-      >
-        <FolderPlus data-icon="inline-start" />
-        <span className="max-sm:sr-only">New Collection</span>
-      </DialogTrigger>
       <DialogContent showCloseButton={!isPending} className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New collection</DialogTitle>
-          <DialogDescription>Group related items under one name.</DialogDescription>
+          <DialogTitle>Edit collection</DialogTitle>
+          <DialogDescription>Change the collection&apos;s name or description.</DialogDescription>
         </DialogHeader>
-        <NewCollectionForm
+        <EditCollectionForm
+          collection={collection}
           isPending={isPending}
           startTransition={startTransition}
-          onCreated={() => setOpen(false)}
+          onSaved={() => onOpenChange(false)}
         />
       </DialogContent>
     </Dialog>
