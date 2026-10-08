@@ -2,7 +2,9 @@ import { cache } from "react";
 
 import { Prisma, type ContentType } from "@/generated/prisma/client";
 import { CREATABLE_ITEM_TYPES, getContentTypeForType } from "@/lib/item-content";
+import { DEFAULT_TYPE_COLOR, DEFAULT_TYPE_ICON } from "@/lib/item-type-icons";
 import { prisma } from "@/lib/prisma";
+import { isRecordNotFound } from "@/lib/prisma-errors";
 import type { CreateItemData, UpdateItemData } from "@/lib/validations/items";
 import type { CreatableItemTypeOption } from "@/types/items";
 
@@ -38,8 +40,6 @@ export interface ItemStats {
   favorites: number;
 }
 
-const DEFAULT_TYPE_ICON = "File";
-const DEFAULT_TYPE_COLOR = "#6b7280";
 
 const ITEM_CARD_SELECT = {
   id: true,
@@ -329,20 +329,9 @@ export async function updateItem(
     });
     return toItemDetail(item);
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return null;
-    }
+    if (isRecordNotFound(error)) return null;
     throw error;
   }
-}
-
-// True for a unique constraint failure, e.g. createItem with a fileUrl another
-// item already has
-export function isUniqueViolation(error: unknown): boolean {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
 
 // The owner's file or image item's stored file, for the download route
@@ -371,12 +360,7 @@ export async function deleteItem(userId: string, itemId: string): Promise<Delete
       select: { fileUrl: true },
     });
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return null;
-    }
+    if (isRecordNotFound(error)) return null;
     throw error;
   }
 }

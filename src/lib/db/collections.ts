@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { DEFAULT_TYPE_COLOR, DEFAULT_TYPE_ICON } from "@/lib/item-type-icons";
 import { prisma } from "@/lib/prisma";
 
 export interface CollectionType {
@@ -25,8 +26,6 @@ export interface CollectionStats {
   favorites: number;
 }
 
-const DEFAULT_TYPE_ICON = "File";
-const DEFAULT_TYPE_COLOR = "#6b7280";
 
 export interface SidebarCollections {
   favorites: CollectionWithTypes[];

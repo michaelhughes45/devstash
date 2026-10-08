@@ -1,18 +1,13 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
+import { jsonResponse, rateLimitedResponse } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/prisma/client";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 import {
   isEmailVerificationEnabled,
   sendVerificationEmail,
 } from "@/lib/email-verification";
 import { hashPassword } from "@/lib/password";
-import {
-  checkRateLimit,
-  rateLimitKey,
-  rateLimitMessage,
-  retryAfterSeconds,
-} from "@/lib/rate-limit";
+import { checkRateLimit, rateLimitKey } from "@/lib/rate-limit";
 import { registerSchema } from "@/lib/validations/auth";
 
 interface RegisterResponse {
@@ -22,9 +17,7 @@ interface RegisterResponse {
   fieldErrors?: Record<string, string[] | undefined>;
 }
 
-function respond(body: RegisterResponse, status: number) {
-  return NextResponse.json(body, { status });
-}
+const respond = jsonResponse<RegisterResponse>;
 
 function emailTaken() {
   return respond(
@@ -54,12 +47,7 @@ export async function POST(request: Request) {
   }
 
   const limit = await checkRateLimit("register", rateLimitKey(request.headers));
-  if (!limit.success) {
-    return NextResponse.json(
-      { success: false, error: rateLimitMessage(limit.reset) } satisfies RegisterResponse,
-      { status: 429, headers: { "Retry-After": String(retryAfterSeconds(limit.reset)) } },
-    );
-  }
+  if (!limit.success) return rateLimitedResponse(limit.reset);
 
   const { name, email, password } = parsed.data;
 
@@ -91,12 +79,7 @@ export async function POST(request: Request) {
     return respond({ success: true, data: user }, 201);
   } catch (error) {
     // A concurrent registration can win the race between the lookup and the insert
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      return emailTaken();
-    }
+    if (isUniqueViolation(error)) return emailTaken();
     console.error("Registration failed", error);
     return respond({ success: false, error: "Registration failed" }, 500);
   }

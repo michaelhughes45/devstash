@@ -26,12 +26,9 @@ function FileContent({ item }: ItemDrawerContentProps) {
   return (
     <div className="flex flex-col gap-3">
       {imageUrl && (
-        <a
-          href={imageUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block overflow-hidden rounded-lg border bg-muted/40"
-        >
+        // Not linked to the raw R2 URL: opened directly, an uploaded SVG could run
+        // scripts there. Download serves it with a sandboxing CSP instead.
+        <div className="overflow-hidden rounded-lg border bg-muted/40">
           {/* Served from R2's public URL; next/image would need it as a remote pattern */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -39,7 +36,7 @@ function FileContent({ item }: ItemDrawerContentProps) {
             alt={item.fileName ?? item.title}
             className="mx-auto max-h-[28rem] w-auto object-contain"
           />
-        </a>
+        </div>
       )}
       <div className="flex items-center gap-3 rounded-lg border bg-muted/40 p-3 text-sm">
         <File className="size-5 shrink-0 text-muted-foreground" aria-hidden />

@@ -6,13 +6,13 @@ import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
   getItemKind,
-  isUniqueViolation,
   updateItem as updateItemRecord,
   type ItemDetail,
   type ItemFileData,
   type ItemKind,
 } from "@/lib/db/items";
 import { getEditableFields } from "@/lib/item-content";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 import {
   getStoredContentType,
   isFileItemType,

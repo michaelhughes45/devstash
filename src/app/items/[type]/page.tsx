@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { ItemCard } from "@/components/dashboard/ItemCard";
 import { ItemTypeIcon } from "@/components/dashboard/ItemTypeIcon";
-import { FileRow } from "@/components/items/FileRow";
-import { ImageCard } from "@/components/items/ImageCard";
+import { ItemsList } from "@/components/items/ItemsList";
 import { getItemsByType, getItemTypeBySlug } from "@/lib/db/items";
-import { isFileType, isImageType } from "@/lib/item-content";
 import { getCurrentUserId } from "@/lib/session";
 
 export async function generateMetadata({
@@ -48,27 +45,7 @@ export default async function ItemsByTypePage({
         </div>
       </div>
 
-      {items.length > 0 && isFileType(items[0].type.name) ? (
-        <ul className="divide-y overflow-hidden rounded-xl border bg-card">
-          {items.map((item) => (
-            <FileRow key={item.id} item={item} />
-          ))}
-        </ul>
-      ) : items.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {items.map((item) =>
-            isImageType(item.type.name) ? (
-              <ImageCard key={item.id} item={item} />
-            ) : (
-              <ItemCard key={item.id} item={item} />
-            ),
-          )}
-        </div>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          No {itemType.name.toLowerCase()} yet.
-        </p>
-      )}
+      <ItemsList typeName={itemType.name} items={items} />
     </div>
   );
 }

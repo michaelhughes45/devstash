@@ -5,10 +5,10 @@ import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
   getItemKind,
-  isUniqueViolation,
   updateItem as updateItemRecord,
   type ItemDetail,
 } from "@/lib/db/items";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 import { copyObject, deleteObjectQuietly, headObject } from "@/lib/r2";
 import { getCurrentUserId } from "@/lib/session";
 
@@ -18,8 +18,8 @@ vi.mock("@/lib/db/items", () => ({
   updateItem: vi.fn(),
   deleteItem: vi.fn(),
   getItemKind: vi.fn(),
-  isUniqueViolation: vi.fn(),
 }));
+vi.mock("@/lib/prisma-errors", () => ({ isUniqueViolation: vi.fn() }));
 // Key and URL helpers stay real; only the calls to R2 are mocked
 vi.mock("@/lib/r2", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/r2")>()),
