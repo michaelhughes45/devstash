@@ -6,7 +6,7 @@ import { ItemCardTrigger } from "@/components/items/ItemCardTrigger";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ItemWithType } from "@/lib/db/items";
-import { getItemCopyText } from "@/lib/item-content";
+import { getCardCopySource } from "@/lib/item-content";
 
 const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -22,7 +22,7 @@ interface ItemCardProps {
 // nested in a button; it overlays the card's bottom-right corner, below the date
 export function ItemCard({ item }: ItemCardProps) {
   const { type } = item;
-  const copyText = getItemCopyText(item);
+  const copySource = getCardCopySource(item);
 
   return (
     <div className="relative h-full">
@@ -72,9 +72,10 @@ export function ItemCard({ item }: ItemCardProps) {
           </CardContent>
         </Card>
       </ItemCardTrigger>
-      {copyText && (
+      {copySource && (
         <CopyItemButton
-          text={copyText}
+          itemId={item.id}
+          source={copySource}
           title={item.title}
           className="absolute right-2.5 bottom-2.5"
         />

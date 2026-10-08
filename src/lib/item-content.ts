@@ -29,6 +29,19 @@ export function getItemCopyText(item: CopyableItem): string | null {
   return text?.trim() ? text : null;
 }
 
+// How a card's quick copy button gets its text: links and files copy their URL
+// straight away, text items fetch their content on click (cards don't load it),
+// and null means there's nothing to copy, so no button
+export type CardCopySource = { kind: "text"; text: string } | { kind: "fetch" };
+
+export function getCardCopySource(
+  item: Omit<CopyableItem, "content">,
+): CardCopySource | null {
+  if (item.contentType === "TEXT") return { kind: "fetch" };
+  const text = getItemCopyText({ ...item, content: null });
+  return text ? { kind: "text", text } : null;
+}
+
 // Splits the edit form's comma-separated tags input, dropping blanks and repeats
 export function parseTags(input: string): string[] {
   const tags = input
