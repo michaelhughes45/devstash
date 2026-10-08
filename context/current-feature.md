@@ -1,26 +1,18 @@
-# Current Feature: Small Fixes and Shared Helpers
+# Current Feature
 
-The smaller findings from the 2026-10-08 code scan, on one branch: the drawer's image preview link, duplicated helpers, and the `/items/[type]` layout choice.
+<!-- Feature name and short description -->
 
 ## Status
 
-Completed
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- Drawer image preview is a plain `<img>`, no longer a link to the raw public R2 file (an SVG's script could run there); Download stays the way to get the file
-- `context/project-overview.md` notes that `R2_PUBLIC_URL` must be on a domain separate from the app
-- `src/lib/prisma-errors.ts` with `isUniqueViolation` (moved) and `isRecordNotFound`, used by `updateItem`, `deleteItem`, the register route and `createItem`
-- `DEFAULT_TYPE_ICON` and `DEFAULT_TYPE_COLOR` exported once from `src/lib/item-type-icons.ts`
-- `src/lib/api-response.ts` with `jsonResponse` and `rateLimitedResponse`, replacing the local `respond`/`errorResponse` helpers and the inline 429s in the four API routes
-- An `ItemsList` component picks the file list, gallery or grid, with no visual change (still from the first item's stored type name, since `itemType.name` is the display name)
-- Unit tests for `prisma-errors` and `api-response`; existing tests still pass
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Spec: `context/features/code-scan-fixes/code-scan-fixes-4-small-fixes-spec.md`
-- Only the preview change is visible; everything else must keep pages, status codes, headers and messages exactly the same (check with curl: register 201/400/409, item 401/404, upload 401, download 404).
-- Not doing: a Cloudflare `Content-Security-Policy: sandbox` header rule on the bucket.
+<!-- Any extra notes -->
 
 ## History
 
