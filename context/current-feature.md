@@ -1,24 +1,18 @@
-# Current Feature: Update Item Type Rules
+# Current Feature
 
-Make saving an edit enforce the same per-type rules as creating: a link can't lose its URL, and fields the item's type doesn't use are never stored.
+<!-- Feature name and short description -->
 
 ## Status
 
-Completed
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- The `updateItem` action looks up the owner's item content type and type name (new `getItemKind` query) before saving; a missing item is still "Item not found."
-- Only the type-specific fields the type uses (`getEditableFields`) are sent to the update; title, description and tags always apply
-- A blank URL on a link is rejected with a "URL is required" field error, without saving
-- The edit form and drawer behave as before
-- Unit tests for the action rules and the new query
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Spec: `context/features/code-scan-fixes/code-scan-fixes-3-update-item-type-rules-spec.md`
-- From the 2026-10-08 code scan (Medium).
-- An omitted `url` (undefined) still leaves the stored URL unchanged; only an explicit blank is rejected.
+<!-- Any extra notes -->
 
 ## History
 
