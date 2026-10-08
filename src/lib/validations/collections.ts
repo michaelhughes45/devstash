@@ -22,3 +22,11 @@ export const createCollectionSchema = z.object({
 
 export type CreateCollectionInput = z.input<typeof createCollectionSchema>;
 export type CreateCollectionData = z.output<typeof createCollectionSchema>;
+
+// Editing uses the same rules as creating
+export const updateCollectionSchema = createCollectionSchema;
+
+export type UpdateCollectionInput = z.input<typeof updateCollectionSchema>;
+export type UpdateCollectionData = z.output<typeof updateCollectionSchema>;
+
+export const collectionIdSchema = z.string().min(1).max(64);

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { FolderOpen, Star } from "lucide-react";
 
+import { CollectionActions } from "@/components/collections/CollectionActions";
 import { CollectionItems } from "@/components/collections/CollectionItems";
 import { getCollection } from "@/lib/db/collections";
 import { getItemsByCollection } from "@/lib/db/items";
@@ -34,7 +35,7 @@ export default async function CollectionPage({ params }: PageProps<"/collections
         <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
           <FolderOpen className="size-5" aria-hidden />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="flex items-center gap-2 text-3xl font-bold">
             <span className="truncate">{collection.name}</span>
             {collection.isFavorite && (
@@ -51,6 +52,7 @@ export default async function CollectionPage({ params }: PageProps<"/collections
             <p className="mt-2 text-sm text-muted-foreground">{collection.description}</p>
           )}
         </div>
+        <CollectionActions collection={collection} />
       </div>
 
       <CollectionItems items={items} />

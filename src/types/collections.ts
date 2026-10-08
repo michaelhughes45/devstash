@@ -11,3 +11,11 @@ export interface CollectionOption {
   id: string;
   name: string;
 }
+
+// A collection's metadata, as shown on its page and edited by the edit dialog
+export interface CollectionSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  isFavorite: boolean;
+}

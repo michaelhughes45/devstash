@@ -2,8 +2,12 @@ import { cache } from "react";
 
 import { DEFAULT_TYPE_COLOR, DEFAULT_TYPE_ICON } from "@/lib/item-type-icons";
 import { prisma } from "@/lib/prisma";
-import type { CreateCollectionData } from "@/lib/validations/collections";
-import type { CollectionOption } from "@/types/collections";
+import { isRecordNotFound } from "@/lib/prisma-errors";
+import type {
+  CreateCollectionData,
+  UpdateCollectionData,
+} from "@/lib/validations/collections";
+import type { CollectionOption, CollectionSummary } from "@/types/collections";
 
 export interface CollectionType {
   id: string;
@@ -47,12 +51,12 @@ export async function getAllCollections(userId: string): Promise<CollectionWithT
   return getCollectionsByRecentUse(userId);
 }
 
-export interface CollectionSummary {
-  id: string;
-  name: string;
-  description: string | null;
-  isFavorite: boolean;
-}
+const COLLECTION_SUMMARY_SELECT = {
+  id: true,
+  name: true,
+  description: true,
+  isFavorite: true,
+} as const;
 
 // One of the user's collections, or null when it's missing or someone else's.
 // Cached per request, since the collection page and its metadata both need it.
@@ -60,7 +64,7 @@ export const getCollection = cache(
   async (userId: string, id: string): Promise<CollectionSummary | null> =>
     prisma.collection.findFirst({
       where: { id, userId },
-      select: { id: true, name: true, description: true, isFavorite: true },
+      select: COLLECTION_SUMMARY_SELECT,
     }),
 );
 
@@ -170,6 +174,36 @@ export async function createCollection(
     data: { userId, name: data.name, description: data.description },
     select: { id: true, name: true, description: true, createdAt: true },
   });
+}
+
+// Updates the owner's collection; null when it's missing or someone else's
+export async function updateCollection(
+  userId: string,
+  id: string,
+  data: UpdateCollectionData,
+): Promise<CollectionSummary | null> {
+  try {
+    return await prisma.collection.update({
+      where: { id, userId },
+      data: { name: data.name, description: data.description },
+      select: COLLECTION_SUMMARY_SELECT,
+    });
+  } catch (error) {
+    if (isRecordNotFound(error)) return null;
+    throw error;
+  }
+}
+
+// Deletes the owner's collection; false when it's missing or someone else's.
+// Its items are kept: only their ItemCollection links go, through the cascade.
+export async function deleteCollection(userId: string, id: string): Promise<boolean> {
+  try {
+    await prisma.collection.delete({ where: { id, userId }, select: { id: true } });
+    return true;
+  } catch (error) {
+    if (isRecordNotFound(error)) return false;
+    throw error;
+  }
 }
 
 // The user's collections by name, for the item forms' collection picker. Cached
