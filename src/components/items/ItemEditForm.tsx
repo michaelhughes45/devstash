@@ -11,20 +11,29 @@ import { Button } from "@/components/ui/button";
 import {
   buildItemInput,
   getEditableFields,
+  type ItemFormChange,
   type ItemFormValues,
 } from "@/lib/item-content";
+import type { CollectionOption } from "@/types/collections";
 import type { FieldErrors } from "@/types/forms";
 import type { ItemDetailData } from "@/types/items";
 
 interface ItemEditFormProps {
   item: ItemDetailData;
+  collections: CollectionOption[];
   onCancel: () => void;
   onSaved: (item: ItemDetailData) => void;
-  // Read-only sections shown under the fields (collections, dates)
+  // Read-only sections shown under the fields (dates)
   children?: ReactNode;
 }
 
-export function ItemEditForm({ item, onCancel, onSaved, children }: ItemEditFormProps) {
+export function ItemEditForm({
+  item,
+  collections,
+  onCancel,
+  onSaved,
+  children,
+}: ItemEditFormProps) {
   const router = useRouter();
   const fields = getEditableFields(item);
   const [values, setValues] = useState<ItemFormValues>({
@@ -34,13 +43,14 @@ export function ItemEditForm({ item, onCancel, onSaved, children }: ItemEditForm
     language: item.language ?? "",
     url: item.url ?? "",
     tags: item.tags.join(", "),
+    collectionIds: item.collections.map((collection) => collection.id),
   });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isPending, startTransition] = useTransition();
 
-  function handleChange(field: keyof ItemFormValues, value: string) {
+  const handleChange: ItemFormChange = (field, value) => {
     setValues((current) => ({ ...current, [field]: value }));
-  }
+  };
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,6 +91,7 @@ export function ItemEditForm({ item, onCancel, onSaved, children }: ItemEditForm
             values={values}
             onChange={handleChange}
             fields={fields}
+            collections={collections}
             fieldErrors={fieldErrors}
           />
         </fieldset>

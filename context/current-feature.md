@@ -1,10 +1,27 @@
-# Current Feature
+# Current Feature: Add Items to Collections
 
 ## Status
 
+In Progress
+
 ## Goals
 
+- The New Item dialog and the drawer's edit form both have a Collections input for picking zero, one or several of the signed-in user's collections
+- The picker lists the user's collections by name (only their own), shows which are selected, and works with the keyboard and at phone width
+- The edit form starts with the item's current collections selected; saving replaces them with the new selection (adding and removing links in `ItemCollection`)
+- Creating an item links it to the selected collections in the same write
+- `createItem` and `updateItem` accept a `collectionIds` array, validated with Zod (deduplicated, bounded length); every id must belong to the signed-in user, otherwise the save is rejected without changes
+- Omitting `collectionIds` on update leaves the item's collections unchanged
+- After saving, the drawer's read-only collections list, the dashboard collection item counts and the sidebar update (`router.refresh()`)
+- Unit tests for the schema changes, the actions and the queries (ownership check, add/remove links)
+
 ## Notes
+
+- Don't build collection pages yet (`/collections`, `/collections/[id]`)
+- Collection options should come from a request-cached query (like `getCreatableItemTypes`) passed down from the server, so the top bar and drawer don't each fetch them
+- Reuse the shared `ItemFormFields`, so both forms get the input from one place
+- Check for an existing shadcn component that fits a multi-select (e.g. popover + command / checkbox list) before adding one
+- Users with no collections should see a short empty state in the picker rather than a broken control
 
 ## History
 

@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 
 import { CodeEditor } from "@/components/items/CodeEditor";
+import { CollectionPicker } from "@/components/items/CollectionPicker";
 import { MarkdownEditor } from "@/components/items/MarkdownEditor";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { EditableFields, ItemFormValues } from "@/lib/item-content";
+import type { EditableFields, ItemFormChange, ItemFormValues } from "@/lib/item-content";
+import type { CollectionOption } from "@/types/collections";
 import type { FieldErrors } from "@/types/forms";
 
 interface FormFieldProps {
@@ -43,17 +45,21 @@ interface ItemFormFieldsProps {
   // Prefixes the input ids, so two forms on a page don't clash
   idPrefix: string;
   values: ItemFormValues;
-  onChange: (field: keyof ItemFormValues, value: string) => void;
+  onChange: ItemFormChange;
   fields: EditableFields;
+  // The user's collections the item can be added to
+  collections: CollectionOption[];
   fieldErrors: FieldErrors;
 }
 
-// Title, description, type-specific fields and tags, shared by the edit and create forms
+// Title, description, type-specific fields, tags and collections, shared by the
+// edit and create forms
 export function ItemFormFields({
   idPrefix,
   values,
   onChange,
   fields,
+  collections,
   fieldErrors,
 }: ItemFormFieldsProps) {
   const id = (field: string) => `${idPrefix}-${field}`;
@@ -159,6 +165,14 @@ export function ItemFormFields({
           {...errorProps(id("tags"), error("tags"))}
         />
       </FormField>
+
+      <CollectionPicker
+        id={id("collections")}
+        collections={collections}
+        value={values.collectionIds}
+        onChange={(collectionIds) => onChange("collectionIds", collectionIds)}
+        error={error("collectionIds")}
+      />
     </>
   );
 }

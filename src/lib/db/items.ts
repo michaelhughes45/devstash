@@ -174,6 +174,23 @@ function tagLinks(userId: string, tags: string[]) {
   }));
 }
 
+// Links an item to each collection; the caller checks the user owns them
+function collectionLinks(collectionIds: string[]) {
+  return collectionIds.map((collectionId) => ({ collectionId }));
+}
+
+// Replaces an item's collection links with `collectionIds`, keeping links that
+// stay (and when they were added) and removing the rest
+function replaceCollectionLinks(itemId: string, collectionIds: string[]) {
+  return {
+    deleteMany: { collectionId: { notIn: collectionIds } },
+    connectOrCreate: collectionIds.map((collectionId) => ({
+      where: { itemId_collectionId: { itemId, collectionId } },
+      create: { collectionId },
+    })),
+  };
+}
+
 // The uploaded file behind a file or image item, as stored on the item
 export interface ItemFileData {
   fileUrl: string;
@@ -187,7 +204,7 @@ export interface ItemFileData {
 export async function createItem(
   userId: string,
   // The caller resolves fileKey into `file`
-  { type, tags, ...fields }: Omit<CreateItemData, "fileKey">,
+  { type, tags, collectionIds, ...fields }: Omit<CreateItemData, "fileKey">,
   file: ItemFileData | null = null,
 ): Promise<ItemDetail | null> {
   const itemType = await prisma.itemType.findFirst({
@@ -204,19 +221,21 @@ export async function createItem(
       userId,
       typeId: itemType.id,
       tags: { create: tagLinks(userId, tags) },
+      collections: { create: collectionLinks(collectionIds) },
     },
     select: ITEM_DETAIL_SELECT,
   });
   return toItemDetail(item);
 }
 
-// Replaces the item's tags with `tags`, creating any the user doesn't have yet.
-// Scoped to the owner like getItemDetail: returns null for a missing or
+// Replaces the item's tags with `tags`, creating any the user doesn't have yet,
+// and its collections with `collectionIds` when given (the caller checks the
+// user owns them). Scoped to the owner like getItemDetail: returns null for a missing or
 // someone else's item.
 export async function updateItem(
   userId: string,
   itemId: string,
-  { tags, ...fields }: UpdateItemData,
+  { tags, collectionIds, ...fields }: UpdateItemData,
 ): Promise<ItemDetail | null> {
   try {
     const item = await prisma.item.update({
@@ -224,6 +243,7 @@ export async function updateItem(
       data: {
         ...fields,
         tags: { deleteMany: {}, create: tagLinks(userId, tags) },
+        ...(collectionIds && { collections: replaceCollectionLinks(itemId, collectionIds) }),
       },
       select: ITEM_DETAIL_SELECT,
     });

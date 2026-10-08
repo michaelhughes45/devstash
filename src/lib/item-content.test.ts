@@ -87,6 +87,7 @@ describe("buildItemInput", () => {
     language: "ts",
     url: "https://nextjs.org",
     tags: "next, docs, next",
+    collectionIds: ["col-1"],
   };
 
   it("sends only the fields the form shows, with tags parsed", () => {
@@ -94,12 +95,14 @@ describe("buildItemInput", () => {
       title: "Docs",
       description: "Reference",
       tags: ["next", "docs"],
+      collectionIds: ["col-1"],
       url: "https://nextjs.org",
     });
     expect(buildItemInput(values, { content: true, language: true, markdown: false, url: false })).toEqual({
       title: "Docs",
       description: "Reference",
       tags: ["next", "docs"],
+      collectionIds: ["col-1"],
       content: "stray content",
       language: "ts",
     });

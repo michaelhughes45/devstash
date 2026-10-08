@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createItem, deleteItem, updateItem } from "@/actions/items";
+import { ownsCollections } from "@/lib/db/collections";
 import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
@@ -13,6 +14,7 @@ import { copyObject, deleteObjectQuietly, headObject } from "@/lib/r2";
 import { getCurrentUserId } from "@/lib/session";
 
 vi.mock("@/lib/session", () => ({ getCurrentUserId: vi.fn() }));
+vi.mock("@/lib/db/collections", () => ({ ownsCollections: vi.fn() }));
 vi.mock("@/lib/db/items", () => ({
   createItem: vi.fn(),
   updateItem: vi.fn(),
@@ -63,6 +65,7 @@ const validInput = {
 
 beforeEach(() => {
   vi.mocked(getCurrentUserId).mockResolvedValue("user-1");
+  vi.mocked(ownsCollections).mockResolvedValue(true);
   vi.stubEnv("R2_PUBLIC_URL", R2_PUBLIC_URL);
 });
 
@@ -113,6 +116,40 @@ describe("updateItem", () => {
       language: "typescript",
       tags: ["react"],
     });
+  });
+
+  it("replaces the item's collections with the user's chosen ones", async () => {
+    vi.mocked(updateItemRecord).mockResolvedValue(savedItem);
+
+    await updateItem("item-1", { ...validInput, collectionIds: ["col-2"] });
+
+    expect(ownsCollections).toHaveBeenCalledWith("user-1", ["col-2"]);
+    expect(updateItemRecord).toHaveBeenCalledWith(
+      "user-1",
+      "item-1",
+      expect.objectContaining({ collectionIds: ["col-2"] }),
+    );
+  });
+
+  it("leaves collections alone when none are sent", async () => {
+    vi.mocked(updateItemRecord).mockResolvedValue(savedItem);
+
+    await updateItem("item-1", validInput);
+
+    expect(ownsCollections).not.toHaveBeenCalled();
+    const [, , data] = vi.mocked(updateItemRecord).mock.calls[0];
+    expect(data).not.toHaveProperty("collectionIds");
+  });
+
+  it("rejects collections the user doesn't own without saving", async () => {
+    vi.mocked(ownsCollections).mockResolvedValue(false);
+
+    const result = await updateItem("item-1", { ...validInput, collectionIds: ["someone-elses"] });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.fieldErrors?.collectionIds).toEqual(["One or more collections weren't found."]);
+    expect(updateItemRecord).not.toHaveBeenCalled();
   });
 
   it("returns the updated item with ISO dates", async () => {
@@ -285,7 +322,34 @@ describe("createItem", () => {
       language: "typescript",
       url: null,
       tags: ["react"],
+      collectionIds: [],
     }, null);
+  });
+
+  it("links the item to the user's chosen collections", async () => {
+    vi.mocked(createItemRecord).mockResolvedValue(savedItem);
+
+    await createItem({ ...createInput, collectionIds: ["col-1", "col-2", "col-1"] });
+
+    expect(ownsCollections).toHaveBeenCalledWith("user-1", ["col-1", "col-2"]);
+    expect(createItemRecord).toHaveBeenCalledWith(
+      "user-1",
+      expect.objectContaining({ collectionIds: ["col-1", "col-2"] }),
+      null,
+    );
+  });
+
+  it("rejects collections the user doesn't own without creating anything", async () => {
+    vi.mocked(ownsCollections).mockResolvedValue(false);
+
+    const result = await createItem({ ...createInput, collectionIds: ["someone-elses"] });
+
+    expect(result).toEqual({
+      success: false,
+      error: "One or more collections weren't found.",
+      fieldErrors: { collectionIds: ["One or more collections weren't found."] },
+    });
+    expect(createItemRecord).not.toHaveBeenCalled();
   });
 
   it("returns the created item with ISO dates", async () => {

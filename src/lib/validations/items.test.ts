@@ -123,7 +123,19 @@ describe("createItemSchema", () => {
       url: null,
       fileKey: null,
       tags: ["react"],
+      collectionIds: [],
     });
+  });
+
+  it("keeps chosen collections without repeats", () => {
+    expect(
+      createItemSchema.parse({
+        type: "note",
+        title: "Notes",
+        tags: [],
+        collectionIds: ["col-1", "col-2", "col-1"],
+      }).collectionIds,
+    ).toEqual(["col-1", "col-2"]);
   });
 
   it("requires an upload for file and image items", () => {
@@ -179,6 +191,35 @@ describe("createItemSchema", () => {
         tags: [],
       }),
     ).toMatchObject({ content: "Review this code", language: null, url: null });
+  });
+});
+
+describe("collectionIds", () => {
+  it("is left undefined when missing, so an update keeps the item's collections", () => {
+    expect(updateItemSchema.parse({ title: "Hook", tags: [] }).collectionIds).toBeUndefined();
+  });
+
+  it("removes repeats and accepts an empty list", () => {
+    expect(
+      updateItemSchema.parse({ title: "Hook", tags: [], collectionIds: ["a", "b", "a"] })
+        .collectionIds,
+    ).toEqual(["a", "b"]);
+    expect(
+      updateItemSchema.parse({ title: "Hook", tags: [], collectionIds: [] }).collectionIds,
+    ).toEqual([]);
+  });
+
+  it("rejects invalid ids and too many collections", () => {
+    expect(
+      updateItemSchema.safeParse({ title: "Hook", tags: [], collectionIds: [""] }).success,
+    ).toBe(false);
+    expect(
+      updateItemSchema.safeParse({ title: "Hook", tags: [], collectionIds: "col-1" }).success,
+    ).toBe(false);
+    const tooMany = Array.from({ length: 101 }, (_, index) => `col-${index}`);
+    expect(fieldErrors({ title: "Hook", tags: [], collectionIds: tooMany }).collectionIds).toEqual([
+      "Choose at most 100 collections",
+    ]);
   });
 });
 
