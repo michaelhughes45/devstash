@@ -17,6 +17,8 @@ const MAX_TAGS = 20;
 const MAX_ID_LENGTH = 64;
 const MAX_FILE_KEY_LENGTH = 200;
 
+export const URL_REQUIRED = "URL is required";
+
 export const itemIdSchema = z.string().min(1).max(MAX_ID_LENGTH);
 
 // Blank values clear the field; undefined leaves it unchanged
@@ -88,7 +90,7 @@ export const createItemSchema = z
     fileKey: z.string().trim().max(MAX_FILE_KEY_LENGTH).optional(),
   })
   .refine((data) => data.type !== "link" || data.url, {
-    error: "URL is required",
+    error: URL_REQUIRED,
     path: ["url"],
   })
   .refine((data) => !isFileItemType(data.type) || data.fileKey, {
