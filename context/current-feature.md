@@ -1,22 +1,18 @@
 # Current Feature
 
-Card Quick Copy — a copy icon button on item cards that copies the item without opening the drawer.
+<!-- Feature name and short description -->
 
 ## Status
 
-Completed
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- Add a quick copy icon button to item cards (dashboard Pinned/Recent and the `/items/[type]` grids)
-- Copies the same text as the drawer's Copy button (content, URL or file URL) with a toast
-- Clicking it doesn't open the item drawer
-- Hidden when the item has nothing to copy
+<!-- Goals and requirements -->
 
 ## Notes
 
-- A button can't be nested inside the card's drawer trigger button, so the copy button sits beside it, positioned over the card's bottom-right corner
-- `contentType`, `content` and `url` move into the card query so the card can compute the copy text server-side
+<!-- Any extra notes -->
 
 ## History
 
