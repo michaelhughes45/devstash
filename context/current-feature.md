@@ -1,10 +1,25 @@
-# Current Feature
+# Current Feature: Collection Pages
 
 ## Status
 
+In Progress
+
 ## Goals
 
+- Add a protected `/collections` page that lists all of the signed-in user's collections, sorted by most recent use, as the existing `CollectionCard`s in a grid. It has a header showing the collection count and an empty state when there are no collections
+- Add a protected `/collections/[id]` page that shows the collection's name, description, favorite star and item count, then its items using the existing item cards (`ItemCard`, `ImageCard` for images, `FileRow` for files), all opening the item drawer
+- `/collections/[id]` returns 404 for an unknown collection or one that belongs to another user. It has an empty state when the collection has no items, and the tab title is the collection name
+- Make sure the sidebar's "View all collections" link goes to `/collections`, and that every collection card (dashboard grid, `/collections` grid) and sidebar collection links to `/collections/{id}`
+- Unit tests for the new queries; `npm test` and `npm run build` pass
+
 ## Notes
+
+- The links already exist: `CollectionCard` links to `/collections/{id}`, `CollectionsNav` links each collection to `/collections/{id}` and "View all collections" to `/collections`. Neither route exists yet, so every link currently 404s
+- Reuse `getCollectionsByRecentUse` in `src/lib/db/collections.ts`, which is request-cached and shared with the sidebar, for the `/collections` list. Add a query for a single collection plus its items, scoped to `{ id, userId }`, that reuses `ITEM_CARD_SELECT` from `src/lib/db/items.ts`
+- Items mix types, so the existing `ItemsList` can't be reused as is: it picks the file list from the first item's type. Either render images and files with their own cards inside one grid, or group items by type. Keep `ItemsList`'s behavior on `/items/[type]` unchanged
+- Use the shared `AppShell` layout (add `src/app/collections/layout.tsx` like `/items`), add `/collections/:path*` to the proxy matcher, and redirect to `/sign-in` if the session's user is gone, as on `/items/[type]`
+- Use the same grid breakpoints as `/items/[type]` (one column, two from `md`, three from `xl`)
+- Out of scope: editing, deleting or favoriting collections (the card's options button stays display only), pagination
 
 ## History
 
