@@ -162,6 +162,7 @@ model User {
   image                String?
   password             String?   // hashed; null for OAuth-only users
   sessionVersion       Int       @default(0) // bumped to revoke existing JWT sessions
+  editorPreferences    Json?     // Monaco settings; null until saved, defaults fill gaps
 
   // Billing
   isPro                Boolean   @default(false)
@@ -516,7 +517,7 @@ devstash/
 │   │   ├── dashboard/        # dashboard (shares AppShell layout)
 │   │   ├── items/[type]/     # items list per type
 │   │   ├── profile/          # profile and usage stats
-│   │   ├── settings/         # change password, delete account
+│   │   ├── settings/         # editor preferences, change password, delete account
 │   │   └── api/
 │   │       ├── auth/         # [...nextauth], register, verify-email
 │   │       ├── items/[id]/   # item detail + download

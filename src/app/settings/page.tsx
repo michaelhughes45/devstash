@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { DeleteAccountDialog } from "@/components/settings/DeleteAccountDialog";
+import { EditorPreferencesForm } from "@/components/settings/EditorPreferencesForm";
 import {
   Card,
   CardContent,
@@ -29,8 +30,21 @@ export default async function SettingsPage() {
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your account</p>
+        <p className="text-muted-foreground">Manage your editor and account</p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Editor</CardTitle>
+          <CardDescription>
+            How the code editor looks and behaves for snippets and commands. Changes save
+            automatically.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <EditorPreferencesForm />
+        </CardContent>
+      </Card>
 
       {profile.hasPassword && (
         <Card>

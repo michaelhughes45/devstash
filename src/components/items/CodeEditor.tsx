@@ -4,14 +4,15 @@ import { useState } from "react";
 import Editor, { type BeforeMount, type OnMount } from "@monaco-editor/react";
 import { Copy } from "lucide-react";
 
+import { useEditorPreferences } from "@/components/settings/EditorPreferencesContext";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { copyToClipboard } from "@/lib/clipboard";
 import { toMonacoLanguage } from "@/lib/code-language";
+import { EDITOR_THEMES, editorLineHeight } from "@/lib/editor-preferences";
+import { MONACO_THEME_IDS, MONACO_THEMES } from "@/lib/monaco-themes";
 import { cn } from "@/lib/utils";
 
-const THEME = "devstash-dark";
-const LINE_HEIGHT = 20;
 const PADDING = 12;
 const MAX_HEIGHT = 400;
 // Edit mode keeps room to type even when the content is short
@@ -20,27 +21,13 @@ const MIN_EDIT_HEIGHT = 160;
 // Stored snippets are fragments, so type and syntax errors would only be noise
 const NO_DIAGNOSTICS = { noSemanticValidation: true, noSyntaxValidation: true };
 
-// Monaco needs hex colors; #171717 is the dark theme's --card
 const setupMonaco: BeforeMount = (monaco) => {
   monaco.typescript.typescriptDefaults.setDiagnosticsOptions(NO_DIAGNOSTICS);
   monaco.typescript.javascriptDefaults.setDiagnosticsOptions(NO_DIAGNOSTICS);
 
-  monaco.editor.defineTheme(THEME, {
-    base: "vs-dark",
-    inherit: true,
-    rules: [],
-    colors: {
-      "editor.background": "#171717",
-      "editor.lineHighlightBackground": "#ffffff0a",
-      "editorLineNumber.foreground": "#525252",
-      "editorLineNumber.activeForeground": "#a3a3a3",
-      "editorGutter.background": "#171717",
-      "scrollbar.shadow": "#00000000",
-      "scrollbarSlider.background": "#ffffff1f",
-      "scrollbarSlider.hoverBackground": "#ffffff33",
-      "scrollbarSlider.activeBackground": "#ffffff4d",
-    },
-  });
+  for (const theme of EDITOR_THEMES) {
+    monaco.editor.defineTheme(MONACO_THEME_IDS[theme], MONACO_THEMES[theme]);
+  }
 };
 
 function clampHeight(contentHeight: number, minHeight: number): number {
@@ -65,10 +52,12 @@ export function CodeEditor({
   ariaLabel = "Code",
   invalid = false,
 }: CodeEditorProps) {
+  const { preferences } = useEditorPreferences();
+  const lineHeight = editorLineHeight(preferences.fontSize);
   const minHeight = readOnly ? 0 : MIN_EDIT_HEIGHT;
   // Estimate from the line count so the first paint doesn't jump once Monaco measures
   const [height, setHeight] = useState(() =>
-    clampHeight(value.split("\n").length * LINE_HEIGHT + PADDING * 2, minHeight),
+    clampHeight(value.split("\n").length * lineHeight + PADDING * 2, minHeight),
   );
   const languageLabel = language?.trim() || "plain text";
 
@@ -109,7 +98,7 @@ export function CodeEditor({
         height={height}
         value={value}
         language={toMonacoLanguage(language)}
-        theme={THEME}
+        theme={MONACO_THEME_IDS[preferences.theme]}
         beforeMount={setupMonaco}
         onMount={handleMount}
         onChange={(next) => onChange?.(next ?? "")}
@@ -119,16 +108,19 @@ export function CodeEditor({
           domReadOnly: readOnly,
           ariaLabel,
           fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-          fontSize: 13,
-          lineHeight: LINE_HEIGHT,
+          fontSize: preferences.fontSize,
+          lineHeight,
           padding: { top: PADDING, bottom: PADDING },
-          minimap: { enabled: false },
+          minimap: { enabled: preferences.minimap },
+          wordWrap: preferences.wordWrap ? "on" : "off",
           scrollBeyondLastLine: false,
           renderLineHighlight: readOnly ? "none" : "line",
           overviewRulerLanes: 0,
           hideCursorInOverviewRuler: true,
           automaticLayout: true,
-          tabSize: 2,
+          tabSize: preferences.tabSize,
+          // Otherwise Monaco guesses the tab size from the content and ignores the setting
+          detectIndentation: false,
           contextmenu: !readOnly,
           scrollbar: {
             verticalScrollbarSize: 8,
