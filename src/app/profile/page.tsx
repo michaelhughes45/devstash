@@ -3,8 +3,6 @@ import { redirect } from "next/navigation";
 import { Folder, Layers } from "lucide-react";
 
 import { ItemTypeIcon } from "@/components/dashboard/ItemTypeIcon";
-import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
-import { DeleteAccountDialog } from "@/components/profile/DeleteAccountDialog";
 import {
   Card,
   CardContent,
@@ -102,30 +100,6 @@ export default async function ProfilePage() {
               ))}
             </ul>
           </div>
-        </CardContent>
-      </Card>
-
-      {profile.hasPassword && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Change password</CardTitle>
-            <CardDescription>Enter your current password to choose a new one</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChangePasswordForm />
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="ring-destructive/40">
-        <CardHeader>
-          <CardTitle>Delete account</CardTitle>
-          <CardDescription>
-            Permanently delete your account and everything in it. This can&apos;t be undone.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DeleteAccountDialog hasPassword={profile.hasPassword} />
         </CardContent>
       </Card>
     </div>
