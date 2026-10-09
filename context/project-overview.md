@@ -515,7 +515,8 @@ devstash/
 │   │   ├── (auth)/           # sign-in, register, forgot/reset password
 │   │   ├── dashboard/        # dashboard (shares AppShell layout)
 │   │   ├── items/[type]/     # items list per type
-│   │   ├── profile/          # profile, change password, delete account
+│   │   ├── profile/          # profile and usage stats
+│   │   ├── settings/         # change password, delete account
 │   │   └── api/
 │   │       ├── auth/         # [...nextauth], register, verify-email
 │   │       ├── items/[id]/   # item detail + download

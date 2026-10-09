@@ -1,10 +1,25 @@
-# Current Feature
+# Current Feature: Settings Page
 
 ## Status
 
+In Progress
+
 ## Goals
 
+- Add a protected `/settings` page (add `/settings/:path*` to the proxy matcher; redirect to `/sign-in?callbackUrl=/settings` without a session, and to `/sign-in` if the session's user no longer exists)
+- Use the shared `AppShell` layout (`src/app/settings/layout.tsx`), like `/profile`
+- Add a "Settings" link to the user dropdown (`UserNav`) at the bottom of the sidebar, alongside Profile and Sign out
+- Move the account actions from `/profile` to `/settings`: the Change password card (still only shown when the user has a password) and the Delete account card with its confirmation dialog
+- `/profile` keeps only the user info (avatar, name, email, join date) and usage stats
+- Tab title "Settings · DevStash", with a page header matching the profile page
+- No change to the account action behavior (`changePassword`, `deleteAccount`, sign-out redirects)
+
 ## Notes
+
+- The request says "forgot password", but the profile page's account action is **Change password** (forgot password lives on `/forgot-password` from the sign-in page and stays there); this moves Change password.
+- `ChangePasswordForm` and `DeleteAccountDialog` live in `src/components/profile/`; consider moving them to `src/components/settings/` since they'll only be used there.
+- After a password change the user is signed out to `/sign-in?passwordChanged=1`, and after deletion to `/sign-in?deleted=1` — unchanged.
+- Mostly page and layout changes, so likely no new unit tests (existing `changePassword`/`deleteAccount` action tests still apply). Verify in the browser at desktop and 390px.
 
 ## History
 
