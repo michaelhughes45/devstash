@@ -6,6 +6,7 @@ import {
   deleteCollection,
   getCollection,
   getCollectionOptions,
+  getCollectionsPage,
   ownsCollections,
   updateCollection,
 } from "@/lib/db/collections";
@@ -13,6 +14,7 @@ import { prisma } from "@/lib/prisma";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
+    $queryRaw: vi.fn(),
     collection: {
       create: vi.fn(),
       update: vi.fn(),
@@ -40,6 +42,67 @@ describe("getCollection", () => {
     vi.mocked(prisma.collection.findFirst).mockResolvedValue(null);
 
     expect(await getCollection("user-2", "col-1")).toBeNull();
+  });
+});
+
+describe("getCollectionsPage", () => {
+  const usedAt = new Date("2026-03-01T00:00:00Z");
+  const card = (id: string, name: string) => ({
+    id,
+    name,
+    description: null,
+    isFavorite: false,
+    updatedAt: new Date("2026-01-01T00:00:00Z"),
+    _count: { items: 2 },
+  });
+
+  it("orders and pages in the database, then loads only that page's collections", async () => {
+    vi.mocked(prisma.$queryRaw)
+      .mockResolvedValueOnce([{ id: "col-2" }, { id: "col-1" }])
+      .mockResolvedValueOnce([
+        {
+          collectionId: "col-2",
+          typeId: "type-1",
+          typeName: "snippet",
+          typeIcon: null,
+          typeColor: "#3b82f6",
+          lastUsedAt: usedAt,
+        },
+      ]);
+    vi.mocked(prisma.collection.count).mockResolvedValue(23);
+    // Returned out of order, as `id IN (...)` doesn't keep the page's order
+    vi.mocked(prisma.collection.findMany).mockResolvedValue([
+      card("col-1", "DevOps"),
+      card("col-2", "React Patterns"),
+    ] as never);
+
+    const page = await getCollectionsPage("user-1", { skip: 21, take: 21 });
+
+    const [, ...pageValues] = vi.mocked(prisma.$queryRaw).mock.calls[0] as unknown[];
+    expect(pageValues).toEqual(["user-1", 21, 21]);
+    expect(prisma.collection.count).toHaveBeenCalledWith({ where: { userId: "user-1" } });
+    expect(prisma.collection.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: "user-1", id: { in: ["col-2", "col-1"] } } }),
+    );
+    expect(page.total).toBe(23);
+    expect(page.rows.map((collection) => collection.id)).toEqual(["col-2", "col-1"]);
+    expect(page.rows[0]).toMatchObject({
+      itemCount: 2,
+      lastUsedAt: usedAt,
+      types: [{ id: "type-1", name: "snippet", icon: "File", color: "#3b82f6" }],
+    });
+    expect(page.rows[1].types).toEqual([]);
+  });
+
+  it("skips loading collections for a page past the end", async () => {
+    vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([]);
+    vi.mocked(prisma.collection.count).mockResolvedValue(3);
+
+    expect(await getCollectionsPage("user-1", { skip: 21, take: 21 })).toEqual({
+      rows: [],
+      total: 3,
+    });
+    expect(prisma.collection.findMany).not.toHaveBeenCalled();
   });
 });
 

@@ -4,8 +4,10 @@ import { FolderOpen, Star } from "lucide-react";
 
 import { CollectionActions } from "@/components/collections/CollectionActions";
 import { CollectionItems } from "@/components/collections/CollectionItems";
+import { Pagination } from "@/components/dashboard/Pagination";
 import { getCollection } from "@/lib/db/collections";
 import { getItemsByCollection } from "@/lib/db/items";
+import { getPageCount, ITEMS_PER_PAGE, pageHref, pageRange, parsePage } from "@/lib/pagination";
 import { getCurrentUserId } from "@/lib/session";
 
 export async function generateMetadata({
@@ -16,18 +18,27 @@ export async function generateMetadata({
   return { title: `${collection?.name ?? "Collection"} · DevStash` };
 }
 
-export default async function CollectionPage({ params }: PageProps<"/collections/[id]">) {
-  const { id } = await params;
+export default async function CollectionPage({
+  params,
+  searchParams,
+}: PageProps<"/collections/[id]">) {
+  const [{ id }, { page: pageParam }] = await Promise.all([params, searchParams]);
+  const page = parsePage(pageParam);
 
   // The proxy only checks the JWT signature; a revoked session gets here without a user
   const userId = await getCurrentUserId();
   if (!userId) redirect(`/sign-in?callbackUrl=/collections/${encodeURIComponent(id)}`);
 
-  const [collection, items] = await Promise.all([
+  const [collection, { rows: items, total }] = await Promise.all([
     getCollection(userId, id),
-    getItemsByCollection(userId, id),
+    getItemsByCollection(userId, id, pageRange(page, ITEMS_PER_PAGE)),
   ]);
   if (!collection) notFound();
+
+  const basePath = `/collections/${encodeURIComponent(id)}`;
+  const pageCount = getPageCount(total, ITEMS_PER_PAGE);
+  // e.g. the last item on the last page was deleted or removed from the collection
+  if (page > pageCount) redirect(pageHref(basePath, pageCount));
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
@@ -46,7 +57,7 @@ export default async function CollectionPage({ params }: PageProps<"/collections
             )}
           </h1>
           <p className="text-muted-foreground">
-            {items.length} {items.length === 1 ? "item" : "items"}
+            {total} {total === 1 ? "item" : "items"}
           </p>
           {collection.description && (
             <p className="mt-2 text-sm text-muted-foreground">{collection.description}</p>
@@ -56,6 +67,7 @@ export default async function CollectionPage({ params }: PageProps<"/collections
       </div>
 
       <CollectionItems items={items} />
+      <Pagination basePath={basePath} page={page} pageCount={pageCount} />
     </div>
   );
 }
