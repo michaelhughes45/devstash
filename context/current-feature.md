@@ -1,10 +1,35 @@
-# Current Feature
+# Current Feature: Editor Preferences Settings
+
+Add an Editor preferences section to `/settings` that auto-saves to the database and applies to every Monaco code editor.
 
 ## Status
 
+Completed
+
 ## Goals
 
+- Editor preferences card on `/settings` with:
+  - Font size dropdown
+  - Tab size dropdown
+  - Word wrap toggle (default: on)
+  - Minimap toggle (default: off)
+  - Theme dropdown: `vs-dark`, `monokai`, `github-dark` (default: `vs-dark`)
+- Store preferences in a JSON column `editorPreferences` on `User`
+- Add the column with a Prisma migration (`prisma migrate dev`, never `db push`) and apply it to the development branch
+- Server action to update preferences (session check, Zod validation, `{ success, data, error }` result)
+- Auto-save on every change (no Save button) with a success toast
+- `EditorPreferencesContext` providing the preferences to client components
+- `CodeEditor` (Monaco) applies the preferences in the drawer view, drawer edit form and New Item dialog
+- Unit tests for the schema, query and action; `npm test` and `npm run build` pass
+
 ## Notes
+
+- Spec source: `context/features/editor-settings-spec.md`.
+- The spec doesn't list font size or tab size options. Defaults should match today's editor (`fontSize: 13`, `tabSize: 2` in `src/components/items/CodeEditor.tsx`); likely options are font sizes 12–20 and tab sizes 2, 4 and 8.
+- Today the editor has no word wrap and uses a custom `devstash-dark` theme (based on `vs-dark` with the card background). Word wrap on by default changes how existing snippets display. `monokai` and `github-dark` aren't built into Monaco, so they need to be defined with `defineTheme`; decide whether `vs-dark` keeps the current card-background tweaks.
+- The column is nullable JSON, so existing users get the defaults; the stored value should be validated and merged with the defaults on read rather than trusted as-is.
+- `/settings` already has the Change password and Delete account cards (`src/components/settings/`); the provider would load preferences in `AppShell` alongside the other per-user data.
+- Production needs `prisma migrate deploy` before this ships.
 
 ## History
 
