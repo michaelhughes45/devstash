@@ -8,14 +8,13 @@ import { ItemCard } from "@/components/dashboard/ItemCard";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { getCollectionStats, getRecentCollections } from "@/lib/db/collections";
 import { getItemStats, getPinnedItems, getRecentItems } from "@/lib/db/items";
+import { DASHBOARD_COLLECTIONS_LIMIT, DASHBOARD_RECENT_ITEMS_LIMIT } from "@/lib/pagination";
 import { getCurrentUserId } from "@/lib/session";
 
 // Render per request so the dashboard reflects the current database state
 export const dynamic = "force-dynamic";
 
-const RECENT_COLLECTIONS_LIMIT = 6;
 const PINNED_ITEMS_LIMIT = 10;
-const RECENT_ITEMS_LIMIT = 10;
 
 export default async function DashboardPage() {
   // The proxy only checks the JWT signature; a revoked session gets here without a user
@@ -24,10 +23,10 @@ export default async function DashboardPage() {
 
   const [recentCollections, collectionStats, pinnedItems, recentItems, itemStats] =
     await Promise.all([
-      getRecentCollections(userId, RECENT_COLLECTIONS_LIMIT),
+      getRecentCollections(userId, DASHBOARD_COLLECTIONS_LIMIT),
       getCollectionStats(userId),
       getPinnedItems(userId, PINNED_ITEMS_LIMIT),
-      getRecentItems(userId, RECENT_ITEMS_LIMIT),
+      getRecentItems(userId, DASHBOARD_RECENT_ITEMS_LIMIT),
       getItemStats(userId),
     ]);
 

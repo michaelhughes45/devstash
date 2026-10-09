@@ -1,6 +1,7 @@
 import { Prisma, type ContentType } from "@/generated/prisma/client";
 import { getContentTypeForType } from "@/lib/item-content";
 import { DEFAULT_TYPE_COLOR, DEFAULT_TYPE_ICON } from "@/lib/item-type-icons";
+import type { Page, PageRange } from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
 import { isRecordNotFound } from "@/lib/prisma-errors";
 import type { CreateItemData, UpdateItemData } from "@/lib/validations/items";
@@ -95,29 +96,46 @@ export async function getRecentItems(
   return items.map(toItemWithType);
 }
 
+// One page of the user's items of a type, newest first
 export async function getItemsByType(
   userId: string,
   typeId: string,
-): Promise<ItemWithType[]> {
-  const items = await prisma.item.findMany({
-    where: { userId, typeId },
-    select: ITEM_CARD_SELECT,
-    orderBy: { createdAt: "desc" },
-  });
-  return items.map(toItemWithType);
+  { skip, take }: PageRange,
+): Promise<Page<ItemWithType>> {
+  const where = { userId, typeId };
+  const [items, total] = await Promise.all([
+    prisma.item.findMany({
+      where,
+      select: ITEM_CARD_SELECT,
+      // The id breaks ties so no item shows on two pages
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      skip,
+      take,
+    }),
+    prisma.item.count({ where }),
+  ]);
+  return { rows: items.map(toItemWithType), total };
 }
 
-// The items in one of the user's collections, most recently added first
+// One page of the user's items in a collection, most recently added first
 export async function getItemsByCollection(
   userId: string,
   collectionId: string,
-): Promise<ItemWithType[]> {
-  const links = await prisma.itemCollection.findMany({
-    where: { collectionId, item: { userId } },
-    select: { item: { select: ITEM_CARD_SELECT } },
-    orderBy: { addedAt: "desc" },
-  });
-  return links.map(({ item }) => toItemWithType(item));
+  { skip, take }: PageRange,
+): Promise<Page<ItemWithType>> {
+  const where = { collectionId, item: { userId } };
+  const [links, total] = await Promise.all([
+    prisma.itemCollection.findMany({
+      where,
+      select: { item: { select: ITEM_CARD_SELECT } },
+      // The item id breaks ties so no item shows on two pages
+      orderBy: [{ addedAt: "desc" }, { itemId: "desc" }],
+      skip,
+      take,
+    }),
+    prisma.itemCollection.count({ where }),
+  ]);
+  return { rows: links.map(({ item }) => toItemWithType(item)), total };
 }
 
 export interface ItemDetail extends ItemWithType {

@@ -1,10 +1,27 @@
-# Current Feature
+# Current Feature: Pagination
 
 ## Status
 
+In Progress
+
 ## Goals
 
+- Paginate `/items/[type]` and `/collections/[id]` with numbered page links
+- Pagination controls at the bottom of the list: page numbers plus Previous/Next links
+- Previous/Next are disabled (greyed out) when there's no previous or next page
+- Shared constants: `ITEMS_PER_PAGE = 21`, `COLLECTIONS_PER_PAGE = 21`
+- Dashboard limits as named constants: `DASHBOARD_COLLECTIONS_LIMIT = 6`, `DASHBOARD_RECENT_ITEMS_LIMIT = 10`
+- Queries fetch only the rows the current page needs (skip/take plus a count), never the full list
+
 ## Notes
+
+- Spec: `context/features/pagination-spec.md`
+- Current queries load everything: `getItemsByType` and `getItemsByCollection` in `src/lib/db/items.ts`; the dashboard uses local `RECENT_COLLECTIONS_LIMIT` / `RECENT_ITEMS_LIMIT` constants in `src/app/dashboard/page.tsx`, to be replaced by the shared `DASHBOARD_*` ones
+- `COLLECTIONS_PER_PAGE` implies paginating `/collections` too, though the spec only names `/items/[type]` and `/collections/[id]`; `getAllCollections` reuses the request-cached `getCollectionsByRecentUse` (also used by the sidebar and search), so paginating it needs its own paged query
+- Page number likely comes from a `?page=` search param (server components, plain links); out-of-range or invalid pages need handling
+- The header item count should show the total, not the page's count
+- `/collections/[id]` renders file rows in a separate list below the grid, so paging should apply to the combined ordered list
+- 21 fits the 1/2/3-column grids evenly at three columns
 
 ## History
 
