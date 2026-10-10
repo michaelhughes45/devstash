@@ -1,18 +1,32 @@
-# Current Feature
+# Current Feature: Favorites Sorting
 
-<!-- Feature name and short description -->
+Add client-side sorting to the `/favorites` page so favorited items and collections can be sorted by name, date or item type.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- A sort control on `/favorites` (above the lists, matching the page's compact monospace style) with three options: Name, Date and Type
+- Sorting happens in the browser with no new requests or page reloads; the server still fetches the favorites once
+- **Name** sorts A–Z by item title / collection name (case-insensitive, locale-aware)
+- **Date** sorts newest first by `updatedAt` (the current order, and the default)
+- **Type** groups items by item type name, then by title within a type
+- The chosen sort applies to both the Items and Collections sections
+- Sorting logic lives in a pure, unit-tested utility in `src/lib/` (e.g. `sortFavorites`), not in the component
+- Rows keep their behavior: item rows open the drawer, collection rows link to their page
+- Works at phone width (390px) with no horizontal scroll
 
 ## Notes
 
-<!-- Any extra notes -->
+- `/favorites` is a server component (`src/app/favorites/page.tsx`); the lists will need a small client wrapper that holds the sort state and renders the existing `FavoritesSection`, `FavoriteItemRow` and `FavoriteCollectionRow` components.
+- Collections don't have a single item type: for Type sort, order them by their most-used item type (`types[0]`, which already colors the folder icon), with collections that have no items last, then by name.
+- Ties in any sort fall back to name, then id, so the order is stable.
+- Sort direction toggling (asc/desc) isn't requested; keep one fixed direction per option unless asked.
+- Whether the choice persists across visits (e.g. `localStorage` or a `?sort=` param) isn't specified; default to in-memory state only.
+- Data comes from `getFavoriteItems` (`FavoriteItem`, has `type` and `updatedAt`) and `getFavoriteCollections` (`CollectionWithTypes`, has `types` and `updatedAt`); no query changes needed.
+- Unit tests for the sort utility only (no component tests).
 
 ## History
 
