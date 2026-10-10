@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createItem, deleteItem, updateItem } from "@/actions/items";
+import { createItem, deleteItem, toggleItemFavorite, updateItem } from "@/actions/items";
 import { ownsCollections } from "@/lib/db/collections";
 import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
   getItemKind,
+  setItemFavorite,
   updateItem as updateItemRecord,
   type ItemDetail,
 } from "@/lib/db/items";
@@ -20,6 +21,7 @@ vi.mock("@/lib/db/items", () => ({
   updateItem: vi.fn(),
   deleteItem: vi.fn(),
   getItemKind: vi.fn(),
+  setItemFavorite: vi.fn(),
 }));
 vi.mock("@/lib/prisma-errors", () => ({ isUniqueViolation: vi.fn() }));
 // Key and URL helpers stay real; only the calls to R2 are mocked
@@ -612,6 +614,61 @@ describe("deleteItem", () => {
     const result = await deleteItem("item-1");
 
     expect(result).toEqual({
+      success: false,
+      error: "Something went wrong. Please try again.",
+    });
+  });
+});
+
+describe("toggleItemFavorite action", () => {
+  beforeEach(() => {
+    vi.mocked(getCurrentUserId).mockResolvedValue("user-1");
+  });
+
+  it("rejects signed-out users without saving", async () => {
+    vi.mocked(getCurrentUserId).mockResolvedValue(null);
+
+    const result = await toggleItemFavorite("item-1", true);
+
+    expect(result).toEqual({ success: false, error: "You need to be signed in to do that." });
+    expect(setItemFavorite).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid id without saving", async () => {
+    const result = await toggleItemFavorite("a".repeat(65), true);
+
+    expect(result).toEqual({ success: false, error: "Item not found." });
+    expect(setItemFavorite).not.toHaveBeenCalled();
+  });
+
+  it("rejects a value that isn't a boolean without saving", async () => {
+    const result = await toggleItemFavorite("item-1", "yes" as unknown as boolean);
+
+    expect(result).toMatchObject({ success: false });
+    expect(setItemFavorite).not.toHaveBeenCalled();
+  });
+
+  it("sets the requested value for the signed-in user", async () => {
+    vi.mocked(setItemFavorite).mockResolvedValue(false);
+
+    expect(await toggleItemFavorite("item-1", false)).toEqual({
+      success: true,
+      data: { isFavorite: false },
+    });
+    expect(setItemFavorite).toHaveBeenCalledWith("user-1", "item-1", false);
+  });
+
+  it("reports a missing or someone else's item", async () => {
+    vi.mocked(setItemFavorite).mockResolvedValue(null);
+
+    expect(await toggleItemFavorite("item-1", true)).toEqual({ success: false, error: "Item not found." });
+  });
+
+  it("returns a generic error when the save fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(setItemFavorite).mockRejectedValue(new Error("db down"));
+
+    expect(await toggleItemFavorite("item-1", true)).toEqual({
       success: false,
       error: "Something went wrong. Please try again.",
     });

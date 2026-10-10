@@ -9,6 +9,7 @@ import {
   getCollectionsPage,
   getFavoriteCollections,
   ownsCollections,
+  setCollectionFavorite,
   updateCollection,
 } from "@/lib/db/collections";
 import { prisma } from "@/lib/prisma";
@@ -267,5 +268,24 @@ describe("deleteCollection", () => {
     vi.mocked(prisma.collection.delete).mockRejectedValue(notFoundError());
 
     expect(await deleteCollection("user-2", "col-1")).toBe(false);
+  });
+});
+
+describe("setCollectionFavorite", () => {
+  it("sets the flag on the owner's collection only", async () => {
+    vi.mocked(prisma.collection.update).mockResolvedValue({ isFavorite: false } as never);
+
+    expect(await setCollectionFavorite("user-1", "col-1", false)).toBe(false);
+    expect(prisma.collection.update).toHaveBeenCalledWith({
+      where: { id: "col-1", userId: "user-1" },
+      data: { isFavorite: false },
+      select: { isFavorite: true },
+    });
+  });
+
+  it("returns null for a missing or someone else's collection", async () => {
+    vi.mocked(prisma.collection.update).mockRejectedValue(notFoundError());
+
+    expect(await setCollectionFavorite("user-2", "col-1", true)).toBeNull();
   });
 });

@@ -331,6 +331,26 @@ export async function deleteItem(userId: string, itemId: string): Promise<Delete
   }
 }
 
+// Sets the owner's item's favorite flag and returns it; null when the item is
+// missing or someone else's
+export async function setItemFavorite(
+  userId: string,
+  itemId: string,
+  isFavorite: boolean,
+): Promise<boolean | null> {
+  try {
+    const item = await prisma.item.update({
+      where: { id: itemId, userId },
+      data: { isFavorite },
+      select: { isFavorite: true },
+    });
+    return item.isFavorite;
+  } catch (error) {
+    if (isRecordNotFound(error)) return null;
+    throw error;
+  }
+}
+
 export async function getItemStats(userId: string): Promise<ItemStats> {
   const [total, favorites] = await Promise.all([
     prisma.item.count({ where: { userId } }),

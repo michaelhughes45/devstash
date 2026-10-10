@@ -1,18 +1,30 @@
-# Current Feature
+# Current Feature: Favorite Toggle
 
-<!-- Feature name and short description -->
+Make the Favorite buttons work for items and collections: in the item drawer, on the collection page and on cards.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- **Item drawer:** the action bar's Favorite button (`ItemDrawerActions`, display only today) toggles the item's `isFavorite`, with the yellow filled star and `aria-pressed` following the new state
+- **Collection page:** the Favorite button in `CollectionActions` on `/collections/[id]` toggles the collection's `isFavorite`
+- **Collection cards:** the Favorite / Unfavorite entry in the card's 3-dots menu (`CollectionCardMenu`, on `/collections` and the dashboard) toggles the collection
+- **Item cards:** `ItemCard` gets a star toggle button beside the `ItemCardTrigger` (like `CopyItemButton`), so clicking it never opens the drawer; filled yellow when favorited
+- New server actions `toggleItemFavorite` and `toggleCollectionFavorite` (`src/actions/items.ts`, `src/actions/collections.ts`): session check, id validated with the existing `itemIdSchema` / `collectionIdSchema`, `{ success, data }` or `{ success: false, error }`
+- Owner-scoped queries (`where: { id, userId }`; P2025 → "Item not found." / "Collection not found.") that set `isFavorite` to the requested value (not a blind flip, so double clicks and stale tabs stay predictable) and return the new state
+- Optimistic UI: the star flips immediately, reverts with an error toast on failure, and buttons are disabled while saving
+- Success shows a short toast ("Added to favorites" / "Removed from favorites") and calls `router.refresh()` so the sidebar favorites, stats cards, dashboard and `/favorites` page update
+- The drawer keeps its open item in sync (no refetch needed) when toggled from the drawer
+- Unit tests for the new actions and queries; `npm test`, lint and build pass
 
 ## Notes
 
-<!-- Any extra notes -->
+- Existing display-only Favorite buttons: `ItemDrawerActions.tsx`, `CollectionActions.tsx`, `CollectionCardMenu.tsx` (their comments say behavior comes in a later spec — remove those notes)
+- "Cards" is taken as both item cards and collection cards. Image cards (`ImageCard`) and file rows (`FileRow`) keep showing the star marker only, matching how they skipped the copy button — confirm if they should get the toggle too
+- Pin stays display only (separate pinned spec in `context/features/pinned-spec.md`)
+- No new migration: `isFavorite` already exists on `Item` and `Collection`
 
 ## History
 

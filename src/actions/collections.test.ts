@@ -1,9 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createCollection, deleteCollection, updateCollection } from "@/actions/collections";
+import {
+  createCollection,
+  deleteCollection,
+  toggleCollectionFavorite,
+  updateCollection,
+} from "@/actions/collections";
 import {
   createCollection as createCollectionRecord,
   deleteCollection as deleteCollectionRecord,
+  setCollectionFavorite,
   updateCollection as updateCollectionRecord,
 } from "@/lib/db/collections";
 import { getCurrentUserId } from "@/lib/session";
@@ -13,6 +19,7 @@ vi.mock("@/lib/db/collections", () => ({
   createCollection: vi.fn(),
   updateCollection: vi.fn(),
   deleteCollection: vi.fn(),
+  setCollectionFavorite: vi.fn(),
 }));
 
 const createdAt = new Date("2026-10-08T10:00:00Z");
@@ -193,6 +200,61 @@ describe("deleteCollection action", () => {
     vi.mocked(deleteCollectionRecord).mockRejectedValue(new Error("db down"));
 
     expect(await deleteCollection("col-1")).toEqual({
+      success: false,
+      error: "Something went wrong. Please try again.",
+    });
+  });
+});
+
+describe("toggleCollectionFavorite action", () => {
+  beforeEach(() => {
+    vi.mocked(getCurrentUserId).mockResolvedValue("user-1");
+  });
+
+  it("rejects signed-out users without saving", async () => {
+    vi.mocked(getCurrentUserId).mockResolvedValue(null);
+
+    const result = await toggleCollectionFavorite("col-1", true);
+
+    expect(result).toEqual({ success: false, error: "You need to be signed in to do that." });
+    expect(setCollectionFavorite).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid id without saving", async () => {
+    const result = await toggleCollectionFavorite("a".repeat(65), true);
+
+    expect(result).toEqual({ success: false, error: "Collection not found." });
+    expect(setCollectionFavorite).not.toHaveBeenCalled();
+  });
+
+  it("rejects a value that isn't a boolean without saving", async () => {
+    const result = await toggleCollectionFavorite("col-1", "yes" as unknown as boolean);
+
+    expect(result).toMatchObject({ success: false });
+    expect(setCollectionFavorite).not.toHaveBeenCalled();
+  });
+
+  it("sets the requested value for the signed-in user", async () => {
+    vi.mocked(setCollectionFavorite).mockResolvedValue(false);
+
+    expect(await toggleCollectionFavorite("col-1", false)).toEqual({
+      success: true,
+      data: { isFavorite: false },
+    });
+    expect(setCollectionFavorite).toHaveBeenCalledWith("user-1", "col-1", false);
+  });
+
+  it("reports a missing or someone else's collection", async () => {
+    vi.mocked(setCollectionFavorite).mockResolvedValue(null);
+
+    expect(await toggleCollectionFavorite("col-1", true)).toEqual({ success: false, error: "Collection not found." });
+  });
+
+  it("returns a generic error when the save fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(setCollectionFavorite).mockRejectedValue(new Error("db down"));
+
+    expect(await toggleCollectionFavorite("col-1", true)).toEqual({
       success: false,
       error: "Something went wrong. Please try again.",
     });
