@@ -7,6 +7,7 @@ import {
   getCollection,
   getCollectionOptions,
   getCollectionsPage,
+  getFavoriteCollections,
   ownsCollections,
   updateCollection,
 } from "@/lib/db/collections";
@@ -103,6 +104,58 @@ describe("getCollectionsPage", () => {
       total: 3,
     });
     expect(prisma.collection.findMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("getFavoriteCollections", () => {
+  const updatedAt = new Date("2026-02-01T00:00:00Z");
+
+  it("lists only the user's favorites, most recently updated first, with their types", async () => {
+    vi.mocked(prisma.collection.findMany).mockResolvedValue([
+      {
+        id: "col-1",
+        name: "React Patterns",
+        description: null,
+        isFavorite: true,
+        updatedAt,
+        _count: { items: 3 },
+      },
+    ] as never);
+    vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([
+      {
+        collectionId: "col-1",
+        typeId: "type-1",
+        typeName: "snippet",
+        typeIcon: "Code",
+        typeColor: "#3b82f6",
+        lastUsedAt: new Date("2026-01-01T00:00:00Z"),
+      },
+    ]);
+
+    const [collection] = await getFavoriteCollections("user-1");
+
+    expect(prisma.collection.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "user-1", isFavorite: true },
+        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+      }),
+    );
+    const [, userValue, scope] = vi.mocked(prisma.$queryRaw).mock.calls[0] as unknown[];
+    expect(userValue).toBe("user-1");
+    expect((scope as Prisma.Sql).values).toEqual(["col-1"]);
+    expect(collection).toMatchObject({
+      id: "col-1",
+      itemCount: 3,
+      updatedAt,
+      types: [{ id: "type-1", name: "snippet", icon: "Code", color: "#3b82f6" }],
+    });
+  });
+
+  it("skips the type query when nothing is favorited", async () => {
+    vi.mocked(prisma.collection.findMany).mockResolvedValue([]);
+
+    expect(await getFavoriteCollections("user-1")).toEqual([]);
+    expect(prisma.$queryRaw).not.toHaveBeenCalled();
   });
 });
 

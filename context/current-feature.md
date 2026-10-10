@@ -1,18 +1,32 @@
-# Current Feature
+# Current Feature: Favorites Page
 
-<!-- Feature name and short description -->
+Add a `/favorites` page listing all of the user's favorited items and collections in a compact, dev-focused list.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Star icon button in the `TopBar` linking to `/favorites`
+- Protected `/favorites` route (add to the proxy matcher; redirect to `/sign-in` without a session or if the session's user is gone), using the shared `AppShell` layout
+- Fetch all of the user's favorited items and collections
+- Compact list view (VS Code/terminal style), not cards
+- Each row: type icon, title, type badge, date
+- Separate Items and Collections sections, each with a count
+- Clicking an item opens the `ItemDrawer`; clicking a collection goes to `/collections/[id]`
+- Empty state when there are no favorites
+- Sorted by most recently favorited (`updatedAt`, newest first)
+- UI: monospace or semi-monospace font, minimal padding, high density, subtle hover states, clean lines only (no cards or heavy borders)
 
 ## Notes
 
-<!-- Any extra notes -->
+- Spec: `context/features/favorites-spec.md`
+- There's no `favoritedAt` column, so "most recently favorited" and the row date use `updatedAt`, as the spec says (an edit also bumps it).
+- Toggling favorites isn't built yet: the drawer's Favorite button and the collection Favorite actions only show state. The spec doesn't ask for toggling, so the page lists what's already favorited (the seed favorites 2 collections and 3 items).
+- Collections have no type, so their rows can use the most-used item type's icon/color (as `CollectionCard` does) with a "collection" badge.
+- Item rows should reuse `ItemCardTrigger` so they open the drawer; item queries should use `ITEM_CARD_SELECT` (no text content).
+- Add unit tests for the new favorites queries.
 
 ## History
 

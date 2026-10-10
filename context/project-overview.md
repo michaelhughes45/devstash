@@ -515,6 +515,7 @@ devstash/
 │   ├── app/
 │   │   ├── (auth)/           # sign-in, register, forgot/reset password
 │   │   ├── dashboard/        # dashboard (shares AppShell layout)
+│   │   ├── favorites/        # favorited items and collections
 │   │   ├── items/[type]/     # items list per type
 │   │   ├── profile/          # profile and usage stats
 │   │   ├── settings/         # editor preferences, change password, delete account

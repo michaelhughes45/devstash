@@ -76,6 +76,7 @@ describe("getSearchData", () => {
         itemCount: 3,
         types: [],
         lastUsedAt: new Date(),
+        updatedAt: new Date(),
       },
     ]);
 
