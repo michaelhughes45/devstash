@@ -96,6 +96,21 @@ export async function getRecentItems(
   return items.map(toItemWithType);
 }
 
+export interface FavoriteItem extends ItemWithType {
+  updatedAt: Date;
+}
+
+// Every favorited item, most recently updated first (there's no favorited-at
+// time, so updatedAt stands in for when it was favorited)
+export async function getFavoriteItems(userId: string): Promise<FavoriteItem[]> {
+  const items = await prisma.item.findMany({
+    where: { userId, isFavorite: true },
+    select: { ...ITEM_CARD_SELECT, updatedAt: true },
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+  });
+  return items.map(({ updatedAt, ...item }) => ({ ...toItemWithType(item), updatedAt }));
+}
+
 // One page of the user's items of a type, newest first
 export async function getItemsByType(
   userId: string,

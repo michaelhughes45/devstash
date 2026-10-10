@@ -6,6 +6,7 @@ import {
   deleteItem,
   getItemDetail,
   getItemFile,
+  getFavoriteItems,
   getItemKind,
   getItemsByCollection,
   getItemsByType,
@@ -89,6 +90,37 @@ describe("getItemDetail", () => {
       type: { id: "type-1", name: "snippet", icon: "File", color: "#6b7280" },
       tags: ["react", "auth"],
       collections: [{ id: "col-1", name: "React Patterns" }],
+    });
+  });
+});
+
+describe("getFavoriteItems", () => {
+  it("lists only the user's favorites, most recently updated first, without text content", async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue([]);
+
+    await getFavoriteItems("user-1");
+
+    const query = vi.mocked(prisma.item.findMany).mock.calls[0][0] as {
+      where: unknown;
+      orderBy: unknown;
+      select: Record<string, unknown>;
+    };
+    expect(query.where).toEqual({ userId: "user-1", isFavorite: true });
+    expect(query.orderBy).toEqual([{ updatedAt: "desc" }, { id: "desc" }]);
+    expect(query.select).not.toHaveProperty("content");
+    expect(query.select).toMatchObject({ updatedAt: true, title: true });
+  });
+
+  it("keeps updatedAt and fills in type defaults", async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue([row] as never);
+
+    const [item] = await getFavoriteItems("user-1");
+
+    expect(item).toMatchObject({
+      id: "item-1",
+      updatedAt,
+      type: { id: "type-1", name: "snippet", icon: "File", color: "#6b7280" },
+      tags: ["react", "auth"],
     });
   });
 });

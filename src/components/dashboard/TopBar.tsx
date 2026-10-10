@@ -1,6 +1,10 @@
+import Link from "next/link";
+import { Star } from "lucide-react";
+
 import { NewCollectionDialog } from "@/components/collections/NewCollectionDialog";
 import { NewItemDialog } from "@/components/items/NewItemDialog";
 import { CommandPalette } from "@/components/search/CommandPalette";
+import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { getCreatableItemTypes } from "@/lib/db/item-types";
@@ -24,6 +28,14 @@ export async function TopBar({ collections, searchData }: TopBarProps) {
       <CommandPalette data={searchData} />
       {/* Labels collapse to icons on phones so both buttons fit beside the search */}
       <div className="ml-auto flex items-center gap-2">
+        <Link
+          href="/favorites"
+          aria-label="Favorites"
+          title="Favorites"
+          className={buttonVariants({ variant: "ghost", size: "icon" })}
+        >
+          <Star />
+        </Link>
         <NewCollectionDialog />
         <NewItemDialog types={creatableTypes} collections={collections} />
       </div>

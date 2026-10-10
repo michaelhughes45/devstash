@@ -27,6 +27,7 @@ export interface CollectionWithTypes {
   // Distinct types in the collection, most-used first
   types: CollectionType[];
   lastUsedAt: Date;
+  updatedAt: Date;
 }
 
 export interface CollectionStats {
@@ -203,6 +204,23 @@ export async function getCollectionsPage(
     (a, b) => (position.get(a.id) ?? 0) - (position.get(b.id) ?? 0),
   );
   return { rows, total };
+}
+
+// Every favorited collection, most recently updated first (there's no favorited-at
+// time, so updatedAt stands in for when it was favorited)
+export async function getFavoriteCollections(userId: string): Promise<CollectionWithTypes[]> {
+  const collections = await prisma.collection.findMany({
+    where: { userId, isFavorite: true },
+    select: COLLECTION_CARD_SELECT,
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+  });
+  if (collections.length === 0) return [];
+
+  const typeUsage = await getTypeUsage(
+    userId,
+    collections.map((collection) => collection.id),
+  );
+  return toCollectionsWithTypes(collections, typeUsage);
 }
 
 export async function getCollectionStats(userId: string): Promise<CollectionStats> {
