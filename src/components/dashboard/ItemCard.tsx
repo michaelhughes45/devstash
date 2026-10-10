@@ -1,7 +1,8 @@
-import { Pin, Star } from "lucide-react";
+import { Pin } from "lucide-react";
 
 import { ItemTypeIcon } from "@/components/dashboard/ItemTypeIcon";
 import { CopyItemButton } from "@/components/items/CopyItemButton";
+import { FavoriteItemButton } from "@/components/items/FavoriteItemButton";
 import { ItemCardTrigger } from "@/components/items/ItemCardTrigger";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,8 +14,9 @@ interface ItemCardProps {
   item: ItemWithType;
 }
 
-// The copy button sits beside the drawer trigger, not inside it, since a button can't be
-// nested in a button; it overlays the card's bottom-right corner, below the date
+// The favorite and copy buttons sit beside the drawer trigger, not inside it, since a
+// button can't be nested in a button; they overlay the card's bottom-right corner,
+// below the date
 export function ItemCard({ item }: ItemCardProps) {
   const { type } = item;
   const copySource = getCardCopySource(item);
@@ -38,9 +40,6 @@ export function ItemCard({ item }: ItemCardProps) {
                 <h3 className="truncate font-medium">{item.title}</h3>
                 {item.isPinned && (
                   <Pin className="size-3.5 shrink-0 text-muted-foreground" />
-                )}
-                {item.isFavorite && (
-                  <Star className="size-3.5 shrink-0 fill-yellow-400 text-yellow-400" />
                 )}
               </div>
               {item.description && (
@@ -67,14 +66,10 @@ export function ItemCard({ item }: ItemCardProps) {
           </CardContent>
         </Card>
       </ItemCardTrigger>
-      {copySource && (
-        <CopyItemButton
-          itemId={item.id}
-          source={copySource}
-          title={item.title}
-          className="absolute right-2.5 bottom-2.5"
-        />
-      )}
+      <div className="absolute right-2.5 bottom-2.5 flex items-center gap-0.5">
+        <FavoriteItemButton itemId={item.id} isFavorite={item.isFavorite} title={item.title} />
+        {copySource && <CopyItemButton itemId={item.id} source={copySource} title={item.title} />}
+      </div>
     </div>
   );
 }

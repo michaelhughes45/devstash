@@ -10,6 +10,7 @@ import {
   getItemKind,
   getItemsByCollection,
   getItemsByType,
+  setItemFavorite,
   updateItem,
 } from "@/lib/db/items";
 import { prisma } from "@/lib/prisma";
@@ -497,5 +498,35 @@ describe("getItemFile", () => {
       fileUrl: "https://files.example.com/a.pdf",
       fileName: "a.pdf",
     });
+  });
+});
+
+describe("setItemFavorite", () => {
+  it("sets the flag on the owner's item only", async () => {
+    vi.mocked(prisma.item.update).mockResolvedValue({ isFavorite: true } as never);
+
+    expect(await setItemFavorite("user-1", "item-1", true)).toBe(true);
+    expect(prisma.item.update).toHaveBeenCalledWith({
+      where: { id: "item-1", userId: "user-1" },
+      data: { isFavorite: true },
+      select: { isFavorite: true },
+    });
+  });
+
+  it("returns null for a missing or someone else's item", async () => {
+    vi.mocked(prisma.item.update).mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("No record found", {
+        code: "P2025",
+        clientVersion: "test",
+      }),
+    );
+
+    expect(await setItemFavorite("user-2", "item-1", false)).toBeNull();
+  });
+
+  it("rethrows other database errors", async () => {
+    vi.mocked(prisma.item.update).mockRejectedValue(new Error("db down"));
+
+    await expect(setItemFavorite("user-1", "item-1", true)).rejects.toThrow("db down");
   });
 });

@@ -29,6 +29,7 @@ interface ItemDrawerProps {
   onEditingChange: (editing: boolean) => void;
   onItemSaved: (item: ItemDetailData) => void;
   onItemDeleted: () => void;
+  onFavoriteChange: (itemId: string, isFavorite: boolean) => void;
 }
 
 export function ItemDrawer({
@@ -40,6 +41,7 @@ export function ItemDrawer({
   onEditingChange,
   onItemSaved,
   onItemDeleted,
+  onFavoriteChange,
 }: ItemDrawerProps) {
   const item = state?.status === "loaded" ? state.item : null;
 
@@ -65,6 +67,7 @@ export function ItemDrawer({
                   item={item}
                   onEdit={() => onEditingChange(true)}
                   onDeleted={onItemDeleted}
+                  onFavoriteChange={onFavoriteChange}
                 />
                 <div className="flex-1 overflow-y-auto p-6">
                   {state.status === "loading" && <DrawerSkeleton />}

@@ -5,6 +5,7 @@ import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
   getItemKind,
+  setItemFavorite,
   updateItem as updateItemRecord,
   type ItemDetail,
   type ItemFileData,
@@ -31,6 +32,7 @@ import {
   type UpdateItemData,
   type UpdateItemInput,
 } from "@/lib/validations/items";
+import type { ToggleFavoriteResult } from "@/types/favorites";
 import type { FieldErrors } from "@/types/forms";
 import type { ItemDetailData } from "@/types/items";
 
@@ -39,7 +41,6 @@ const NOT_FOUND = "Item not found.";
 const INVALID_INPUT = "Please fix the highlighted fields.";
 const GENERIC_ERROR = "Something went wrong. Please try again.";
 const COLLECTION_NOT_FOUND = "One or more collections weren't found.";
-
 
 export type ItemMutationResult =
   | { success: true; data: ItemDetailData }
@@ -199,6 +200,30 @@ export async function deleteItem(itemId: string): Promise<DeleteItemResult> {
     return { success: true };
   } catch (error) {
     console.error("Item delete failed", error);
+    return { success: false, error: GENERIC_ERROR };
+  }
+}
+
+// Sets the flag to the requested value rather than flipping the stored one, so a
+// double click or a stale tab ends in the state the user saw
+export async function toggleItemFavorite(
+  itemId: string,
+  isFavorite: boolean,
+): Promise<ToggleFavoriteResult> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { success: false, error: NOT_SIGNED_IN };
+
+  const parsed = itemIdSchema.safeParse(itemId);
+  if (!parsed.success) return { success: false, error: NOT_FOUND };
+  if (typeof isFavorite !== "boolean") return { success: false, error: GENERIC_ERROR };
+
+  try {
+    // Scoped to the owner, so another user's item is reported as missing
+    const saved = await setItemFavorite(userId, parsed.data, isFavorite);
+    if (saved === null) return { success: false, error: NOT_FOUND };
+    return { success: true, data: { isFavorite: saved } };
+  } catch (error) {
+    console.error("Item favorite failed", error);
     return { success: false, error: GENERIC_ERROR };
   }
 }

@@ -267,6 +267,26 @@ export async function updateCollection(
   }
 }
 
+// Sets the owner's collection's favorite flag and returns it; null when the
+// collection is missing or someone else's
+export async function setCollectionFavorite(
+  userId: string,
+  id: string,
+  isFavorite: boolean,
+): Promise<boolean | null> {
+  try {
+    const collection = await prisma.collection.update({
+      where: { id, userId },
+      data: { isFavorite },
+      select: { isFavorite: true },
+    });
+    return collection.isFavorite;
+  } catch (error) {
+    if (isRecordNotFound(error)) return null;
+    throw error;
+  }
+}
+
 // Deletes the owner's collection; false when it's missing or someone else's.
 // Its items are kept: only their ItemCollection links go, through the cascade.
 export async function deleteCollection(userId: string, id: string): Promise<boolean> {

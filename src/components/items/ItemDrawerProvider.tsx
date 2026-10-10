@@ -79,6 +79,15 @@ export function ItemDrawerProvider({ collections, children }: ItemDrawerProvider
     setEditing(false);
   }, []);
 
+  // Keeps the open item in step with a favorite saved from the drawer
+  const handleFavoriteChange = useCallback((itemId: string, isFavorite: boolean) => {
+    setState((current) =>
+      current?.status === "loaded" && current.item.id === itemId
+        ? { ...current, item: { ...current.item, isFavorite } }
+        : current,
+    );
+  }, []);
+
   const value = useMemo(() => ({ openItem }), [openItem]);
 
   return (
@@ -93,6 +102,7 @@ export function ItemDrawerProvider({ collections, children }: ItemDrawerProvider
         onEditingChange={setEditing}
         onItemSaved={handleItemSaved}
         onItemDeleted={() => handleOpenChange(false)}
+        onFavoriteChange={handleFavoriteChange}
       />
     </ItemDrawerContext.Provider>
   );

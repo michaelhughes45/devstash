@@ -3,6 +3,7 @@
 import {
   createCollection as createCollectionRecord,
   deleteCollection as deleteCollectionRecord,
+  setCollectionFavorite,
   updateCollection as updateCollectionRecord,
 } from "@/lib/db/collections";
 import { getCurrentUserId } from "@/lib/session";
@@ -15,6 +16,7 @@ import {
 } from "@/lib/validations/collections";
 import { fieldErrorsOf } from "@/lib/validations/field-errors";
 import type { CollectionData, CollectionSummary } from "@/types/collections";
+import type { ToggleFavoriteResult } from "@/types/favorites";
 import type { FieldErrors } from "@/types/forms";
 
 const NOT_SIGNED_IN = "You need to be signed in to do that.";
@@ -91,6 +93,28 @@ export async function deleteCollection(id: string): Promise<DeleteCollectionResu
     return deleted ? { success: true } : { success: false, error: NOT_FOUND };
   } catch (error) {
     console.error("Collection delete failed", error);
+    return { success: false, error: GENERIC_ERROR };
+  }
+}
+
+// Sets the flag to the requested value rather than flipping the stored one, so a
+// double click or a stale tab ends in the state the user saw
+export async function toggleCollectionFavorite(
+  id: string,
+  isFavorite: boolean,
+): Promise<ToggleFavoriteResult> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { success: false, error: NOT_SIGNED_IN };
+
+  if (!collectionIdSchema.safeParse(id).success) return { success: false, error: NOT_FOUND };
+  if (typeof isFavorite !== "boolean") return { success: false, error: GENERIC_ERROR };
+
+  try {
+    const saved = await setCollectionFavorite(userId, id, isFavorite);
+    if (saved === null) return { success: false, error: NOT_FOUND };
+    return { success: true, data: { isFavorite: saved } };
+  } catch (error) {
+    console.error("Collection favorite failed", error);
     return { success: false, error: GENERIC_ERROR };
   }
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MoreHorizontal, Pencil, Star, Trash2 } from "lucide-react";
 
+import { toggleCollectionFavorite } from "@/actions/collections";
 import { DeleteCollectionDialog } from "@/components/collections/DeleteCollectionDialog";
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
 import { Button } from "@/components/ui/button";
@@ -13,14 +14,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useFavoriteToggle } from "@/hooks/use-favorite-toggle";
 import type { CollectionSummary } from "@/types/collections";
 
 // A collection card's options menu. The trigger sits above the card's stretched
-// link (`relative`), so opening it never navigates. Favorite shows state only;
-// its behavior comes in the favorites spec.
+// link (`relative`), so opening it never navigates.
 export function CollectionCardMenu({ collection }: { collection: CollectionSummary }) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const favorite = useFavoriteToggle({
+    isFavorite: collection.isFavorite,
+    save: (isFavorite) => toggleCollectionFavorite(collection.id, isFavorite),
+  });
 
   return (
     <>
@@ -42,11 +47,11 @@ export function CollectionCardMenu({ collection }: { collection: CollectionSumma
             <Pencil />
             Edit
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem disabled={favorite.pending} onClick={favorite.toggle}>
             <Star
-              className={collection.isFavorite ? "fill-yellow-400 text-yellow-400" : undefined}
+              className={favorite.isFavorite ? "fill-yellow-400 text-yellow-400" : undefined}
             />
-            {collection.isFavorite ? "Unfavorite" : "Favorite"}
+            {favorite.isFavorite ? "Unfavorite" : "Favorite"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
