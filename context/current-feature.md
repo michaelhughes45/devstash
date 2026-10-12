@@ -1,18 +1,35 @@
-# Current Feature
+# Current Feature: Homepage
 
-<!-- Feature name and short description -->
+Replace the placeholder `src/app/page.tsx` with the real marketing homepage, rebuilt from the static prototype in `prototypes/homepage/` with React, Tailwind v4 and shadcn/ui. Spec: `context/features/homepage-spec.md`.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- `/` renders the homepage for everyone (stays out of the proxy matcher), with the prototype's sections, copy, layout and animations
+- Page metadata: title "DevStash — Store Smarter. Build Faster." and the prototype's description
+- Components in `src/components/homepage/`, with `page.tsx` only composing them: `HomeNav` (client), `Hero`, `ChaosIcons` (client), `MiniDashboard`, `Features`, `AiSection`, `AiTags` (client), `Pricing` (client), `PlanCard` (server-safe), `CtaSection`, `HomeFooter`, `Reveal` (client)
+- Server components by default; `"use client"` only for scroll, animation, toggle and observer pieces
+- Shared `Logo` component in `src/components/`, used by `HomeNav`, `HomeFooter` and the `(auth)` layout (replacing its copy)
+- Static content (features, plans, footer links, chaos icons, AI tags, code sample) as typed constants in `src/components/homepage/content.ts`; repeated markup rendered from arrays
+- Chaos physics (`stepIcon`: repel, speed easing, wall bounce, rotation) as a pure function in `src/lib/chaos-physics.ts`; `ChaosIcons` only handles DOM, refs and the frame loop (no re-render per frame, cleanup on unmount, paused off screen and with reduced motion)
+- Session-aware links (`auth()`): signed out → `/sign-in`, `/register`; signed in → Sign In hidden, "Dashboard" → `/dashboard`, CTAs and Free plan → `/dashboard`, Pro plan → `/settings` (placeholder); anchors `#top`, `#features`, `#pricing`, `#ai`; no `href="#"`
+- Footer: Product column plus a new Account column (Sign In, Register; Dashboard when signed in); Resources and Company columns dropped
+- Unit tests for `chaos-physics`: wall bounce reverses velocity away from the wall and clamps position, pointer repels near icons but not distant ones, speed eases toward base and never exceeds max
 
 ## Notes
 
-<!-- Any extra notes -->
+- Tailwind only, shadcn `Button` (`asChild` for links), `Badge` and `Card` where they fit; no new CSS file or copy of `styles.css`
+- Dark theme from existing tokens; use the app's seeded item type colors (not the prototype's palette), defined once in `content.ts` and applied via a `--type-color` CSS variable (the only inline style allowed)
+- Gradient text with `bg-linear-to-r … bg-clip-text text-transparent`, blue-500 → violet-600 like the logo
+- Pulsing arrow and tag pop-in as `@keyframes` via `@theme` animations in `globals.css`, wrapped in `motion-safe:`; editor mockup window dots reuse `--color-window-*`
+- Brand icons (Notion, GitHub, Slack, VS Code) stay as inline SVG components in `ChaosIcons` (not in lucide-react v1); Lucide for everything else
+- `scroll-smooth` on the page wrapper and `scroll-mt` on sections to clear the fixed nav; nav more opaque after 16px of scroll
+- Responsive: hero visual stacks below `md` with the arrow rotated to point down, grids go to one column, nav links hide below `sm`, Sign In hides at the smallest widths, no horizontal scroll at 320px (only the code sample scrolls)
+- Verify in the browser at 1440, 1024, 768, 390 and 320px, signed out and as the demo user: links, anchors, nav opacity, icon motion/bounds/repel, pricing toggle, tags, reveal, reduced motion, no console errors
+- Out of scope: Stripe checkout, pages for the removed footer links, changing the prototype files
 
 ## History
 
