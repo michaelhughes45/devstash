@@ -1,12 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createItem, deleteItem, toggleItemFavorite, updateItem } from "@/actions/items";
+import {
+  createItem,
+  deleteItem,
+  toggleItemFavorite,
+  toggleItemPin,
+  updateItem,
+} from "@/actions/items";
 import { ownsCollections } from "@/lib/db/collections";
 import {
   createItem as createItemRecord,
   deleteItem as deleteItemRecord,
   getItemKind,
   setItemFavorite,
+  setItemPinned,
   updateItem as updateItemRecord,
   type ItemDetail,
 } from "@/lib/db/items";
@@ -22,6 +29,7 @@ vi.mock("@/lib/db/items", () => ({
   deleteItem: vi.fn(),
   getItemKind: vi.fn(),
   setItemFavorite: vi.fn(),
+  setItemPinned: vi.fn(),
 }));
 vi.mock("@/lib/prisma-errors", () => ({ isUniqueViolation: vi.fn() }));
 // Key and URL helpers stay real; only the calls to R2 are mocked
@@ -669,6 +677,61 @@ describe("toggleItemFavorite action", () => {
     vi.mocked(setItemFavorite).mockRejectedValue(new Error("db down"));
 
     expect(await toggleItemFavorite("item-1", true)).toEqual({
+      success: false,
+      error: "Something went wrong. Please try again.",
+    });
+  });
+});
+
+describe("toggleItemPin action", () => {
+  beforeEach(() => {
+    vi.mocked(getCurrentUserId).mockResolvedValue("user-1");
+  });
+
+  it("rejects signed-out users without saving", async () => {
+    vi.mocked(getCurrentUserId).mockResolvedValue(null);
+
+    const result = await toggleItemPin("item-1", true);
+
+    expect(result).toEqual({ success: false, error: "You need to be signed in to do that." });
+    expect(setItemPinned).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid id without saving", async () => {
+    const result = await toggleItemPin("", true);
+
+    expect(result).toEqual({ success: false, error: "Item not found." });
+    expect(setItemPinned).not.toHaveBeenCalled();
+  });
+
+  it("rejects a value that isn't a boolean without saving", async () => {
+    const result = await toggleItemPin("item-1", 1 as unknown as boolean);
+
+    expect(result).toMatchObject({ success: false });
+    expect(setItemPinned).not.toHaveBeenCalled();
+  });
+
+  it("sets the requested value for the signed-in user", async () => {
+    vi.mocked(setItemPinned).mockResolvedValue(true);
+
+    expect(await toggleItemPin("item-1", true)).toEqual({
+      success: true,
+      data: { isPinned: true },
+    });
+    expect(setItemPinned).toHaveBeenCalledWith("user-1", "item-1", true);
+  });
+
+  it("reports a missing or someone else's item", async () => {
+    vi.mocked(setItemPinned).mockResolvedValue(null);
+
+    expect(await toggleItemPin("item-1", false)).toEqual({ success: false, error: "Item not found." });
+  });
+
+  it("returns a generic error when the save fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(setItemPinned).mockRejectedValue(new Error("db down"));
+
+    expect(await toggleItemPin("item-1", true)).toEqual({
       success: false,
       error: "Something went wrong. Please try again.",
     });

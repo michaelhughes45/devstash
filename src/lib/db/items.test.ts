@@ -11,6 +11,7 @@ import {
   getItemsByCollection,
   getItemsByType,
   setItemFavorite,
+  setItemPinned,
   updateItem,
 } from "@/lib/db/items";
 import { prisma } from "@/lib/prisma";
@@ -149,7 +150,7 @@ describe("getItemsByType", () => {
     expect(prisma.item.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { userId: "user-1", typeId: "type-1" },
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }, { id: "desc" }],
         skip: 21,
         take: 21,
       }),
@@ -173,7 +174,7 @@ describe("getItemsByCollection", () => {
     expect(prisma.itemCollection.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where,
-        orderBy: [{ addedAt: "desc" }, { itemId: "desc" }],
+        orderBy: [{ item: { isPinned: "desc" } }, { addedAt: "desc" }, { itemId: "desc" }],
         skip: 21,
         take: 21,
       }),
@@ -528,5 +529,35 @@ describe("setItemFavorite", () => {
     vi.mocked(prisma.item.update).mockRejectedValue(new Error("db down"));
 
     await expect(setItemFavorite("user-1", "item-1", true)).rejects.toThrow("db down");
+  });
+});
+
+describe("setItemPinned", () => {
+  it("sets the flag on the owner's item only", async () => {
+    vi.mocked(prisma.item.update).mockResolvedValue({ isPinned: true } as never);
+
+    expect(await setItemPinned("user-1", "item-1", true)).toBe(true);
+    expect(prisma.item.update).toHaveBeenCalledWith({
+      where: { id: "item-1", userId: "user-1" },
+      data: { isPinned: true },
+      select: { isPinned: true },
+    });
+  });
+
+  it("returns null for a missing or someone else's item", async () => {
+    vi.mocked(prisma.item.update).mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("No record found", {
+        code: "P2025",
+        clientVersion: "test",
+      }),
+    );
+
+    expect(await setItemPinned("user-2", "item-1", false)).toBeNull();
+  });
+
+  it("rethrows other errors", async () => {
+    vi.mocked(prisma.item.update).mockRejectedValue(new Error("db down"));
+
+    await expect(setItemPinned("user-1", "item-1", true)).rejects.toThrow("db down");
   });
 });

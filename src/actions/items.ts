@@ -6,6 +6,7 @@ import {
   deleteItem as deleteItemRecord,
   getItemKind,
   setItemFavorite,
+  setItemPinned,
   updateItem as updateItemRecord,
   type ItemDetail,
   type ItemFileData,
@@ -34,7 +35,7 @@ import {
 } from "@/lib/validations/items";
 import type { ToggleFavoriteResult } from "@/types/favorites";
 import type { FieldErrors } from "@/types/forms";
-import type { ItemDetailData } from "@/types/items";
+import type { ItemDetailData, TogglePinResult } from "@/types/items";
 
 const NOT_SIGNED_IN = "You need to be signed in to do that.";
 const NOT_FOUND = "Item not found.";
@@ -224,6 +225,29 @@ export async function toggleItemFavorite(
     return { success: true, data: { isFavorite: saved } };
   } catch (error) {
     console.error("Item favorite failed", error);
+    return { success: false, error: GENERIC_ERROR };
+  }
+}
+
+// Sets the pin to the requested value, like toggleItemFavorite
+export async function toggleItemPin(
+  itemId: string,
+  isPinned: boolean,
+): Promise<TogglePinResult> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { success: false, error: NOT_SIGNED_IN };
+
+  const parsed = itemIdSchema.safeParse(itemId);
+  if (!parsed.success) return { success: false, error: NOT_FOUND };
+  if (typeof isPinned !== "boolean") return { success: false, error: GENERIC_ERROR };
+
+  try {
+    // Scoped to the owner, so another user's item is reported as missing
+    const saved = await setItemPinned(userId, parsed.data, isPinned);
+    if (saved === null) return { success: false, error: NOT_FOUND };
+    return { success: true, data: { isPinned: saved } };
+  } catch (error) {
+    console.error("Item pin failed", error);
     return { success: false, error: GENERIC_ERROR };
   }
 }

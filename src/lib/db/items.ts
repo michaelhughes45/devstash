@@ -111,7 +111,7 @@ export async function getFavoriteItems(userId: string): Promise<FavoriteItem[]> 
   return items.map(({ updatedAt, ...item }) => ({ ...toItemWithType(item), updatedAt }));
 }
 
-// One page of the user's items of a type, newest first
+// One page of the user's items of a type, pinned first, then newest first
 export async function getItemsByType(
   userId: string,
   typeId: string,
@@ -123,7 +123,7 @@ export async function getItemsByType(
       where,
       select: ITEM_CARD_SELECT,
       // The id breaks ties so no item shows on two pages
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }, { id: "desc" }],
       skip,
       take,
     }),
@@ -132,7 +132,8 @@ export async function getItemsByType(
   return { rows: items.map(toItemWithType), total };
 }
 
-// One page of the user's items in a collection, most recently added first
+// One page of the user's items in a collection, pinned first, then most
+// recently added first
 export async function getItemsByCollection(
   userId: string,
   collectionId: string,
@@ -144,7 +145,7 @@ export async function getItemsByCollection(
       where,
       select: { item: { select: ITEM_CARD_SELECT } },
       // The item id breaks ties so no item shows on two pages
-      orderBy: [{ addedAt: "desc" }, { itemId: "desc" }],
+      orderBy: [{ item: { isPinned: "desc" } }, { addedAt: "desc" }, { itemId: "desc" }],
       skip,
       take,
     }),
@@ -345,6 +346,26 @@ export async function setItemFavorite(
       select: { isFavorite: true },
     });
     return item.isFavorite;
+  } catch (error) {
+    if (isRecordNotFound(error)) return null;
+    throw error;
+  }
+}
+
+// Sets the owner's item's pinned flag and returns it; null when the item is
+// missing or someone else's
+export async function setItemPinned(
+  userId: string,
+  itemId: string,
+  isPinned: boolean,
+): Promise<boolean | null> {
+  try {
+    const item = await prisma.item.update({
+      where: { id: itemId, userId },
+      data: { isPinned },
+      select: { isPinned: true },
+    });
+    return item.isPinned;
   } catch (error) {
     if (isRecordNotFound(error)) return null;
     throw error;

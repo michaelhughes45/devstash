@@ -1,9 +1,6 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-
+import { useOptimisticToggle } from "@/hooks/use-optimistic-toggle";
 import type { ToggleFavoriteResult } from "@/types/favorites";
 
 interface UseFavoriteToggleOptions {
@@ -13,31 +10,21 @@ interface UseFavoriteToggleOptions {
   onSaved?: (isFavorite: boolean) => void;
 }
 
-// Flips the star straight away; the optimistic value holds until the save and
-// the refresh finish, and falls back to the stored one if the save fails
+const FAVORITE_MESSAGES = {
+  on: "Added to favorites",
+  off: "Removed from favorites",
+  failed: "Couldn't update favorites. Please try again.",
+};
+
 export function useFavoriteToggle({ isFavorite, save, onSaved }: UseFavoriteToggleOptions) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [optimistic, setOptimistic] = useOptimistic(isFavorite);
-
-  function toggle() {
-    const next = !optimistic;
-    startTransition(async () => {
-      setOptimistic(next);
-      try {
-        const result = await save(next);
-        if (!result.success) {
-          toast.error(result.error);
-          return;
-        }
-        onSaved?.(result.data.isFavorite);
-        toast.success(result.data.isFavorite ? "Added to favorites" : "Removed from favorites");
-        router.refresh();
-      } catch {
-        toast.error("Couldn't update favorites. Please try again.");
-      }
-    });
-  }
-
-  return { isFavorite: optimistic, pending, toggle };
+  const toggle = useOptimisticToggle({
+    value: isFavorite,
+    save: async (next) => {
+      const result = await save(next);
+      return result.success ? { success: true, value: result.data.isFavorite } : result;
+    },
+    messages: FAVORITE_MESSAGES,
+    onSaved,
+  });
+  return { isFavorite: toggle.value, pending: toggle.pending, toggle: toggle.toggle };
 }
