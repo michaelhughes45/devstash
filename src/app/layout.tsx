@@ -22,7 +22,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      // Smooth in-page anchor scrolling, only on the homepage
+      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased motion-safe:has-[[data-home]]:scroll-smooth`}
     >
       <body className="min-h-full flex flex-col">
         {children}

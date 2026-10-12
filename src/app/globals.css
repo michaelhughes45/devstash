@@ -51,6 +51,35 @@
     --color-window-maximize: #28c840;
 }
 
+/* Homepage animations */
+@theme {
+    --animate-pulse-arrow: pulse-arrow 2s ease-in-out infinite;
+    --animate-tag-pop: tag-pop 0.35s ease-out both;
+
+    @keyframes pulse-arrow {
+        0%,
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgb(99 102 241 / 0.5);
+        }
+        50% {
+            transform: scale(1.08);
+            box-shadow: 0 0 0 14px rgb(99 102 241 / 0);
+        }
+    }
+
+    @keyframes tag-pop {
+        from {
+            opacity: 0;
+            transform: translateY(6px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+}
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
