@@ -1,18 +1,36 @@
-# Current Feature
+# Current Feature: Homepage Mockup
 
-<!-- Feature name and short description -->
+A static marketing homepage prototype for DevStash, built as plain HTML, CSS and JavaScript in `prototypes/homepage/` (`index.html`, `styles.css`, `script.js`).
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+Completed
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Dark theme with accent colors per item type: Snippet `#3b82f6`, Prompt `#f59e0b`, Command `#06b6d4`, Note `#22c55e`, File `#64748b`, Image `#ec4899`, URL `#6366f1`
+- **Navigation**: fixed top nav with logo, Features and Pricing links, Sign In and Get Started buttons; gets more opaque on scroll
+- **Hero text**: "Stop Losing Your Developer Knowledge" headline with gradient text, a subheadline about scattered knowledge and CTA buttons
+- **Hero visual** ("chaos to order"), three elements side by side:
+  - Chaos container labeled "Your knowledge today..." with 8 floating icons (Notion, GitHub, Slack, VS Code, browser tabs, terminal, text file, bookmark) that drift and bounce off the walls, rotate and pulse in scale slightly, and move away from the mouse cursor (`requestAnimationFrame`)
+  - A pulsing arrow (CSS animation) pointing from chaos to order
+  - Dashboard preview labeled "...with DevStash": a simplified sidebar with nav items and a grid of item cards with colored top borders in the item type colors
+- **Features**: 6 cards in a grid (Code Snippets, AI Prompts, Instant Search, Commands, Files & Docs, Collections), each using its item type accent color
+- **AI section**: two columns; left has a "Pro Feature" badge and a checklist of AI capabilities, right a code editor mockup with an "AI Generated Tags" demo
+- **Pricing**: Free ($0, 50 items, 3 collections) and Pro ($8/mo, unlimited, AI features), with the Pro card highlighted by a "Most Popular" badge and a monthly/yearly toggle showing $72/yr
+- **CTA**: "Ready to Organize Your Knowledge?" with a button
+- **Footer**: logo, link columns and a copyright line with the current year
+- Elements fade in as they scroll into view
+- **Responsive**: on mobile the chaos container, arrow and dashboard stack vertically with the arrow rotated 90° to point down, and grids become a single column
 
 ## Notes
 
-<!-- Any extra notes -->
+- Spec: `context/features/homepage-mockup-spec.md`
+- A standalone prototype, not part of the Next.js app: no React, Tailwind, routes or database, and nothing under `src/`.
+- The spec's palette differs from the app's seeded type colors for Prompt (`#8b5cf6` in the app), Command (`#f97316`), Note (`#fde047`), File (`#6b7280`) and URL (`#10b981`). Follow the spec for the prototype unless told otherwise.
+- Pricing matches the project overview (Free: 50 items, 3 collections; Pro: $8/mo or $72/yr).
+- Third-party logos (Notion, GitHub, Slack, VS Code) should be simple inline SVG icons, with no external image requests.
+- Static HTML/CSS/JS only, so no Vitest unit tests apply (tests cover server actions and utilities). Check it in the browser at desktop and phone widths instead, including no horizontal scroll and reduced-motion behavior.
 
 ## History
 
