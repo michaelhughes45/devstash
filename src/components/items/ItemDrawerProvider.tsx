@@ -13,7 +13,7 @@ import {
 import { ItemDrawer, type ItemDrawerState } from "@/components/items/ItemDrawer";
 import { fetchItemDetail } from "@/lib/fetch-item";
 import type { CollectionOption } from "@/types/collections";
-import type { ItemDetailData, ItemPreview } from "@/types/items";
+import type { ItemDetailData, ItemFlags, ItemPreview } from "@/types/items";
 
 interface ItemDrawerContextValue {
   openItem: (preview: ItemPreview) => void;
@@ -79,11 +79,11 @@ export function ItemDrawerProvider({ collections, children }: ItemDrawerProvider
     setEditing(false);
   }, []);
 
-  // Keeps the open item in step with a favorite saved from the drawer
-  const handleFavoriteChange = useCallback((itemId: string, isFavorite: boolean) => {
+  // Keeps the open item in step with a favorite or pin saved from the drawer
+  const handleFlagsChange = useCallback((itemId: string, flags: ItemFlags) => {
     setState((current) =>
       current?.status === "loaded" && current.item.id === itemId
-        ? { ...current, item: { ...current.item, isFavorite } }
+        ? { ...current, item: { ...current.item, ...flags } }
         : current,
     );
   }, []);
@@ -102,7 +102,7 @@ export function ItemDrawerProvider({ collections, children }: ItemDrawerProvider
         onEditingChange={setEditing}
         onItemSaved={handleItemSaved}
         onItemDeleted={() => handleOpenChange(false)}
-        onFavoriteChange={handleFavoriteChange}
+        onFlagsChange={handleFlagsChange}
       />
     </ItemDrawerContext.Provider>
   );

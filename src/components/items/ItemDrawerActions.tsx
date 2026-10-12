@@ -2,20 +2,21 @@
 
 import { Copy, Pencil, Pin, Star } from "lucide-react";
 
-import { toggleItemFavorite } from "@/actions/items";
+import { toggleItemFavorite, toggleItemPin } from "@/actions/items";
 import { DeleteItemDialog } from "@/components/items/DeleteItemDialog";
 import { Button } from "@/components/ui/button";
 import { useFavoriteToggle } from "@/hooks/use-favorite-toggle";
+import { usePinToggle } from "@/hooks/use-pin-toggle";
 import { copyToClipboard } from "@/lib/clipboard";
 import { getItemCopyText } from "@/lib/item-content";
-import type { ItemDetailData } from "@/types/items";
+import type { ItemDetailData, ItemFlags } from "@/types/items";
 
 interface ItemDrawerActionsProps {
   // null while the item is loading or failed to load
   item: ItemDetailData | null;
   onEdit: () => void;
   onDeleted: () => void;
-  onFavoriteChange: (itemId: string, isFavorite: boolean) => void;
+  onFlagsChange: (itemId: string, flags: ItemFlags) => void;
 }
 
 // Labels collapse to icons on narrow screens so the bar fits on one line
@@ -23,18 +24,22 @@ function ActionLabel({ children }: { children: string }) {
   return <span className="max-sm:sr-only">{children}</span>;
 }
 
-// Pin shows state only; its behavior comes in the pinned spec
 export function ItemDrawerActions({
   item,
   onEdit,
   onDeleted,
-  onFavoriteChange,
+  onFlagsChange,
 }: ItemDrawerActionsProps) {
   const copyText = item ? getItemCopyText(item) : null;
   const favorite = useFavoriteToggle({
     isFavorite: item?.isFavorite ?? false,
     save: (isFavorite) => toggleItemFavorite(item?.id ?? "", isFavorite),
-    onSaved: (isFavorite) => item && onFavoriteChange(item.id, isFavorite),
+    onSaved: (isFavorite) => item && onFlagsChange(item.id, { isFavorite }),
+  });
+  const pin = usePinToggle({
+    isPinned: item?.isPinned ?? false,
+    save: (isPinned) => toggleItemPin(item?.id ?? "", isPinned),
+    onSaved: (isPinned) => item && onFlagsChange(item.id, { isPinned }),
   });
 
   function handleCopy() {
@@ -53,8 +58,13 @@ export function ItemDrawerActions({
         <Star className={favorite.isFavorite ? "fill-yellow-400" : undefined} />
         <ActionLabel>Favorite</ActionLabel>
       </Button>
-      <Button variant="ghost" disabled={!item} aria-pressed={item?.isPinned ?? false}>
-        <Pin className={item?.isPinned ? "fill-current" : undefined} />
+      <Button
+        variant="ghost"
+        disabled={!item || pin.pending}
+        onClick={pin.toggle}
+        aria-pressed={pin.isPinned}
+      >
+        <Pin className={pin.isPinned ? "fill-current" : undefined} />
         <ActionLabel>Pin</ActionLabel>
       </Button>
       <Button variant="ghost" disabled={!copyText} onClick={handleCopy}>

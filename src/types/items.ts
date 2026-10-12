@@ -21,3 +21,10 @@ export type ItemDetailData = Omit<ItemDetail, "createdAt" | "updatedAt"> & {
   createdAt: string;
   updatedAt: string;
 };
+
+export type TogglePinResult =
+  | { success: true; data: { isPinned: boolean } }
+  | { success: false; error: string };
+
+// Flags the drawer patches into its open item after a save from its action bar
+export type ItemFlags = Partial<Pick<ItemDetailData, "isFavorite" | "isPinned">>;

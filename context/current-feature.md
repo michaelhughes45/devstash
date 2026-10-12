@@ -1,18 +1,28 @@
-# Current Feature
+# Current Feature: Pinned Items
 
-<!-- Feature name and short description -->
+Make the existing Pin button in the item drawer work, with pinned items sorting to the top of listings and showing in the dashboard's Pinned section.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Add a `toggleItemPin` server action (session check, id validation, owner-scoped update, `{ success, data, error }`)
+- Make the drawer's Pin button clickable (it currently shows state only, with no `onClick`)
+- Optimistic UI updates for instant feedback
+- Toast on success and on error
+- Pinned items sort to the top of item listings
+- Items only, not collections
+- The pin icon on `ItemCard` stays a static indicator (no card toggle)
 
 ## Notes
 
-<!-- Any extra notes -->
+- Follow the Favorite Toggle pattern: `toggleItemFavorite` / `setItemFavorite`, the shared `useFavoriteToggle` hook (`useOptimistic` in a transition, set the requested value rather than flip, `router.refresh()`), and the drawer patching its open item through `onFavoriteChange` from `ItemDrawerProvider`.
+- The Pin button lives in `src/components/items/ItemDrawerActions.tsx` (comment there says behavior comes in this spec).
+- The dashboard Pinned section already reads `getPinnedItems` (`isPinned: true`) and is hidden when nothing is pinned.
+- "Sort to top of listings" applies to the paged `getItemsByType` and `getItemsByCollection` queries; ordering by `isPinned desc` first keeps pinned items at the top across pages while keeping the id tie-breaker.
+- Pin markers already appear on `ItemCard`, `ImageCard` and `FileRow`.
 
 ## History
 

@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatLongDate } from "@/lib/format-date";
 import { capitalize } from "@/lib/item-type-names";
 import type { CollectionOption } from "@/types/collections";
-import type { ItemDetailData, ItemPreview } from "@/types/items";
+import type { ItemDetailData, ItemFlags, ItemPreview } from "@/types/items";
 
 export type ItemDrawerState =
   | { status: "loading"; preview: ItemPreview }
@@ -29,7 +29,7 @@ interface ItemDrawerProps {
   onEditingChange: (editing: boolean) => void;
   onItemSaved: (item: ItemDetailData) => void;
   onItemDeleted: () => void;
-  onFavoriteChange: (itemId: string, isFavorite: boolean) => void;
+  onFlagsChange: (itemId: string, flags: ItemFlags) => void;
 }
 
 export function ItemDrawer({
@@ -41,7 +41,7 @@ export function ItemDrawer({
   onEditingChange,
   onItemSaved,
   onItemDeleted,
-  onFavoriteChange,
+  onFlagsChange,
 }: ItemDrawerProps) {
   const item = state?.status === "loaded" ? state.item : null;
 
@@ -67,7 +67,7 @@ export function ItemDrawer({
                   item={item}
                   onEdit={() => onEditingChange(true)}
                   onDeleted={onItemDeleted}
-                  onFavoriteChange={onFavoriteChange}
+                  onFlagsChange={onFlagsChange}
                 />
                 <div className="flex-1 overflow-y-auto p-6">
                   {state.status === "loading" && <DrawerSkeleton />}
