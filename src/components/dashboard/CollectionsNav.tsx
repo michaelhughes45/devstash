@@ -46,7 +46,8 @@ function CollectionList({ label, collections }: CollectionListProps) {
               tooltip={collection.name}
               render={<Link href={`/collections/${collection.id}`} />}
             >
-              <Folder />
+              {/* Tinted with the most-used type so collections differ when collapsed */}
+              <Folder style={{ color: collection.types[0]?.color }} />
               <span>{collection.name}</span>
             </SidebarMenuButton>
             <SidebarMenuBadge>

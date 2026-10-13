@@ -9,14 +9,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { ItemWithType } from "@/lib/db/items";
 import { formatShortDate } from "@/lib/format-date";
 import { getCardCopySource } from "@/lib/item-content";
+import { cn } from "@/lib/utils";
 
 interface ItemCardProps {
   item: ItemWithType;
 }
 
+function CardDate({ date, className }: { date: Date; className: string }) {
+  return (
+    <time
+      dateTime={date.toISOString()}
+      className={cn("shrink-0 text-xs text-muted-foreground", className)}
+    >
+      {formatShortDate(date)}
+    </time>
+  );
+}
+
 // The favorite and copy buttons sit beside the drawer trigger, not inside it, since a
 // button can't be nested in a button; they overlay the card's bottom-right corner,
-// below the date
+// below the date. On phones the icon tile is dropped and the date moves into that
+// bottom row, so the title gets the card's full width
 export function ItemCard({ item }: ItemCardProps) {
   const { type } = item;
   const copySource = getCardCopySource(item);
@@ -25,12 +38,12 @@ export function ItemCard({ item }: ItemCardProps) {
     <div className="relative h-full">
       <ItemCardTrigger preview={{ id: item.id, title: item.title, type }} className="h-full">
         <Card
-          className="h-full border-l-4 border-l-border transition-colors hover:bg-muted/40"
+          className="h-full border-l-4 border-l-border transition-colors hover:bg-muted/40 max-sm:pb-14"
           style={{ borderLeftColor: type.color }}
         >
           <CardContent className="flex items-start gap-4">
             <div
-              className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted"
+              className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted max-sm:hidden"
               style={{ color: type.color }}
             >
               <ItemTypeIcon icon={type.icon} className="size-5" aria-label={type.name} />
@@ -57,18 +70,27 @@ export function ItemCard({ item }: ItemCardProps) {
                 </div>
               )}
             </div>
-            <time
-              dateTime={item.createdAt.toISOString()}
-              className="shrink-0 text-xs text-muted-foreground"
-            >
-              {formatShortDate(item.createdAt)}
-            </time>
+            <CardDate date={item.createdAt} className="max-sm:hidden" />
           </CardContent>
         </Card>
       </ItemCardTrigger>
-      <div className="absolute right-2.5 bottom-2.5 flex items-center gap-0.5">
-        <FavoriteItemButton itemId={item.id} isFavorite={item.isFavorite} title={item.title} />
-        {copySource && <CopyItemButton itemId={item.id} source={copySource} title={item.title} />}
+      {/* Clicks between the buttons fall through to the drawer trigger underneath */}
+      <div className="pointer-events-none absolute right-2.5 bottom-2.5 flex items-center gap-0.5 max-sm:left-5 max-sm:gap-2">
+        <CardDate date={item.createdAt} className="mr-auto sm:hidden" />
+        <FavoriteItemButton
+          itemId={item.id}
+          isFavorite={item.isFavorite}
+          title={item.title}
+          className="pointer-events-auto max-sm:size-9"
+        />
+        {copySource && (
+          <CopyItemButton
+            itemId={item.id}
+            source={copySource}
+            title={item.title}
+            className="pointer-events-auto max-sm:size-9"
+          />
+        )}
       </div>
     </div>
   );

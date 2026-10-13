@@ -44,7 +44,7 @@ export default async function DashboardPage() {
         action={
           <Link
             href="/collections"
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="text-sm text-muted-foreground hover:text-foreground max-sm:-mx-2 max-sm:-my-3 max-sm:px-2 max-sm:py-3"
           >
             View all
           </Link>

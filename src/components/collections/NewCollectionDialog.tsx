@@ -92,10 +92,10 @@ export function NewCollectionDialog() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {/* Label collapses to an icon on phones so it fits beside the search */}
       <DialogTrigger
-        render={<Button variant="outline" size="lg" className="max-sm:w-9 max-sm:px-0" />}
+        render={<Button variant="outline" size="lg" className="max-lg:w-9 max-lg:px-0" />}
       >
         <FolderPlus data-icon="inline-start" />
-        <span className="max-sm:sr-only">New Collection</span>
+        <span className="max-lg:sr-only">New Collection</span>
       </DialogTrigger>
       <DialogContent showCloseButton={!isPending} className="sm:max-w-lg">
         <DialogHeader>
