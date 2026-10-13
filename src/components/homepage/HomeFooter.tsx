@@ -19,15 +19,15 @@ export function HomeFooter({ signedIn }: HomeFooterProps) {
           <p className="mt-3 text-sm text-muted-foreground">Store Smarter. Build Faster.</p>
         </div>
         {FOOTER_COLUMNS.map((column) => (
-          <nav key={column.title} aria-label={column.title} className="flex flex-col gap-2.5 text-sm">
-            <h2 className="mb-1 text-xs font-semibold tracking-[0.08em] uppercase">{column.title}</h2>
+          <nav key={column.title} aria-label={column.title} className="flex flex-col text-sm">
+            <h2 className="mb-1.5 text-xs font-semibold tracking-[0.08em] uppercase">{column.title}</h2>
             {column.links
               .filter((link) => !link.when || link.when === session)
               .map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="w-fit text-muted-foreground transition-colors hover:text-foreground"
+                  className="inline-flex min-h-11 w-fit min-w-11 items-center text-muted-foreground transition-colors hover:text-foreground sm:min-h-8"
                 >
                   {link.label}
                 </Link>

@@ -151,7 +151,7 @@ export function ChaosIcons() {
   return (
     <div
       ref={areaRef}
-      className="group/chaos relative h-65 overflow-hidden rounded-lg border border-dashed bg-background bg-[radial-gradient(circle_at_1px_1px,rgb(255_255_255/0.05)_1px,transparent_0)] bg-size-[20px_20px] md:h-75"
+      className="group/chaos relative h-48 overflow-hidden rounded-lg border border-dashed bg-background bg-[radial-gradient(circle_at_1px_1px,rgb(255_255_255/0.05)_1px,transparent_0)] bg-size-[20px_20px] md:h-75"
     >
       {CHAOS_ICONS.map((item) => {
         const Icon = ICONS[item.icon];

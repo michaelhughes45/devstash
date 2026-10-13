@@ -18,7 +18,12 @@ const WINDOW_DOTS = ["bg-window-close", "bg-window-minimize", "bg-window-maximiz
 
 function CodeSample() {
   return (
-    <pre className="overflow-x-auto p-5 font-mono text-[0.82rem] leading-[1.7] text-[#c9d1d9]">
+    // Focusable so keyboard users can scroll it sideways on narrow screens
+    <pre
+      tabIndex={0}
+      aria-label={`${CODE_SAMPLE_FILE_NAME} code sample`}
+      className="overflow-x-auto p-5 font-mono text-[0.82rem] leading-[1.7] text-[#c9d1d9] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
+    >
       <code>
         {CODE_SAMPLE.map((line, lineIndex) => (
           <span key={lineIndex} className="block min-h-[1.7em]">

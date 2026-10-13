@@ -11,10 +11,11 @@ interface PlanCardProps {
   plan: Plan;
   period: BillingPeriod;
   href: string;
+  label: string;
 }
 
 // Presentational only (no hooks), so it renders inside the client Pricing component
-export function PlanCard({ plan, period, href }: PlanCardProps) {
+export function PlanCard({ plan, period, href, label }: PlanCardProps) {
   const price = plan.prices[period];
   const highlighted = Boolean(plan.highlight);
 
@@ -55,7 +56,7 @@ export function PlanCard({ plan, period, href }: PlanCardProps) {
           "w-full",
         )}
       >
-        {plan.cta.label}
+        {label}
       </Link>
     </Card>
   );

@@ -1,18 +1,30 @@
-# Current Feature
+# Current Feature: Homepage UI Review Fixes
 
-<!-- Feature name and short description -->
+Fix the findings from the 2026-10-13 homepage UI review (`context/features/ui-audit/ui_review_homepage.md`) on `/`, signed out and signed in.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- **Hero visible on first paint (Medium):** render the hero eyebrow, headline, subheadline and CTAs without `Reveal`, so they're in the server HTML and visible before JavaScript loads; keep `Reveal` on the sections further down
+- **Sign in on phones (Medium):** signed out, `HomeNav` keeps a compact "Sign in" link at 420px and below (instead of hiding it), without overflowing at 320px
+- **Social proof (Medium):** add a proof strip under the hero CTAs or above Pricing (see Notes — content must be real)
+- **Tap targets (Low):** footer links and the Features/Pricing nav links at least 24px tall (aim for 44px on mobile), e.g. `py-2` or `inline-block min-h-6`
+- **Keyboard-scrollable code block (Low):** the `AiSection` editor mockup `<pre>` gets `tabIndex={0}` and an `aria-label` (or wraps on small screens) so keyboard users can scroll it
+- **No orphaned words (Low):** `text-balance` on `SectionHeader` titles and `text-pretty` on lead text
+- **Shorter hero visual on phones (Low):** below `md`, show fewer `MiniDashboard` cards and/or a shorter chaos box, so the stacked visual is well under ~1,300px
+- **Signed-in Free plan label (Low):** the Free plan button reads "Go to Dashboard" when signed in, matching the hero and CTA
 
 ## Notes
 
-<!-- Any extra notes -->
+- Source: `context/features/ui-audit/ui_review_homepage.md` (Playwright at 375, 768 and 1280px; 0 high, 3 medium, 5 low).
+- Files: `src/app/page.tsx`, `src/components/homepage/*` (`Hero`, `HomeNav`, `HomeFooter`, `AiSection`, `SectionHeader`, `MiniDashboard`, `Pricing`/`PlanCard`, `Reveal`, `content.ts`).
+- Social proof: DevStash has no real users, ratings or testimonials yet, and the project avoids fabricated content. Needs a decision before implementing — options: a real GitHub link/stars badge, a factual "built with" strip (Next.js, Prisma, Neon…), or skip this finding for now.
+- Keep what the review says looks good: no horizontal scroll at 320–1440px, the pricing toggle and `aria-pressed`, signed-in links, `aria-hidden` chaos icons, visible focus rings, and reduced motion showing everything still.
+- Mostly UI-only; unit tests only if a utility in `src/lib` changes (e.g. `chaos-physics.ts`). Verify with Playwright at 320, 375, 768 and 1280px, signed out and as the demo user, including a screenshot right after load to confirm the hero shows on first paint.
+- Not in scope (review didn't check): light mode, a real screen reader.
 
 ## History
 

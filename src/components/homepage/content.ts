@@ -175,7 +175,7 @@ export interface Plan {
   description: string;
   prices: Record<BillingPeriod, PlanPrice>;
   features: string[];
-  cta: { label: string; href: SessionHref };
+  cta: { label: string; signedInLabel?: string; href: SessionHref };
   highlight?: string;
 }
 
@@ -192,7 +192,7 @@ export const PLANS: Plan[] = [
       "Snippets, prompts, commands, notes, links and images",
       "Basic search",
     ],
-    cta: { label: "Get Started", href: START_HREF },
+    cta: { label: "Get Started", signedInLabel: "Go to Dashboard", href: START_HREF },
   },
   {
     name: "Pro",
