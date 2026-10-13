@@ -36,10 +36,12 @@ export async function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/dashboard" />}>
-              <div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-violet-600 text-white">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-violet-600 text-white">
                 <Layers />
               </div>
-              <span className="text-lg font-semibold">DevStash</span>
+              <span className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
+                DevStash
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -138,9 +138,9 @@ export function NewItemDialog({ types, collections }: NewItemDialogProps) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {/* Label collapses to an icon on phones so it fits beside the search */}
-      <DialogTrigger render={<Button size="lg" className="max-sm:w-9 max-sm:px-0" />}>
+      <DialogTrigger render={<Button size="lg" className="max-lg:w-9 max-lg:px-0" />}>
         <Plus data-icon="inline-start" />
-        <span className="max-sm:sr-only">New Item</span>
+        <span className="max-lg:sr-only">New Item</span>
       </DialogTrigger>
       <DialogContent
         showCloseButton={!isPending}

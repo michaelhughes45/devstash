@@ -17,7 +17,7 @@ export function CollectionCard({ collection }: CollectionCardProps) {
 
   return (
     <Card
-      className="relative border-l-4 border-l-border transition-colors hover:bg-accent/40"
+      className="relative border-l-4 border-l-border transition-colors hover:bg-accent/40 has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50"
       style={{ borderLeftColor: accent }}
     >
       <CardContent className="flex flex-col gap-3">
@@ -26,7 +26,7 @@ export function CollectionCard({ collection }: CollectionCardProps) {
             <h3 className="flex items-center gap-2 font-medium">
               <Link
                 href={`/collections/${collection.id}`}
-                className="truncate after:absolute after:inset-0"
+                className="truncate outline-none after:absolute after:inset-0"
               >
                 {collection.name}
               </Link>

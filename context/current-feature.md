@@ -1,18 +1,30 @@
-# Current Feature
+# Current Feature: Dashboard UI Review Fixes
 
-<!-- Feature name and short description -->
+Fix the findings from the 2026-10-13 dashboard UI review (`context/features/ui-audit/ui_review_dashboard.md`).
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- **[Medium] Collapsed sidebar logo:** with the sidebar collapsed, the logo tile stays a full `size-8` square (`shrink-0`) and the "DevStash" text is hidden (`group-data-[collapsible=icon]:hidden`), so no clipped "D" shows.
+- **[Medium] Search button at tablet width:** at 768px the top bar search button shows a readable label, not "S…". Show New Collection and New Item as icons below `lg` (labels kept for screen readers), and/or hide the ⌘K hint at `md`.
+- **[Medium] Card star and copy buttons:** `FavoriteItemButton` and `CopyItemButton` on `ItemCard` get bigger touch targets on phones (`size-9`/`size-10` below `sm`) or a wider gap, so mis-taps are unlikely. Also review the drawer's action buttons and Close button size on touch widths.
+- **[Medium] Item card titles on phones:** at 375px titles aren't cut off early. Below `sm`, drop the 40px icon tile or move the date and buttons to a row under the text.
+- **[Low] Active Pin in the drawer:** a pinned item's Pin button gets its own colour or background, matching Favorite's yellow active treatment.
+- **[Low] Collection card focus ring:** tabbing to a collection card shows a ring around the whole card (`focus-visible:outline-none` on the stretched link, `has-[a:focus-visible]:ring-*` on the card), like item cards.
+- **[Low] Collections in the collapsed sidebar:** each collection's folder icon is tinted with its most-used item type colour, and each has a tooltip with its name.
+- **[Low] Other small tap targets on phones:** the "View all" link, mobile sidebar drawer rows and the Toggle Sidebar button get more padding or a larger minimum height at touch widths.
+- **[Low] Seed snippet leading spaces:** trim the "Next.js multi-stage Dockerfile" content in `prisma/seed.ts` and fix the stored item on the development branch.
 
 ## Notes
 
-<!-- Any extra notes -->
+- UI only, apart from the seed data fix; unit tests only if a utility changes.
+- Desktop layout should stay unchanged apart from the collapsed sidebar and 768px top bar fixes.
+- Verify with Playwright at 375, 768 and 1280px (sidebar expanded, collapsed and as the mobile drawer): no horizontal scroll, no console errors.
+- Not checked by the review (worth a look while fixing): collapsed sidebar tooltips, collapsing the sidebar at 768px.
+- The stored item fix runs against the development branch only (`br-tiny-surf-b5v99la3`).
 
 ## History
 

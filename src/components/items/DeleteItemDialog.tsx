@@ -17,14 +17,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface DeleteItemDialogProps {
   // null while the item is loading or failed to load
   item: { id: string; title: string } | null;
   onDeleted: () => void;
+  triggerClassName?: string;
 }
 
-export function DeleteItemDialog({ item, onDeleted }: DeleteItemDialogProps) {
+export function DeleteItemDialog({ item, onDeleted, triggerClassName }: DeleteItemDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -58,7 +60,7 @@ export function DeleteItemDialog({ item, onDeleted }: DeleteItemDialogProps) {
             size="icon"
             disabled={!item}
             aria-label="Delete item"
-            className="text-destructive hover:text-destructive"
+            className={cn("text-destructive hover:text-destructive", triggerClassName)}
           />
         }
       >

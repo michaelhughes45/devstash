@@ -22,11 +22,11 @@ export async function TopBar({ collections, searchData }: TopBarProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 sm:gap-4">
       <div className="flex items-center gap-2">
-        <SidebarTrigger />
+        <SidebarTrigger className="max-sm:size-9" />
         <Separator orientation="vertical" className="h-6" />
       </div>
       <CommandPalette data={searchData} />
-      {/* Labels collapse to icons on phones so both buttons fit beside the search */}
+      {/* Labels collapse to icons below lg so the search keeps its width beside the sidebar */}
       <div className="ml-auto flex items-center gap-2">
         <Link
           href="/favorites"
