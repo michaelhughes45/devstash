@@ -22,14 +22,14 @@ export function SectionEyebrow({ children }: { children: ReactNode }) {
 
 export function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h2 className="text-[clamp(1.9rem,4vw,2.6rem)] leading-[1.15] font-bold tracking-tight">
+    <h2 className="text-[clamp(1.9rem,4vw,2.6rem)] leading-[1.15] font-bold tracking-tight text-balance">
       {children}
     </h2>
   );
 }
 
 export function SectionLead({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn("mt-4 text-[1.05rem] text-muted-foreground", className)}>{children}</p>;
+  return <p className={cn("mt-4 text-[1.05rem] text-pretty text-muted-foreground", className)}>{children}</p>;
 }
 
 interface SectionHeaderProps {

@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { ChaosIcons } from "./ChaosIcons";
 import { START_HREF, resolveHref } from "./content";
 import { MiniDashboard } from "./MiniDashboard";
-import { Reveal } from "./Reveal";
 import { GradientText, SectionEyebrow } from "./SectionHeader";
 
 interface HeroProps {
@@ -32,14 +31,14 @@ export function Hero({ signedIn }: HeroProps) {
         className="pointer-events-none absolute -top-50 left-1/2 h-150 w-225 -translate-x-1/2 bg-[radial-gradient(closest-side,rgb(99_102_241/0.22),transparent)]"
       />
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-        <Reveal className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-3xl text-center">
           <SectionEyebrow>Store Smarter. Build Faster.</SectionEyebrow>
-          <h1 className="text-[clamp(2.4rem,6vw,4rem)] leading-[1.15] font-extrabold tracking-tight">
+          <h1 className="text-[clamp(2.4rem,6vw,4rem)] leading-[1.15] font-extrabold tracking-tight text-balance">
             Stop Losing Your
             <br />
             <GradientText>Developer Knowledge</GradientText>
           </h1>
-          <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
+          <p className="mx-auto mt-6 max-w-xl text-lg text-pretty text-muted-foreground">
             Your snippets live in VS Code, your prompts are buried in chat history, your commands
             are in a <code className="font-mono text-[0.9em]">.txt</code> file somewhere. DevStash
             brings all of it into one fast, searchable, AI-enhanced hub.
@@ -61,9 +60,9 @@ export function Hero({ signedIn }: HeroProps) {
               See Features
             </Link>
           </div>
-        </Reveal>
+        </div>
 
-        <Reveal className="mt-12 grid grid-cols-1 items-center justify-items-center gap-4 md:mt-16 md:grid-cols-[1fr_auto_1fr] md:gap-6">
+        <div className="mt-12 grid grid-cols-1 items-center justify-items-center gap-4 md:mt-16 md:grid-cols-[1fr_auto_1fr] md:gap-6">
           <Panel label="Your knowledge today...">
             <ChaosIcons />
           </Panel>
@@ -76,7 +75,7 @@ export function Hero({ signedIn }: HeroProps) {
           <Panel label="...with DevStash">
             <MiniDashboard />
           </Panel>
-        </Reveal>
+        </div>
       </div>
     </section>
   );

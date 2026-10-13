@@ -30,25 +30,26 @@ export function HomeNav({ signedIn }: HomeNavProps) {
         scrolled ? "border-border bg-background/90" : "border-transparent bg-background/35",
       )}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-4 sm:px-6">
-        <Logo href="#top" />
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:gap-8 sm:px-6">
+        {/* Icon only below 360px, so Sign in and Get Started both fit */}
+        <Logo href="#top" className="max-[359px]:[&>span:last-child]:hidden" />
         <nav aria-label="Primary" className="hidden gap-6 text-sm text-muted-foreground sm:flex">
           {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="transition-colors hover:text-foreground">
+            <Link key={link.href} href={link.href} className="inline-flex min-h-11 items-center transition-colors hover:text-foreground">
               {link.label}
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1 min-[421px]:gap-2">
           {!signedIn && (
             <Link
               href="/sign-in"
               className={cn(
                 buttonVariants({ variant: "ghost" }),
-                "hidden text-muted-foreground min-[421px]:inline-flex",
+                "px-2 text-muted-foreground min-[421px]:px-2.5",
               )}
             >
-              Sign In
+              Sign in
             </Link>
           )}
           <Link

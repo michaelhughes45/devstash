@@ -59,7 +59,12 @@ export function Pricing({ signedIn }: PricingProps) {
         <div className="mx-auto grid max-w-205 grid-cols-1 gap-6 md:grid-cols-2">
           {PLANS.map((plan) => (
             <Reveal key={plan.name}>
-              <PlanCard plan={plan} period={period} href={resolveHref(plan.cta.href, signedIn)} />
+              <PlanCard
+                plan={plan}
+                period={period}
+                href={resolveHref(plan.cta.href, signedIn)}
+                label={(signedIn && plan.cta.signedInLabel) || plan.cta.label}
+              />
             </Reveal>
           ))}
         </div>
