@@ -22,7 +22,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      // Smooth in-page anchor scrolling, only on the homepage
+      // Smooth in-page anchor scrolling, only on the homepage; data-scroll-behavior
+      // makes route transitions (e.g. /sign-in → /#pricing) jump instead
+      data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased motion-safe:has-[[data-home]]:scroll-smooth`}
     >
       <body className="min-h-full flex flex-col">

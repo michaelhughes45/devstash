@@ -11,9 +11,11 @@ import { NAV_LINKS, START_HREF, resolveHref } from "./content";
 
 interface HomeNavProps {
   signedIn: boolean;
+  /** Prefix for the in-page anchors: "" on the homepage, "/" on other pages so they lead back to it */
+  anchorBase?: "" | "/";
 }
 
-export function HomeNav({ signedIn }: HomeNavProps) {
+export function HomeNav({ signedIn, anchorBase = "" }: HomeNavProps) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -32,10 +34,10 @@ export function HomeNav({ signedIn }: HomeNavProps) {
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:gap-8 sm:px-6">
         {/* Icon only below 360px, so Sign in and Get Started both fit */}
-        <Logo href="#top" className="max-[359px]:[&>span:last-child]:hidden" />
+        <Logo href={`${anchorBase}#top`} className="max-[359px]:[&>span:last-child]:hidden" />
         <nav aria-label="Primary" className="hidden gap-6 text-sm text-muted-foreground sm:flex">
           {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="inline-flex min-h-11 items-center transition-colors hover:text-foreground">
+            <Link key={link.href} href={`${anchorBase}${link.href}`} className="inline-flex min-h-11 items-center transition-colors hover:text-foreground">
               {link.label}
             </Link>
           ))}

@@ -1,18 +1,27 @@
-# Current Feature
+# Current Feature: Homepage Nav on Auth Pages
 
-<!-- Feature name and short description -->
+Add the homepage's top navigation bar to the sign-in and register pages, so visitors can get back to the homepage, Features and Pricing from the auth screens.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- `/sign-in` and `/register` show the same fixed top nav as the homepage (`HomeNav`): logo, Features and Pricing links, Sign in and Get Started buttons
+- Links work off the homepage: the logo goes to `/` (not `#top`), and Features/Pricing go to `/#features` and `/#pricing`
+- The nav stays usable at phone widths (fits at 320px, no horizontal scroll), matching the homepage behavior
+- The auth form stays centered below the nav and isn't hidden behind the fixed 64px header
+- The homepage nav is unchanged (same anchors, scroll opacity, signed-in/out buttons)
 
 ## Notes
 
-<!-- Any extra notes -->
+- Reuse `HomeNav` (`src/components/homepage/HomeNav.tsx`) rather than copying it: add a prop (or variant) for off-homepage use that prefixes anchors with `/` and points the logo at `/`; `NAV_LINKS` live in `src/components/homepage/content.ts`
+- The `(auth)` layout (`src/app/(auth)/layout.tsx`) also wraps `/forgot-password` and `/reset-password`; the request names only sign in and sign up, so decide whether to add the nav in the layout (all four pages) or only those two pages. Decided: added in the layout, so all four auth pages get it
+- The auth layout redirects signed-in users to `/dashboard`, so the nav is always in its signed-out state there (`signedIn={false}`)
+- Decided: removed the layout's standalone `Logo` above the form, since the nav shows the logo
+- Added `data-scroll-behavior="smooth"` to `<html>` (Next 16 opt-in): without it, going from `/sign-in` to `/#pricing` kept the homepage's smooth scrolling during the route change and logged a Next.js warning
+- UI only, so likely no new unit tests unless a helper is added
 
 ## History
 
