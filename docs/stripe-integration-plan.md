@@ -2,7 +2,7 @@
 
 > Research output for `context/research/stripe-integration-research.md` (2026-10-15).
 > Pro: **$8/month** or **$72/year**. Hosted Stripe Checkout + Customer Portal + webhooks.
-> Builds on the drafts in `context/features/stripe-phase-1-spec.md` and `stripe-phase-2-spec.md`; where this plan differs from them, the reason is given under [Deviations from the phase specs](#deviations-from-the-phase-specs).
+> Builds on earlier drafts of the phase specs; where this plan differs from them, the reason is given under [Deviations from the phase specs](#deviations-from-the-phase-specs). The final specs are `context/features/stripe-phase-1-spec.md` and `stripe-phase-2-spec.md`.
 
 ---
 
@@ -66,12 +66,12 @@ None. `grep` for `stripe` finds nothing in `src/`. Related bits:
 | Items | 50 | Unlimited |
 | Collections | 3 | Unlimited |
 | File uploads | ❌ | ✅ |
-| Image uploads | ⚠️ see decision below | ✅ |
+| Image uploads | ❌ (decided 2026-10-15) | ✅ |
 | Custom types, AI, export | ❌ (not built yet) | ✅ |
 
 On downgrade: existing items stay readable (and editable); only **creating** above the limits is blocked.
 
-### ⚠️ Decision needed: are images Pro?
+### ✅ Decided: images are Pro
 
 The sources disagree:
 
@@ -82,13 +82,13 @@ The sources disagree:
 | Sidebar `PRO_SYSTEM_TYPES` | Badged **Pro** |
 | `stripe-phase-2-spec.md` | Gated **Pro** ("File and image uploads require a Pro subscription") |
 
-**Recommendation:** follow the project overview and pricing page (the customer-facing promise): only `file` is Pro, images are free. That means dropping `"image"` from `PRO_SYSTEM_TYPES` and making the gate a single `isProOnlyItemType(type)` helper used by the badge, `createItem` and the upload route. If images should be Pro instead, the overview table and homepage copy must change. The rest of this plan uses a `PRO_ONLY_ITEM_TYPES` constant so either answer is a one-line change.
+**Decision (2026-10-15):** images are Pro, like files, matching the sidebar badge. The original recommendation was to keep images free to match the overview and pricing page; that was overruled. The gate is a single `isProOnlyItemType(type)` helper over `PRO_ONLY_ITEM_TYPES = ["file", "image"]`, used by the badge, `createItem` and the upload route. The project overview tables and homepage pricing copy, which promise images on Free, must change in Phase 2.
 
 ### Where counts are (or can be) checked
 
 | Need | Existing code | Plan |
 | --- | --- | --- |
-| Item count | `getItemStats(userId)` in `src/lib/db/items.ts` (`prisma.item.count({ where: { userId } })`, plus favorites) | New `src/lib/usage.ts` with its own `count` calls (only the totals needed) |
+| Item count | `getItemStats(userId)` in `src/lib/db/items.ts` (`prisma.item.count({ where: { userId } })`, plus favorites) | New `src/lib/usage-limits.ts` with its own `count` calls (only the totals needed) |
 | Collection count | `getCollectionStats(userId)` in `src/lib/db/collections.ts` | Same |
 | Item create | `createItem` in `src/actions/items.ts` | Check type gate + item limit **before** `ownsCollections` / `attachUpload` (and `discardUpload` the pending key on rejection, matching the existing failure paths) |
 | Collection create | `createCollection` in `src/actions/collections.ts` | Check collection limit after validation |
@@ -102,7 +102,7 @@ Count-then-create is not atomic: two simultaneous creates at 49 items can end at
 | Feature | Status | Gate now? |
 | --- | --- | --- |
 | File uploads | Built (`/api/upload`, `createItem` with `fileKey`) | ✅ Yes — upload route + `createItem` |
-| Image uploads | Built | Per decision above |
+| Image uploads | Built | ✅ Yes — same as file uploads |
 | Downloads (`/api/items/[id]/download`) | Built | ❌ No — existing files stay accessible after downgrade |
 | Custom item types | Not built | Gate when built (`isPro` from `getCurrentUser()`) |
 | AI features | Specs exist (`ai-auto-tag-spec.md`, `ai-explain-spec.md`) | Gate when built |
@@ -169,7 +169,7 @@ export function stripe(): Stripe {
 }
 ```
 
-### 4.2 `src/lib/usage.ts` — free tier limits
+### 4.2 `src/lib/usage-limits.ts` — free tier limits
 
 ```typescript
 import { prisma } from "@/lib/prisma";
@@ -177,12 +177,12 @@ import { prisma } from "@/lib/prisma";
 export const FREE_ITEM_LIMIT = 50;
 export const FREE_COLLECTION_LIMIT = 3;
 
-// Item types only Pro users can create (see the images decision)
-export const PRO_ONLY_ITEM_TYPES = ["file"] as const;
+// Item types only Pro users can create
+export const PRO_ONLY_ITEM_TYPES = ["file", "image"] as const;
 
 export const ITEM_LIMIT_ERROR = `You've reached the free plan limit of ${FREE_ITEM_LIMIT} items. Upgrade to Pro for unlimited items.`;
 export const COLLECTION_LIMIT_ERROR = `You've reached the free plan limit of ${FREE_COLLECTION_LIMIT} collections. Upgrade to Pro for unlimited collections.`;
-export const PRO_TYPE_ERROR = "File uploads require a Pro subscription.";
+export const PRO_TYPE_ERROR = "File and image uploads require a Pro subscription.";
 
 export interface UserUsage {
   itemCount: number;
@@ -497,7 +497,7 @@ If the webhook hasn't landed yet when the user returns (usually < 1–2 s), the 
 
 | File | Covers |
 | --- | --- |
-| `src/lib/usage.test.ts` | Counts and flags; `false` at exactly 50 items / 3 collections; Pro bypass without querying; `isProOnlyItemType` |
+| `src/lib/usage-limits.test.ts` | Counts and flags; `false` at exactly 50 items / 3 collections; Pro bypass without querying; `isProOnlyItemType` |
 | `src/lib/billing.test.ts` | `priceIdFor` mapping and missing env; `isProStatus`; `createCheckoutUrl` (already Pro, reuses existing customer, creates one, uses `appUrl`, sets `metadata.userId`); `createPortalUrl` (no customer → null); `syncSubscription` (active/past_due → Pro + ID, canceled/unpaid → not Pro, ID cleared, expanded vs string customer); `handleStripeEvent` (routes each type, ignores one-time checkouts and unknown events) |
 | `src/lib/validations/billing.test.ts` | Accepts `monthly`/`yearly`; rejects price IDs and other strings |
 | `src/actions/items.test.ts` (extend) | Free user blocked at the limit (and pending upload discarded), Pro-only type rejected for free user, Pro user passes |
@@ -519,15 +519,15 @@ Mock `@/lib/stripe` (`vi.mock` returning a fake `stripe()`), `@/lib/prisma` and 
 | `src/lib/session.ts` | Add `getCurrentUser()` → `{ id, isPro } \| null` |
 | `src/actions/items.ts` | `createItem`: use `getCurrentUser()`; after validation, reject Pro-only types (`PRO_TYPE_ERROR`) and the item limit (`ITEM_LIMIT_ERROR`), calling `discardUpload(userId, getFileKey(data))` on rejection |
 | `src/actions/collections.ts` | `createCollection`: use `getCurrentUser()`; return `COLLECTION_LIMIT_ERROR` when `canCreateCollection` is false |
-| `src/app/api/upload/route.ts` | Use `getCurrentUser()`. Since `type` is in the form data, the order is: auth → content-length checks → `formData()` → type check → **Pro check** (403 "File uploads require a Pro subscription." for `isProOnlyItemType(type)` when not Pro) → file validation → rate limit |
+| `src/app/api/upload/route.ts` | Use `getCurrentUser()`. Since `type` is in the form data, the order is: auth → content-length checks → `formData()` → type check → **Pro check** (403 "File and image uploads require a Pro subscription." for `isProOnlyItemType(type)` when not Pro) → file validation → rate limit |
 | `src/lib/rate-limit.ts` | Add `billing: { limit: 10, window: "1 h" }` |
-| `src/lib/item-type-names.ts` | `isProSystemType` uses `isProOnlyItemType` (removes `image` if images stay free) |
+| `src/lib/item-type-names.ts` | `isProSystemType` uses `isProOnlyItemType` (Files and Images keep the badge) |
 | `src/lib/account.ts` | `deleteUserAccount`: select `stripeSubscriptionId` and call `cancelSubscriptionQuietly()` after confirmation succeeds, before the delete transaction |
 | `src/app/settings/page.tsx` | Accept `searchParams`; fetch `getUserUsage` and the Stripe fields; render the Billing card between Editor and Change password; render `UpgradeToast` |
 | `src/lib/db/users.ts` | `getUserProfile` (or a new `getBillingStatus`) also returns `isPro` and `hasBillingAccount` (`stripeCustomerId !== null`), never the raw IDs |
-| `src/components/homepage/content.ts` | Pro CTA signed in → `/settings#billing` (add `id="billing"` to the card); drop the "until Stripe phase 2" comment |
-| `src/components/items/TypeSelector.tsx` / `NewItemDialog.tsx` | Optional UX: for free users, mark Pro-only types with a `PRO` badge and a hint ("Upgrade to Pro to upload files") instead of letting them fill the form and fail. Needs `isPro` passed down from `TopBar` (`getCurrentUser()`) |
-| `context/project-overview.md` | Fix the Stripe env var name, tick roadmap items, and record the images decision |
+| `src/components/homepage/content.ts` | Pro CTA signed in → `/settings#billing` (add `id="billing"` to the card); drop the "until Stripe phase 2" comment; Free features stop mentioning images and Pro lists file and image uploads |
+| `src/components/items/TypeSelector.tsx` / `NewItemDialog.tsx` | Optional UX: for free users, mark Pro-only types with a `PRO` badge and a hint ("Upgrade to Pro to upload files and images") instead of letting them fill the form and fail. Needs `isPro` passed down from `TopBar` (`getCurrentUser()`) |
+| `context/project-overview.md` | Fix the Stripe env var name, tick roadmap items, and make Image Pro in the item types and Monetization tables |
 
 `src/auth.ts` `jwt` callback after the change:
 
@@ -645,9 +645,8 @@ Do everything in **Test mode** first; repeat for Live mode before launch.
 **Gating**
 - [ ] Free user at 50 items → New Item fails with the limit toast; deleting one allows creating again
 - [ ] Free user at 3 collections → New Collection fails with the limit toast
-- [ ] Free user creating a File item → error toast; `POST /api/upload` with `type=file` → 403; no object left in R2 `pending/`
-- [ ] Images: behave per the decision (allowed for free, or 403)
-- [ ] Pro user: >50 items, >3 collections, file uploads all work
+- [ ] Free user creating a File or Image item → error toast; `POST /api/upload` with `type=file` or `type=image` → 403; no object left in R2 `pending/`
+- [ ] Pro user: >50 items, >3 collections, file and image uploads all work
 - [ ] Downgraded user above the limits can still view, edit, download and delete existing items and files
 - [ ] Session sync: flip `isPro` via webhook → next page load reflects it without signing out
 
@@ -666,7 +665,7 @@ Matches the two existing phase specs, with the fixes above folded in.
 **Phase 1 — infrastructure (no UI)**
 1. Dashboard setup (test mode), env vars in `.env`
 2. `npm install stripe`; `src/lib/stripe.ts`
-3. `src/lib/usage.ts` + tests; point `isProSystemType` at `isProOnlyItemType` (after the images decision)
+3. `src/lib/usage-limits.ts` + tests; point `isProSystemType` at `isProOnlyItemType`
 4. Session: `next-auth.d.ts`, `auth.ts` `jwt` select, `auth.config.ts` session callback, `getCurrentUser()`
 5. `src/lib/validations/billing.ts`, `src/lib/billing.ts` (checkout, portal, sync, event handler) + tests
 6. `billing` rate limiter; checkout and portal routes; verify with curl (signed-in cookie)
@@ -677,7 +676,7 @@ Matches the two existing phase specs, with the fixes above folded in.
 9. Cancel the subscription on account deletion + test
 10. `BillingSettings`, `UpgradeToast`, settings page wiring; homepage Pro CTA → `/settings#billing`
 11. Optional: Pro hints in `TypeSelector` / New Collection for free users
-12. Update `context/project-overview.md` (env name, roadmap, images decision); full manual checklist; `npm test`, lint, build
+12. Update `context/project-overview.md` (env name, roadmap, images Pro) and the homepage pricing copy; full manual checklist; `npm test`, lint, build
 13. Before going live: Live-mode product/prices/portal, production webhook endpoint and secrets in Vercel
 
 ---
@@ -690,7 +689,6 @@ Matches the two existing phase specs, with the fixes above folded in.
 | Upload route should query `isPro` from the DB because the session may lack it | Use `getCurrentUser()` | `auth()` runs the `jwt` callback, which re-reads `isPro` every request |
 | Handle `invoice.paid` / `invoice.payment_failed` | Handle `customer.subscription.*` + `checkout.session.completed`, re-fetching the subscription | Subscription status already reflects renewals and failures; `invoice.subscription` moved in the current API; re-fetching makes out-of-order events safe |
 | `isPro` only for `active`/`trialing` | Also `past_due` | Otherwise the first failed retry downgrades, contradicting "don't downgrade on payment failure" |
-| Gate files **and images** | Files only (pending decision) | Project overview and pricing page promise images on Free |
 | `billing-settings.tsx` | `BillingSettings.tsx` | Coding standards: PascalCase components |
 | `/settings?upgraded=true` + `useSearchParams` | `?upgraded=1` read from page `searchParams` | Matches existing `?registered=1` / `?reset=1` style; no Suspense boundary |
 | `new Stripe(key, { typescript: true })` at module scope | Lazy `stripe()` | Option is obsolete; lazy init doesn't throw at import time in tests/build |
@@ -698,7 +696,7 @@ Matches the two existing phase specs, with the fixes above folded in.
 
 ## Open Questions
 
-1. **Images Pro or Free?** (blocks step 3)
+1. ~~**Images Pro or Free?**~~ Decided 2026-10-15: Pro.
 2. **Trial?** None planned; add `subscription_data.trial_period_days` later if wanted (status `trialing` already counts as Pro).
 3. **Over-limit after downgrade**: block only new creates (current spec), or also block editing? Plan assumes only creates.
 4. **Demo user**: keep it seeded as Pro, or make it free so the demo shows the free tier?
