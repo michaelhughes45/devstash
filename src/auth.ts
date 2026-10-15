@@ -81,19 +81,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     ...authConfig.callbacks,
     // Not in auth.config.ts: the proxy has no database access, so it only checks the signature.
-    // Returning null ends the session once the user is deleted or their sessionVersion is bumped
+    // Returning null ends the session once the user is deleted or their sessionVersion is bumped.
+    // The same query refreshes isPro, so a billing change shows on the next request
     async jwt({ token, user }) {
       const userId = user?.id ?? token.sub;
       if (!userId) return null;
 
       const current = await prisma.user.findUnique({
         where: { id: userId },
-        select: { sessionVersion: true },
+        select: { sessionVersion: true, isPro: true },
       });
       if (!current) return null;
 
-      if (user) return { ...token, sessionVersion: current.sessionVersion };
-      return token.sessionVersion === current.sessionVersion ? token : null;
+      if (user) return { ...token, sessionVersion: current.sessionVersion, isPro: current.isPro };
+      if (token.sessionVersion !== current.sessionVersion) return null;
+      return { ...token, isPro: current.isPro };
     },
   },
 });

@@ -9,6 +9,8 @@ const RATE_LIMITS = {
   resendVerification: { limit: 3, window: "15 m" },
   // Per user; keeps one account from filling the R2 bucket
   upload: { limit: 20, window: "1 h" },
+  // Per user; each checkout or portal request calls Stripe
+  billing: { limit: 10, window: "1 h" },
 } satisfies Record<string, { limit: number; window: Duration }>;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;

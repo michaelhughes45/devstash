@@ -9,3 +9,14 @@ export async function getCurrentUserId(): Promise<string | null> {
   const session = await getSession();
   return session?.user?.id ?? null;
 }
+
+export interface CurrentUser {
+  id: string;
+  isPro: boolean;
+}
+
+export async function getCurrentUser(): Promise<CurrentUser | null> {
+  const session = await getSession();
+  const id = session?.user?.id;
+  return id ? { id, isPro: session.user.isPro ?? false } : null;
+}

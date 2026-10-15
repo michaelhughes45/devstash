@@ -1,8 +1,13 @@
 // Sidebar order for system types; custom types follow alphabetically
 const SYSTEM_TYPE_ORDER = ["snippet", "prompt", "command", "note", "file", "image", "link"];
 
-// System types shown with a PRO badge in the sidebar
-const PRO_SYSTEM_TYPES = ["file", "image"];
+// Item types only Pro users can create; also badged PRO in the sidebar.
+// Kept here, not in usage-limits.ts, because client components import this file and that one uses Prisma
+export const PRO_ONLY_ITEM_TYPES = ["file", "image"] as const;
+
+export function isProOnlyItemType(type: string): boolean {
+  return (PRO_ONLY_ITEM_TYPES as readonly string[]).includes(type);
+}
 
 export function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -23,7 +28,7 @@ export function getTypeSlug(name: string): string {
 }
 
 export function isProSystemType(name: string, isSystem: boolean): boolean {
-  return isSystem && PRO_SYSTEM_TYPES.includes(name);
+  return isSystem && isProOnlyItemType(name);
 }
 
 interface RankedType {

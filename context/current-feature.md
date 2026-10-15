@@ -1,18 +1,28 @@
-# Current Feature
+# Current Feature: Stripe Integration — Phase 1 (Core Infrastructure)
 
-<!-- Feature name and short description -->
+Groundwork for DevStash Pro ($8/month or $72/year) with hosted Stripe Checkout and the Customer Portal: Stripe client, free tier usage limits, `isPro` on the session, billing logic, and the checkout and portal API routes. Spec: `context/features/stripe-phase-1-spec.md`; full plan: `docs/stripe-integration-plan.md`.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
+In Progress
 
 ## Goals
 
-<!-- Goals and requirements -->
+- **Setup:** "DevStash Pro" product with $8 monthly and $72 yearly prices and a configured Customer Portal in Stripe test mode; `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID_MONTHLY`, `STRIPE_PRICE_ID_YEARLY` (and `STRIPE_WEBHOOK_SECRET`) in `.env`; `npm install stripe` (v23); no migration
+- **`src/lib/stripe.ts`:** lazy `stripe()` client that throws a clear error only when called without `STRIPE_SECRET_KEY`; no `apiVersion` or `typescript` option
+- **`src/lib/usage-limits.ts`:** `FREE_ITEM_LIMIT = 50`, `FREE_COLLECTION_LIMIT = 3`, `PRO_ONLY_ITEM_TYPES = ["file", "image"]`, the three error messages, `isProOnlyItemType`, `getUserUsage` (parallel counts), `canCreateItem` / `canCreateCollection` (Pro skips the query); `isProSystemType` uses `isProOnlyItemType`
+- **Session `isPro`:** typed on `Session.user` and `JWT`; read in the `jwt` callback's existing `sessionVersion` query (no extra query) and set on every call; `session` callback copies it from the token (edge-safe); `getCurrentUser()` → `{ id, isPro } | null`
+- **Billing logic:** `checkoutSchema` (`monthly` | `yearly`, never a price ID); `priceIdFor`, `isProStatus` (`active`, `trialing`, `past_due`), `createCheckoutUrl` (not-found / already-pro errors, idempotent customer creation saved with a conditional `updateMany`, `userId` in metadata, `appUrl()` success/cancel URLs), `createPortalUrl`, `syncSubscription`, `handleStripeEvent`, `cancelSubscriptionQuietly`; no raw Stripe IDs returned to the client
+- **API routes:** `billing` rate limiter (10/hour per user); `POST /api/stripe/checkout` (401, 400 "Choose a plan.", 429, 409 "You're already on Pro.", 500, `{ success, data: { url } }`) and `POST /api/stripe/portal` (401, 429, 400 "No billing account found.", URL); thin routes using `jsonResponse`
+- **Tests:** unit tests for usage limits (including the exact 50 / 3 boundaries), the checkout schema, billing logic and `getCurrentUser`; manual curl checks of checkout (customer saved and reused), bad plan / signed out / Pro errors and the portal; `npm test`, `npm run lint` and `npm run build` pass
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Images are Pro** (decided 2026-10-15): file and image uploads both require Pro; the project overview and homepage pricing copy are updated in Phase 2
+- The demo user is seeded with `isPro: true`; test free tier behavior with a newly registered user
+- Hosted Checkout needs no publishable key in the browser; keep the env var names in `context/project-overview.md` consistent with `.env`
+- Upgrading isn't reflected in the app until the Phase 2 webhook syncs the subscription
+- Out of scope (Phase 2): webhook route, gating in actions and the upload route, cancelling on account deletion, Billing settings UI, homepage CTA
 
 ## History
 
