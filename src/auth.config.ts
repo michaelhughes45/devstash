@@ -24,6 +24,8 @@ export default {
       if (token.sub) {
         session.user.id = token.sub;
       }
+      // Set from the database by the jwt callback in auth.ts; the proxy only has the token
+      session.user.isPro = token.isPro === true;
       return session;
     },
   },
