@@ -6,7 +6,8 @@ import {
   setCollectionFavorite,
   updateCollection as updateCollectionRecord,
 } from "@/lib/db/collections";
-import { getCurrentUserId } from "@/lib/session";
+import { getCurrentUser, getCurrentUserId } from "@/lib/session";
+import { canCreateCollection, COLLECTION_LIMIT_ERROR } from "@/lib/usage-limits";
 import {
   collectionIdSchema,
   createCollectionSchema,
@@ -31,8 +32,8 @@ export type CreateCollectionResult =
 export async function createCollection(
   data: CreateCollectionInput,
 ): Promise<CreateCollectionResult> {
-  const userId = await getCurrentUserId();
-  if (!userId) return { success: false, error: NOT_SIGNED_IN };
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: NOT_SIGNED_IN };
 
   const parsed = createCollectionSchema.safeParse(data);
   if (!parsed.success) {
@@ -40,7 +41,11 @@ export async function createCollection(
   }
 
   try {
-    const collection = await createCollectionRecord(userId, parsed.data);
+    if (!(await canCreateCollection(user.id, user.isPro))) {
+      return { success: false, error: COLLECTION_LIMIT_ERROR };
+    }
+
+    const collection = await createCollectionRecord(user.id, parsed.data);
     return {
       success: true,
       data: { ...collection, createdAt: collection.createdAt.toISOString() },

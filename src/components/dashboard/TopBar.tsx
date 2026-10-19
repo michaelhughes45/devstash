@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { getCreatableItemTypes } from "@/lib/db/item-types";
+import { getCurrentUser } from "@/lib/session";
 import type { CollectionOption } from "@/types/collections";
 import type { SearchData } from "@/types/search";
 
@@ -17,7 +18,7 @@ interface TopBarProps {
 }
 
 export async function TopBar({ collections, searchData }: TopBarProps) {
-  const creatableTypes = await getCreatableItemTypes();
+  const [creatableTypes, user] = await Promise.all([getCreatableItemTypes(), getCurrentUser()]);
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 sm:gap-4">
@@ -37,7 +38,11 @@ export async function TopBar({ collections, searchData }: TopBarProps) {
           <Star />
         </Link>
         <NewCollectionDialog />
-        <NewItemDialog types={creatableTypes} collections={collections} />
+        <NewItemDialog
+          types={creatableTypes}
+          collections={collections}
+          isPro={user?.isPro ?? false}
+        />
       </div>
     </header>
   );

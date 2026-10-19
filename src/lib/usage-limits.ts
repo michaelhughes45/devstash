@@ -1,9 +1,8 @@
+import { FREE_COLLECTION_LIMIT, FREE_ITEM_LIMIT } from "@/lib/plan-limits";
 import { prisma } from "@/lib/prisma";
 
 export { isProOnlyItemType, PRO_ONLY_ITEM_TYPES } from "@/lib/item-type-names";
-
-export const FREE_ITEM_LIMIT = 50;
-export const FREE_COLLECTION_LIMIT = 3;
+export { FREE_COLLECTION_LIMIT, FREE_ITEM_LIMIT } from "@/lib/plan-limits";
 
 export const ITEM_LIMIT_ERROR = `You've reached the free plan limit of ${FREE_ITEM_LIMIT} items. Upgrade to Pro for unlimited items.`;
 export const COLLECTION_LIMIT_ERROR = `You've reached the free plan limit of ${FREE_COLLECTION_LIMIT} collections. Upgrade to Pro for unlimited collections.`;

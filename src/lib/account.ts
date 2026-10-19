@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 
+import { cancelSubscriptionQuietly } from "@/lib/billing";
 import { hashPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { PASSWORD_RESET_PREFIX } from "@/lib/tokens";
@@ -51,7 +52,7 @@ export async function deleteUserAccount(
 ): Promise<DeleteAccountResult> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true, password: true },
+    select: { email: true, password: true, stripeSubscriptionId: true },
   });
   if (!user) return "not-found";
 
@@ -61,6 +62,10 @@ export async function deleteUserAccount(
   } else if (confirmation.trim().toLowerCase() !== user.email.toLowerCase()) {
     return "wrong-confirmation";
   }
+
+  // Cancelled first so a deleted user isn't billed again; a failed cancel is only
+  // logged, and its subscription.deleted webhook later finds no user
+  await cancelSubscriptionQuietly(user.stripeSubscriptionId);
 
   await prisma.$transaction([
     prisma.verificationToken.deleteMany({

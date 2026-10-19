@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { Prisma } from "@/generated/prisma/client";
-import { getEditorPreferences, updateEditorPreferences } from "@/lib/db/users";
+import {
+  getBillingStatus,
+  getEditorPreferences,
+  updateEditorPreferences,
+} from "@/lib/db/users";
 import { DEFAULT_EDITOR_PREFERENCES } from "@/lib/editor-preferences";
 import { prisma } from "@/lib/prisma";
 
@@ -73,5 +77,37 @@ describe("updateEditorPreferences", () => {
     vi.mocked(prisma.user.update).mockRejectedValue(new Error("connection lost"));
 
     await expect(updateEditorPreferences("user-1", custom)).rejects.toThrow("connection lost");
+  });
+});
+
+describe("getBillingStatus", () => {
+  it("reports Pro and a billing account without returning Stripe IDs", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      isPro: true,
+      stripeCustomerId: "cus_123",
+    } as never);
+
+    const status = await getBillingStatus("user-1");
+
+    expect(status).toEqual({ isPro: true, hasBillingAccount: true });
+    expect(prisma.user.findUnique).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      select: { isPro: true, stripeCustomerId: true },
+    });
+  });
+
+  it("reports no billing account for a user who never checked out", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      isPro: false,
+      stripeCustomerId: null,
+    } as never);
+
+    expect(await getBillingStatus("user-1")).toEqual({ isPro: false, hasBillingAccount: false });
+  });
+
+  it("returns null when the user no longer exists", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+
+    expect(await getBillingStatus("user-1")).toBeNull();
   });
 });

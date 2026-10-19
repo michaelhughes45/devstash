@@ -109,7 +109,7 @@ export const FEATURES: Feature[] = [
   },
   {
     title: "Files & Docs",
-    description: "Upload docs, configs and images, then preview or download them wherever you are.",
+    description: "With Pro, upload docs, configs and images, then preview or download them anywhere.",
     icon: FileText,
     color: TYPE_COLORS.file,
   },
@@ -189,7 +189,7 @@ export const PLANS: Plan[] = [
     features: [
       "50 items",
       "3 collections",
-      "Snippets, prompts, commands, notes, links and images",
+      "Snippets, prompts, commands, notes and links",
       "Basic search",
     ],
     cta: { label: "Get Started", signedInLabel: "Go to Dashboard", href: START_HREF },
@@ -203,14 +203,16 @@ export const PLANS: Plan[] = [
     },
     features: [
       "Unlimited items and collections",
-      "File uploads",
+      "File and image uploads",
       "Custom item types",
       "AI auto-tagging, summaries, explain code and prompt optimizer",
       "Export to JSON / ZIP",
       "Priority support",
     ],
-    // /settings until Stripe phase 2 adds the upgrade flow
-    cta: { label: "Upgrade to Pro", href: { signedOut: "/register", signedIn: "/settings" } },
+    cta: {
+      label: "Upgrade to Pro",
+      href: { signedOut: "/register", signedIn: "/settings#billing" },
+    },
     highlight: "Most Popular",
   },
 ];
