@@ -210,7 +210,7 @@ First list the changes you plan to make and why, then show the refactored code.
   },
   {
     name: "DevOps",
-    description: "Infrastructure and deployment resources",
+    description: "Infrastructure, deployment and everyday shell commands",
     items: [
       {
         type: "snippet",
@@ -257,12 +257,6 @@ CMD ["node", "server.js"]`,
         description: "Workflows, syntax reference and CI/CD guides",
         url: "https://docs.github.com/en/actions",
       },
-    ],
-  },
-  {
-    name: "Terminal Commands",
-    description: "Useful shell commands for everyday development",
-    items: [
       {
         type: "command",
         title: "Undo last commit, keep changes",
@@ -295,42 +289,40 @@ CMD ["node", "server.js"]`,
       },
     ],
   },
+];
+
+// The demo user is on the free plan (3 collections max), so these stay outside any collection
+const UNCOLLECTED_ITEMS: SeedItem[] = [
   {
-    name: "Design Resources",
-    description: "UI/UX resources and references",
-    items: [
-      {
-        type: "link",
-        title: "Tailwind CSS documentation",
-        description: "Utility class reference and configuration for Tailwind CSS",
-        isPinned: true,
-        url: "https://tailwindcss.com/docs",
-      },
-      {
-        type: "link",
-        title: "shadcn/ui",
-        description: "Accessible components built on Radix UI and Tailwind",
-        url: "https://ui.shadcn.com/",
-      },
-      {
-        type: "link",
-        title: "Material Design 3",
-        description: "Google's design system: guidelines, components and tokens",
-        url: "https://m3.material.io/",
-      },
-      {
-        type: "link",
-        title: "Lucide icons",
-        description: "Open-source icon library used by shadcn/ui",
-        url: "https://lucide.dev/icons/",
-      },
-    ],
+    type: "link",
+    title: "Tailwind CSS documentation",
+    description: "Utility class reference and configuration for Tailwind CSS",
+    isPinned: true,
+    url: "https://tailwindcss.com/docs",
+  },
+  {
+    type: "link",
+    title: "shadcn/ui",
+    description: "Accessible components built on Radix UI and Tailwind",
+    url: "https://ui.shadcn.com/",
+  },
+  {
+    type: "link",
+    title: "Material Design 3",
+    description: "Google's design system: guidelines, components and tokens",
+    url: "https://m3.material.io/",
+  },
+  {
+    type: "link",
+    title: "Lucide icons",
+    description: "Open-source icon library used by shadcn/ui",
+    url: "https://lucide.dev/icons/",
   },
 ];
 
 async function seedUser() {
   const password = await bcrypt.hash(DEMO_USER.password, 12);
-  const data = { name: DEMO_USER.name, password, isPro: true, emailVerified: new Date() };
+  const data = { name: DEMO_USER.name, password, isPro: false, emailVerified: new Date() };
 
   return prisma.user.upsert({
     where: { email: DEMO_USER.email },
@@ -365,21 +357,35 @@ async function seedCollections(userId: string, typeIds: Record<SystemTypeName, s
       data: { name, description, isFavorite, userId },
     });
 
-    for (const { type, url, ...item } of items) {
-      await prisma.item.create({
-        data: {
-          ...item,
-          url,
-          contentType: url ? ContentType.URL : ContentType.TEXT,
-          userId,
-          typeId: typeIds[type],
-          collections: { create: { collectionId: collection.id } },
-        },
-      });
+    for (const item of items) {
+      await createItem(userId, typeIds, item, collection.id);
     }
 
     console.log(`✔ Collection "${name}" with ${items.length} items`);
   }
+
+  for (const item of UNCOLLECTED_ITEMS) {
+    await createItem(userId, typeIds, item);
+  }
+  console.log(`✔ ${UNCOLLECTED_ITEMS.length} items outside any collection`);
+}
+
+async function createItem(
+  userId: string,
+  typeIds: Record<SystemTypeName, string>,
+  { type, url, ...item }: SeedItem,
+  collectionId?: string,
+) {
+  await prisma.item.create({
+    data: {
+      ...item,
+      url,
+      contentType: url ? ContentType.URL : ContentType.TEXT,
+      userId,
+      typeId: typeIds[type],
+      ...(collectionId && { collections: { create: { collectionId } } }),
+    },
+  });
 }
 
 async function main() {

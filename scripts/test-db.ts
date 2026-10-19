@@ -7,9 +7,7 @@ import { DEMO_USER_EMAIL, DEMO_USER_PASSWORD } from "../src/lib/demo-user";
 const EXPECTED_COLLECTIONS: Record<string, number> = {
   "React Patterns": 3,
   "AI Workflows": 3,
-  DevOps: 4,
-  "Terminal Commands": 4,
-  "Design Resources": 4,
+  DevOps: 8,
 };
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -40,7 +38,7 @@ async function checkDemoUser() {
     await bcrypt.compare(DEMO_USER_PASSWORD, user.password),
     "Demo user password does not match",
   );
-  assert(user.isPro && user.emailVerified, "Demo user should be Pro and email-verified");
+  assert(!user.isPro && user.emailVerified, "Demo user should be free and email-verified");
 
   console.log(`\n✔ Demo user: ${user.name} <${user.email}> (password ok, isPro: ${user.isPro})`);
   return user.id;
