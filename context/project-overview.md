@@ -116,7 +116,7 @@ System types are seeded into the database with `isSystem = true` and `userId = n
 | Note | text | `StickyNote` | `#fde047` 🟡 | Free |
 | Command | text | `Terminal` | `#f97316` 🟠 | Free |
 | URL | url | `Link` | `#10b981` 🟢 | Free |
-| Image | file | `Image` | `#ec4899` 🩷 | Free |
+| Image | file | `Image` | `#ec4899` 🩷 | Pro |
 | File | file | `File` | `#6b7280` ⚪ | Pro |
 
 > URL: `/items/{type}` e.g. `/items/snippets`, `/items/commands`
@@ -448,13 +448,13 @@ Uploads pass through the app server, so on Vercel they're capped at its ~4.5 MB 
 
 | Plan | Price | Limits | Features |
 | --- | --- | --- | --- |
-| 🆓 **Free** | $0 | 50 items · 3 collections | All system types except File, image uploads, basic search |
-| ⭐ **Pro** | $8/mo or $72/yr (save 25%) | Unlimited items & collections | File uploads, custom types, AI features, export (JSON/ZIP), priority support |
+| 🆓 **Free** | $0 | 50 items · 3 collections | Snippets, prompts, notes, commands and links, basic search |
+| ⭐ **Pro** | $8/mo or $72/yr (save 25%) | Unlimited items & collections | File and image uploads, custom types, AI features, export (JSON/ZIP), priority support |
 
 - Stripe Checkout for upgrades, Customer Portal for managing/cancelling
 - Webhooks keep `isPro`, `stripeCustomerId` and `stripeSubscriptionId` in sync
 - Limits are enforced **server‑side** (never trust the client)
-- On downgrade: existing items stay readable; creating new items is blocked above the free limits
+- On downgrade: existing items and files stay fully usable (view, edit, download, delete); creating new items, collections, files or images is blocked above the free limits
 
 ---
 
@@ -518,11 +518,13 @@ devstash/
 │   │   ├── favorites/        # favorited items and collections
 │   │   ├── items/[type]/     # items list per type
 │   │   ├── profile/          # profile and usage stats
-│   │   ├── settings/         # editor preferences, change password, delete account
+│   │   ├── settings/         # editor preferences, billing, change password, delete account
 │   │   └── api/
 │   │       ├── auth/         # [...nextauth], register, verify-email
 │   │       ├── items/[id]/   # item detail + download
-│   │       └── upload/       # file uploads to R2
+│   │       ├── stripe/       # checkout and billing portal sessions
+│   │       ├── upload/       # file uploads to R2
+│   │       └── webhooks/stripe/ # Stripe subscription webhook
 │   ├── actions/              # server actions (auth, profile, items; later collections, ai)
 │   ├── components/
 │   │   ├── ui/               # shadcn components
@@ -620,11 +622,11 @@ Refer to the screenshots below as a base for the dashboard UI.  It does not have
 - [ ] Tags
 - [ ] Search & filters
 - [ ] Favorites, pinned, recently used
-- [ ] Free tier limits
+- [x] Free tier limits
 
 ### 🟣 Phase 2 — Pro
-- [ ] Stripe billing & upgrade flow
-- [ ] File uploads (R2) — uploads, gallery/list views and downloads done; Pro gating still to do
+- [x] Stripe billing & upgrade flow
+- [x] File uploads (R2) — uploads, gallery/list views, downloads and Pro gating
 - [ ] Custom item types
 - [ ] AI features (auto‑tag, summarize, explain, optimize prompt)
 - [ ] Export (JSON / ZIP)

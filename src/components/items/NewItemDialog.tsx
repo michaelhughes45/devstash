@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition, type FormEvent } from "react";
 import { Plus } from "lucide-react";
 
 import { FileUpload } from "@/components/items/FileUpload";
 import { ItemFormFields } from "@/components/items/ItemFormFields";
 import { TypeSelector } from "@/components/items/TypeSelector";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -27,24 +28,29 @@ import {
   type ItemFormChange,
   type ItemFormValues,
 } from "@/lib/item-content";
+import { isProOnlyItemType } from "@/lib/item-type-names";
 import type { CollectionOption } from "@/types/collections";
 import type { CreatableItemTypeOption } from "@/types/items";
 
 interface NewItemFormProps {
   types: CreatableItemTypeOption[];
   collections: CollectionOption[];
+  isPro: boolean;
   isPending: boolean;
   startTransition: (action: () => Promise<void>) => void;
   onCreated: () => void;
+  onClose: () => void;
 }
 
 // Mounted only while the dialog is open, so each opening starts blank
 function NewItemForm({
   types,
   collections,
+  isPro,
   isPending,
   startTransition,
   onCreated,
+  onClose,
 }: NewItemFormProps) {
   const [type, setType] = useState<CreatableItemType>(types[0]?.name ?? "snippet");
   const [values, setValues] = useState<ItemFormValues>(EMPTY_ITEM_FORM_VALUES);
@@ -52,7 +58,10 @@ function NewItemForm({
   const { progress, fieldErrors, submit, clearFileError } = useCreateItem(onCreated);
   const fields = getCreateFields(type);
   const fileType = isFileItemType(type) ? type : null;
+  // The server rejects these too; this just says so before the form is filled in
+  const needsPro = !isPro && isProOnlyItemType(type);
   const canSubmit =
+    !needsPro &&
     values.title.trim() !== "" &&
     (!fields.url || values.url.trim() !== "") &&
     (!fileType || file !== null);
@@ -78,8 +87,20 @@ function NewItemForm({
       {/* The div scrolls rather than the fieldset, which browsers don't scroll as a flex item */}
       <div className="-mx-4 min-h-0 overflow-y-auto px-4 py-1">
         <fieldset disabled={isPending} className="flex flex-col gap-5">
-          <TypeSelector types={types} value={type} onChange={handleTypeChange} />
-          {fileType && (
+          <TypeSelector types={types} value={type} onChange={handleTypeChange} isPro={isPro} />
+          {needsPro && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-dashed p-3 text-sm">
+              <p className="text-muted-foreground">Upgrade to Pro to upload files and images.</p>
+              <Link
+                href="/settings#billing"
+                onClick={onClose}
+                className={buttonVariants({ size: "sm" })}
+              >
+                Upgrade
+              </Link>
+            </div>
+          )}
+          {fileType && !needsPro && (
             <div className="grid gap-2">
               <Label htmlFor="new-item-file">{fileType === "image" ? "Image" : "File"}</Label>
               {/* Keyed by type so switching file ↔ image also resets its own errors */}
@@ -124,9 +145,10 @@ function NewItemForm({
 interface NewItemDialogProps {
   types: CreatableItemTypeOption[];
   collections: CollectionOption[];
+  isPro: boolean;
 }
 
-export function NewItemDialog({ types, collections }: NewItemDialogProps) {
+export function NewItemDialog({ types, collections, isPro }: NewItemDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -153,9 +175,11 @@ export function NewItemDialog({ types, collections }: NewItemDialogProps) {
         <NewItemForm
           types={types}
           collections={collections}
+          isPro={isPro}
           isPending={isPending}
           startTransition={startTransition}
           onCreated={() => setOpen(false)}
+          onClose={() => setOpen(false)}
         />
       </DialogContent>
     </Dialog>

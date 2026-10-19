@@ -12,9 +12,16 @@ import {
   setCollectionFavorite,
   updateCollection as updateCollectionRecord,
 } from "@/lib/db/collections";
-import { getCurrentUserId } from "@/lib/session";
+import { getCurrentUser, getCurrentUserId } from "@/lib/session";
+import { canCreateCollection, COLLECTION_LIMIT_ERROR } from "@/lib/usage-limits";
 
-vi.mock("@/lib/session", () => ({ getCurrentUserId: vi.fn() }));
+vi.mock("@/lib/session", () => ({ getCurrentUser: vi.fn(), getCurrentUserId: vi.fn() }));
+vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+// The message stays real; only the count is mocked
+vi.mock("@/lib/usage-limits", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/usage-limits")>()),
+  canCreateCollection: vi.fn(),
+}));
 vi.mock("@/lib/db/collections", () => ({
   createCollection: vi.fn(),
   updateCollection: vi.fn(),
@@ -26,11 +33,12 @@ const createdAt = new Date("2026-10-08T10:00:00Z");
 
 describe("createCollection action", () => {
   beforeEach(() => {
-    vi.mocked(getCurrentUserId).mockResolvedValue("user-1");
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: "user-1", isPro: false });
+    vi.mocked(canCreateCollection).mockResolvedValue(true);
   });
 
   it("rejects signed-out users without saving", async () => {
-    vi.mocked(getCurrentUserId).mockResolvedValue(null);
+    vi.mocked(getCurrentUser).mockResolvedValue(null);
 
     const result = await createCollection({ name: "React" });
 
@@ -83,6 +91,31 @@ describe("createCollection action", () => {
       name: "React",
       description: null,
     });
+  });
+
+  it("blocks a free user at the collection limit without saving", async () => {
+    vi.mocked(canCreateCollection).mockResolvedValue(false);
+
+    const result = await createCollection({ name: "React" });
+
+    expect(canCreateCollection).toHaveBeenCalledWith("user-1", false);
+    expect(result).toEqual({ success: false, error: COLLECTION_LIMIT_ERROR });
+    expect(createCollectionRecord).not.toHaveBeenCalled();
+  });
+
+  it("lets a Pro user create past the free limit", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: "user-1", isPro: true });
+    vi.mocked(createCollectionRecord).mockResolvedValue({
+      id: "col-1",
+      name: "React",
+      description: null,
+      createdAt,
+    });
+
+    const result = await createCollection({ name: "React" });
+
+    expect(canCreateCollection).toHaveBeenCalledWith("user-1", true);
+    expect(result.success).toBe(true);
   });
 
   it("returns a generic error when the save fails", async () => {

@@ -7,7 +7,8 @@ import {
 } from "@/lib/file-constraints";
 import { createUploadKey, putObject } from "@/lib/r2";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { getCurrentUserId } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
+import { isProOnlyItemType, PRO_TYPE_ERROR } from "@/lib/usage-limits";
 
 interface UploadResponse {
   success: boolean;
@@ -24,8 +25,9 @@ const MAX_BODY_SIZE =
 // Stores one file or image in R2 and returns its key, which createItem then
 // turns into an item. The proxy doesn't cover /api, so this checks the session itself.
 export async function POST(request: Request) {
-  const userId = await getCurrentUserId();
-  if (!userId) return respond({ success: false, error: "Unauthorized" }, 401);
+  const user = await getCurrentUser();
+  if (!user) return respond({ success: false, error: "Unauthorized" }, 401);
+  const userId = user.id;
 
   // Reject an oversized body before reading it. Browsers always send a length
   // for FormData, so a chunked body without one is refused rather than buffered.
@@ -49,6 +51,11 @@ export async function POST(request: Request) {
   const file = formData.get("file");
   if (typeof type !== "string" || !isFileItemType(type) || !(file instanceof File)) {
     return respond({ success: false, error: "Invalid upload." }, 400);
+  }
+
+  // Before validation and the rate limit, so a free user's upload is never stored
+  if (!user.isPro && isProOnlyItemType(type)) {
+    return respond({ success: false, error: PRO_TYPE_ERROR }, 403);
   }
 
   const error = validateUploadFile(type, file);

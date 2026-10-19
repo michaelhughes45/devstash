@@ -34,6 +34,22 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   return { ...profile, hasPassword: password !== null };
 }
 
+export interface BillingStatus {
+  isPro: boolean;
+  // A Stripe customer exists, so the billing portal has invoices to show
+  hasBillingAccount: boolean;
+}
+
+// Raw Stripe IDs never leave this function
+export async function getBillingStatus(userId: string): Promise<BillingStatus | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isPro: true, stripeCustomerId: true },
+  });
+  if (!user) return null;
+  return { isPro: user.isPro, hasBillingAccount: user.stripeCustomerId !== null };
+}
+
 // Defaults for anything not saved yet
 export async function getEditorPreferences(userId: string): Promise<EditorPreferences> {
   const user = await prisma.user.findUnique({

@@ -22,7 +22,13 @@ import {
   UPLOAD_NOT_FOUND,
 } from "@/lib/item-uploads";
 import { deleteObjectQuietly, finalKeyFor, keyFromPublicUrl } from "@/lib/r2";
-import { getCurrentUserId } from "@/lib/session";
+import { getCurrentUser, getCurrentUserId } from "@/lib/session";
+import {
+  canCreateItem,
+  isProOnlyItemType,
+  ITEM_LIMIT_ERROR,
+  PRO_TYPE_ERROR,
+} from "@/lib/usage-limits";
 import { fieldErrorsOf } from "@/lib/validations/field-errors";
 import {
   createItemSchema,
@@ -71,8 +77,9 @@ function toItemDetailData(item: ItemDetail): ItemDetailData {
 }
 
 export async function createItem(data: CreateItemInput): Promise<CreateItemResult> {
-  const userId = await getCurrentUserId();
-  if (!userId) return { success: false, error: NOT_SIGNED_IN };
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: NOT_SIGNED_IN };
+  const userId = user.id;
 
   const parsed = createItemSchema.safeParse(data);
   if (!parsed.success) {
@@ -88,7 +95,17 @@ export async function createItem(data: CreateItemInput): Promise<CreateItemResul
   const { type } = itemData;
   const uploadKey = isFileItemType(type) ? fileKey : null;
   let finalKey: string | null = null;
+  // Checked before any upload is attached, so a blocked create leaves nothing in R2
+  if (!user.isPro && isProOnlyItemType(type)) {
+    await discardUpload(userId, uploadKey);
+    return { success: false, error: PRO_TYPE_ERROR };
+  }
   try {
+    if (!(await canCreateItem(userId, user.isPro))) {
+      await discardUpload(userId, uploadKey);
+      return { success: false, error: ITEM_LIMIT_ERROR };
+    }
+
     // Never link to another user's collection; a deleted one is reported the same way
     if (!(await ownsCollections(userId, itemData.collectionIds))) {
       await discardUpload(userId, uploadKey);

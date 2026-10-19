@@ -1,5 +1,7 @@
 import { ItemTypeIcon } from "@/components/dashboard/ItemTypeIcon";
+import { Badge } from "@/components/ui/badge";
 import type { CreatableItemType } from "@/lib/item-content";
+import { isProOnlyItemType } from "@/lib/item-type-names";
 import { cn } from "@/lib/utils";
 import type { CreatableItemTypeOption } from "@/types/items";
 
@@ -7,10 +9,12 @@ interface TypeSelectorProps {
   types: CreatableItemTypeOption[];
   value: CreatableItemType;
   onChange: (type: CreatableItemType) => void;
+  // Free users see a PRO badge on file and image
+  isPro: boolean;
 }
 
 // Native radios styled as chips, so arrow keys move between types
-export function TypeSelector({ types, value, onChange }: TypeSelectorProps) {
+export function TypeSelector({ types, value, onChange, isPro }: TypeSelectorProps) {
   return (
     <fieldset className="grid gap-2">
       <legend className="mb-2 text-sm leading-none font-medium">Type</legend>
@@ -33,6 +37,14 @@ export function TypeSelector({ types, value, onChange }: TypeSelectorProps) {
             />
             <ItemTypeIcon icon={type.icon} className="size-4" style={{ color: type.color }} />
             {type.label}
+            {!isPro && isProOnlyItemType(type.name) && (
+              <Badge
+                variant="outline"
+                className="h-4 px-1.5 text-[10px] font-semibold tracking-wide text-muted-foreground"
+              >
+                PRO
+              </Badge>
+            )}
           </label>
         ))}
       </div>

@@ -19,9 +19,20 @@ import {
 } from "@/lib/db/items";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 import { copyObject, deleteObjectQuietly, headObject } from "@/lib/r2";
-import { getCurrentUserId } from "@/lib/session";
+import { getCurrentUser, getCurrentUserId } from "@/lib/session";
+import {
+  canCreateItem,
+  ITEM_LIMIT_ERROR,
+  PRO_TYPE_ERROR,
+} from "@/lib/usage-limits";
 
-vi.mock("@/lib/session", () => ({ getCurrentUserId: vi.fn() }));
+vi.mock("@/lib/session", () => ({ getCurrentUser: vi.fn(), getCurrentUserId: vi.fn() }));
+vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+// Messages and the Pro-only type check stay real; only the count is mocked
+vi.mock("@/lib/usage-limits", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/usage-limits")>()),
+  canCreateItem: vi.fn(),
+}));
 vi.mock("@/lib/db/collections", () => ({ ownsCollections: vi.fn() }));
 vi.mock("@/lib/db/items", () => ({
   createItem: vi.fn(),
@@ -75,6 +86,8 @@ const validInput = {
 
 beforeEach(() => {
   vi.mocked(getCurrentUserId).mockResolvedValue("user-1");
+  vi.mocked(getCurrentUser).mockResolvedValue({ id: "user-1", isPro: false });
+  vi.mocked(canCreateItem).mockResolvedValue(true);
   vi.mocked(ownsCollections).mockResolvedValue(true);
   vi.stubEnv("R2_PUBLIC_URL", R2_PUBLIC_URL);
 });
@@ -286,7 +299,7 @@ describe("createItem", () => {
   const createInput = { type: "snippet" as const, ...validInput };
 
   it("rejects signed-out users without creating anything", async () => {
-    vi.mocked(getCurrentUserId).mockResolvedValue(null);
+    vi.mocked(getCurrentUser).mockResolvedValue(null);
 
     const result = await createItem(createInput);
 
@@ -409,7 +422,7 @@ describe("createItem with an upload", () => {
   const UPLOAD_NOT_FOUND = "The upload wasn't found. Please choose the file again.";
 
   beforeEach(() => {
-    vi.mocked(getCurrentUserId).mockResolvedValue("user1");
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: "user1", isPro: true });
     vi.mocked(headObject).mockResolvedValue({
       size: 2048,
       contentType: "application/pdf",
@@ -552,6 +565,73 @@ describe("createItem with an upload", () => {
       expect.not.objectContaining({ fileKey }),
       null,
     );
+  });
+});
+
+describe("createItem plan limits", () => {
+  const fileKey = "pending/user-1/0f8fad5b-d9cb-469f-a165-70867728950e.pdf";
+  const snippetInput = { type: "snippet" as const, ...validInput };
+  const fileInput = { type: "file" as const, title: "Spec", tags: [], fileKey };
+
+  beforeEach(() => {
+    vi.mocked(headObject).mockResolvedValue({
+      size: 2048,
+      contentType: "application/pdf",
+      originalName: "Spec.pdf",
+    });
+    vi.mocked(createItemRecord).mockResolvedValue(savedItem);
+  });
+
+  it("creates an item for a free user under the limit", async () => {
+    const result = await createItem(snippetInput);
+
+    expect(canCreateItem).toHaveBeenCalledWith("user-1", false);
+    expect(result.success).toBe(true);
+  });
+
+  it("blocks a free user at the item limit without saving", async () => {
+    vi.mocked(canCreateItem).mockResolvedValue(false);
+
+    const result = await createItem(snippetInput);
+
+    expect(result).toEqual({ success: false, error: ITEM_LIMIT_ERROR });
+    expect(ownsCollections).not.toHaveBeenCalled();
+    expect(createItemRecord).not.toHaveBeenCalled();
+  });
+
+  it("discards a pending upload when the item limit blocks the create", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: "user-1", isPro: true });
+    vi.mocked(canCreateItem).mockResolvedValue(false);
+
+    const result = await createItem(fileInput);
+
+    expect(result).toEqual({ success: false, error: ITEM_LIMIT_ERROR });
+    expect(deleteObjectQuietly).toHaveBeenCalledWith(fileKey);
+    expect(copyObject).not.toHaveBeenCalled();
+    expect(createItemRecord).not.toHaveBeenCalled();
+  });
+
+  it.each(["file", "image"] as const)(
+    "rejects a free user's %s item and discards its upload",
+    async (type) => {
+      const result = await createItem({ ...fileInput, type });
+
+      expect(result).toEqual({ success: false, error: PRO_TYPE_ERROR });
+      expect(deleteObjectQuietly).toHaveBeenCalledWith(fileKey);
+      expect(canCreateItem).not.toHaveBeenCalled();
+      expect(headObject).not.toHaveBeenCalled();
+      expect(createItemRecord).not.toHaveBeenCalled();
+    },
+  );
+
+  it("lets a Pro user create a file item", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: "user-1", isPro: true });
+
+    const result = await createItem(fileInput);
+
+    expect(canCreateItem).toHaveBeenCalledWith("user-1", true);
+    expect(result.success).toBe(true);
+    expect(createItemRecord).toHaveBeenCalled();
   });
 });
 
