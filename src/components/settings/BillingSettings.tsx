@@ -1,8 +1,6 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,10 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { type BillingAction, useBillingRedirect } from "@/hooks/use-billing-redirect";
 import { FREE_COLLECTION_LIMIT, FREE_ITEM_LIMIT } from "@/lib/plan-limits";
-import type { BillingPlan } from "@/lib/validations/billing";
-
-type BillingAction = BillingPlan | "portal";
 
 interface BillingSettingsProps {
   isPro: boolean;
@@ -26,47 +22,13 @@ interface BillingSettingsProps {
   finishingUpgrade: boolean;
 }
 
-interface BillingResponse {
-  success: boolean;
-  data?: { url: string };
-  error?: string;
-}
-
-const GENERIC_ERROR = "Something went wrong. Please try again.";
-
-// Both routes answer with a Stripe-hosted URL to send the user to
-async function requestBillingUrl(action: BillingAction): Promise<string> {
-  const response =
-    action === "portal"
-      ? await fetch("/api/stripe/portal", { method: "POST" })
-      : await fetch("/api/stripe/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plan: action }),
-        });
-  const body = (await response.json().catch(() => null)) as BillingResponse | null;
-  if (!response.ok || !body?.data?.url) throw new Error(body?.error ?? GENERIC_ERROR);
-  return body.data.url;
-}
-
 export function BillingSettings({
   isPro,
   hasBillingAccount,
   usage,
   finishingUpgrade,
 }: BillingSettingsProps) {
-  const [pending, setPending] = useState<BillingAction | null>(null);
-
-  async function start(action: BillingAction) {
-    setPending(action);
-    try {
-      // Stays pending while the browser leaves for Stripe
-      window.location.assign(await requestBillingUrl(action));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : GENERIC_ERROR);
-      setPending(null);
-    }
-  }
+  const { pending, start } = useBillingRedirect();
 
   function actionButton(
     action: BillingAction,
