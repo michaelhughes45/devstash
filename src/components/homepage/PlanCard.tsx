@@ -1,4 +1,4 @@
-import Link from "next/link";
+import type { ReactNode } from "react";
 import { Check } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -10,12 +10,17 @@ import type { BillingPeriod, Plan } from "./content";
 interface PlanCardProps {
   plan: Plan;
   period: BillingPeriod;
-  href: string;
-  label: string;
+  // The plan's button: a link on the homepage, a checkout button on /upgrade
+  action: ReactNode;
+}
+
+// Button styles for a plan's action, so links and buttons match
+export function planButtonClass(plan: Plan): string {
+  return cn(buttonVariants({ variant: plan.highlight ? "default" : "outline", size: "lg" }), "w-full");
 }
 
 // Presentational only (no hooks), so it renders inside the client Pricing component
-export function PlanCard({ plan, period, href, label }: PlanCardProps) {
+export function PlanCard({ plan, period, action }: PlanCardProps) {
   const price = plan.prices[period];
   const highlighted = Boolean(plan.highlight);
 
@@ -49,15 +54,7 @@ export function PlanCard({ plan, period, href, label }: PlanCardProps) {
           </li>
         ))}
       </ul>
-      <Link
-        href={href}
-        className={cn(
-          buttonVariants({ variant: highlighted ? "default" : "outline", size: "lg" }),
-          "w-full",
-        )}
-      >
-        {label}
-      </Link>
+      {action}
     </Card>
   );
 }

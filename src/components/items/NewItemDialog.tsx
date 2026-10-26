@@ -92,7 +92,7 @@ function NewItemForm({
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-dashed p-3 text-sm">
               <p className="text-muted-foreground">Upgrade to Pro to upload files and images.</p>
               <Link
-                href="/settings#billing"
+                href="/upgrade"
                 onClick={onClose}
                 className={buttonVariants({ size: "sm" })}
               >
