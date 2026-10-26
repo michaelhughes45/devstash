@@ -1,23 +1,18 @@
 # Current Feature
 
-Upgrade Page — a dedicated `/upgrade` page for free users, linked from a subtle Upgrade button in the header.
+<!-- Feature name and short description -->
 
 ## Status
 
-Completed
+<!-- Not Started | In Progress | Completed -->
 
 ## Goals
 
-- Free users see a ghost "Upgrade" button in the app header (more subtle than New Collection / New Item); Pro users don't
-- New protected `/upgrade` page showing the plans and features like the homepage Pricing section, with a Monthly ($8) / Yearly ($72) toggle
-- The Pro plan's button starts Stripe Checkout for the selected period (existing `POST /api/stripe/checkout`)
-- Pro users visiting `/upgrade` are sent to `/settings#billing`
-- Free users opening `/items/files` or `/items/images` are sent to `/upgrade` instead of the current upgrade screen, which is removed (downgraded users with existing files or images still see their list)
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Reuse the homepage `PLANS`, `PlanCard` and the billing period toggle, and the `useBillingRedirect` hook
-- Other in-app upgrade links (New Item dialog, homepage Pro plan when signed in) point to `/upgrade`
+<!-- Any extra notes -->
 
 ## History
 
