@@ -211,7 +211,7 @@ export const PLANS: Plan[] = [
     ],
     cta: {
       label: "Upgrade to Pro",
-      href: { signedOut: "/register", signedIn: "/settings#billing" },
+      href: { signedOut: "/register", signedIn: "/upgrade" },
     },
     highlight: "Most Popular",
   },

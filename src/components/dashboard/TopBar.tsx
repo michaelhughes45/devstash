@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Star, Zap } from "lucide-react";
 
 import { NewCollectionDialog } from "@/components/collections/NewCollectionDialog";
 import { NewItemDialog } from "@/components/items/NewItemDialog";
@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { getCreatableItemTypes } from "@/lib/db/item-types";
 import { getCurrentUser } from "@/lib/session";
+import { cn } from "@/lib/utils";
 import type { CollectionOption } from "@/types/collections";
 import type { SearchData } from "@/types/search";
 
@@ -29,6 +30,19 @@ export async function TopBar({ collections, searchData }: TopBarProps) {
       <CommandPalette data={searchData} />
       {/* Labels collapse to icons below lg so the search keeps its width beside the sidebar */}
       <div className="ml-auto flex items-center gap-2">
+        {user && !user.isPro && (
+          <Link
+            href="/upgrade"
+            title="Upgrade to Pro"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "lg" }),
+              "text-muted-foreground max-lg:w-9 max-lg:px-0",
+            )}
+          >
+            <Zap />
+            <span className="max-lg:sr-only">Upgrade</span>
+          </Link>
+        )}
         <Link
           href="/favorites"
           aria-label="Favorites"
